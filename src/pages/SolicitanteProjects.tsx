@@ -88,7 +88,7 @@ const SolicitanteProjects = () => {
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Button size="sm" variant={p.status === "aguardando" || p.status === "corrigir" ? "default" : "outline"} className="text-xs h-7">
+                  <Button size="sm" variant={p.status === "aguardando" || p.status === "corrigir" ? "default" : "outline"} className="text-xs h-7" onClick={() => navigate(`/solicitante/projeto/${p.id}`)}>
                     {p.status === "aguardando" || p.status === "corrigir" ? "Abrir" : "Ver"}
                   </Button>
                 </td>
