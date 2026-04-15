@@ -11,6 +11,7 @@ import SolicitanteDashboard from "./pages/SolicitanteDashboard";
 import Configuracoes from "./pages/Configuracoes";
 import NovaAnalise from "./pages/NovaAnalise";
 import FornecedorProjects from "./pages/FornecedorProjects";
+import SolicitanteProjectDetail from "./pages/SolicitanteProjectDetail";
 import FornecedorProjectDetail from "./pages/FornecedorProjectDetail";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
