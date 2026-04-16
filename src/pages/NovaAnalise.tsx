@@ -92,7 +92,11 @@ const NovaAnalise = () => {
 
   const canAdvance = () => {
     if (step === 0) return projectCode.trim() && costCenter.trim() && responsible.trim();
-    if (step === 1) return serviceType && methodology;
+    if (step === 1) {
+      if (!serviceType || !methodology) return false;
+      if ((serviceType === "dev" || serviceType === "pmo") && (!subtype || !seniority)) return false;
+      return true;
+    }
     return true;
   };
 
