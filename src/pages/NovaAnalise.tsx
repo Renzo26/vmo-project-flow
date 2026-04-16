@@ -395,6 +395,7 @@ const NovaAnalise = () => {
               <p><span className="text-muted-foreground">Centro de custo:</span> {costCenter || "—"}</p>
               <p><span className="text-muted-foreground">Responsável:</span> {responsible || "—"}</p>
               <p><span className="text-muted-foreground">Serviço:</span> {selectedService ? `${selectedService.code} · ${selectedService.label}` : "—"}</p>
+              {subtype && <p><span className="text-muted-foreground">Subtipo:</span> {subtype}{seniority ? ` · ${seniority}` : ""}</p>}
               <p><span className="text-muted-foreground">Metodologia:</span> {methodology || "—"}</p>
               <p><span className="text-muted-foreground">Classificação:</span> {finType} · {initiative}</p>
               <p><span className="text-muted-foreground">Urgência:</span> {urgency === "emergencial" ? "Emergencial" : "Normal"}</p>
