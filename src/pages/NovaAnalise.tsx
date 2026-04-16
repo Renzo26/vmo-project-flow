@@ -314,7 +314,7 @@ const NovaAnalise = () => {
             </div>
             <div>
               <Label className="mb-2 block">Prazo para proposta</Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-wrap">
                 {["3", "5", "7"].map(d => (
                   <button key={d} onClick={() => setDeadline(d)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     deadline === d ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
@@ -322,6 +322,17 @@ const NovaAnalise = () => {
                     {d} dias
                   </button>
                 ))}
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={!["3","5","7"].includes(deadline) ? deadline : ""}
+                    onChange={e => setDeadline(e.target.value)}
+                    placeholder="Personalizado"
+                    className={`w-32 h-10 ${!["3","5","7"].includes(deadline) && deadline ? "border-primary ring-2 ring-primary/20" : ""}`}
+                  />
+                  <span className="text-sm text-muted-foreground">dias</span>
+                </div>
               </div>
             </div>
           </div>
