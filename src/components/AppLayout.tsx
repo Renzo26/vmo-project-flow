@@ -8,9 +8,9 @@ interface AppLayoutProps {
 }
 
 const solicitanteMenu = [
-  { label: "Meus Projetos", path: "/solicitante/projetos", icon: FolderKanban },
-  { label: "Nova Análise", path: "/solicitante/nova-analise", icon: PlusCircle },
   { label: "Dashboard", path: "/solicitante/dashboard", icon: LayoutDashboard },
+  { label: "Meus Projetos", path: "/solicitante/projetos", icon: FolderKanban },
+  { label: "Nova Solicitação", path: "/solicitante/nova-analise", icon: PlusCircle },
   { label: "Configurações", path: "/solicitante/configuracoes", icon: Settings },
 ];
 

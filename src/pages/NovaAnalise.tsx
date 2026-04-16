@@ -6,42 +6,53 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Check, Upload, AlertTriangle, Code, Search, TestTube, Briefcase, Layers, Puzzle } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  Check, Upload, AlertTriangle, Code, Search, TestTube, Briefcase, Layers, Puzzle,
+  GitBranch, Network, Server, ClipboardList, FileCode,
+} from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
-const steps = ["Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
+const steps = ["Configuração", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
 
 const serviceTypes = [
-  { id: "dev", label: "Desenvolvimento de Software", icon: Code, badge: null },
-  { id: "analise", label: "Análise e Levantamento", icon: Search, badge: null },
-  { id: "testes", label: "Testes e Qualidade", icon: TestTube, badge: null },
-  { id: "gestao", label: "Gestão de Projeto", icon: Briefcase, badge: null },
-  { id: "ciclo", label: "Ciclo Completo", icon: Layers, badge: "Inclui todas as fases" },
-  { id: "custom", label: "Customizar Atividades", icon: Puzzle, badge: "Você define as atividades" },
+  { id: "mapeamento", label: "Mapeamento de Processos", code: "MAP", icon: GitBranch, badge: null },
+  { id: "arquitetura", label: "Arquitetura de Sistemas", code: "ARQ", icon: Network, badge: null },
+  { id: "infra", label: "Infraestrutura", code: "INF", icon: Server, badge: null },
+  { id: "pmo", label: "Gestão de Projetos e PMO", code: "PMO", icon: ClipboardList, badge: null },
+  { id: "dev", label: "Desenvolvimento de Software", code: "DEV", icon: Code, badge: null },
+  { id: "analise", label: "Análise e Levantamento", code: "ANA", icon: Search, badge: null },
+  { id: "testes", label: "Testes e Qualidade", code: "TST", icon: TestTube, badge: null },
+  { id: "gestao", label: "Gestão de Projeto", code: "GES", icon: Briefcase, badge: null },
+  { id: "ciclo", label: "Ciclo Completo", code: "CIC", icon: Layers, badge: "Inclui todas as fases" },
+  { id: "custom", label: "Customizar Atividades", code: "CUS", icon: Puzzle, badge: "Você define as atividades" },
 ];
 
-const methodologies = ["Ágil", "Waterfall", "Kanban", "Outro"];
+const methodologies = ["Ágil", "Waterfall", "Híbrida", "Kanban", "Outro"];
+
+const initiativeTypes = ["Correção", "Estratégico", "Área", "Melhoria", "Inovação", "Regulatória"];
 
 const NovaAnalise = () => {
   const [step, setStep] = useState(0);
+
+  // Step 0 — Configuração inicial
+  const [projectCode, setProjectCode] = useState("");
+  const [costCenter, setCostCenter] = useState("");
+  const [responsible, setResponsible] = useState("");
+
   const [serviceType, setServiceType] = useState("");
   const [methodology, setMethodology] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("5");
   const [finType, setFinType] = useState<"CAPEX" | "OPEX">("CAPEX");
-  const [initiative, setInitiative] = useState("Melhoria");
+  const [initiative, setInitiative] = useState("Correção");
   const [urgency, setUrgency] = useState<"normal" | "emergencial">("normal");
-  const [projectName, setProjectName] = useState("");
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
+  const selectedService = serviceTypes.find(s => s.id === serviceType);
   const needsAttachment = (serviceType === "dev" || serviceType === "testes") && methodology === "Waterfall";
 
   const toggleSupplier = (id: string) => {
@@ -50,6 +61,12 @@ const NovaAnalise = () => {
 
   const handleSubmit = () => {
     setShowModal(true);
+  };
+
+  const canAdvance = () => {
+    if (step === 0) return projectCode.trim() && costCenter.trim() && responsible.trim();
+    if (step === 1) return serviceType && methodology;
+    return true;
   };
 
   return (
@@ -72,8 +89,56 @@ const NovaAnalise = () => {
       </div>
 
       <div className="bg-card rounded-xl border border-border p-6">
-        {/* Step 1 */}
+        {/* Step 0 — Configuração */}
         {step === 0 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Configuração inicial</h2>
+              <p className="text-sm text-muted-foreground mt-1">Identificação e responsáveis pelo projeto</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Código do projeto *</Label>
+                <Input
+                  value={projectCode}
+                  onChange={e => setProjectCode(e.target.value)}
+                  placeholder="Ex: PRJ-2024-001"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Centro de custo *</Label>
+                <Input
+                  value={costCenter}
+                  onChange={e => setCostCenter(e.target.value)}
+                  placeholder="Ex: CC-1042"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Responsável pelo projeto *</Label>
+              <Input
+                value={responsible}
+                onChange={e => setResponsible(e.target.value)}
+                placeholder="Nome do responsável"
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <FileCode className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-xs text-foreground">
+                Cada tipo de serviço possui um código próprio que será associado ao centro de custo informado.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 1 — Tipo de Serviço */}
+        {step === 1 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Qual o tipo de serviço a ser contratado?</h2>
             <div className="grid grid-cols-3 gap-3">
@@ -85,7 +150,10 @@ const NovaAnalise = () => {
                     serviceType === st.id ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-primary/40"
                   }`}
                 >
-                  <st.icon className={`h-6 w-6 mb-2 ${serviceType === st.id ? "text-primary" : "text-muted-foreground"}`} />
+                  <div className="flex items-start justify-between mb-2">
+                    <st.icon className={`h-6 w-6 ${serviceType === st.id ? "text-primary" : "text-muted-foreground"}`} />
+                    <Badge variant="outline" className="text-[9px] font-mono bg-muted/50">{st.code}</Badge>
+                  </div>
                   <p className="text-sm font-medium text-foreground">{st.label}</p>
                   {st.badge && (
                     <Badge variant="outline" className={`mt-2 text-[10px] ${st.id === "custom" ? "bg-warning/15 text-warning border-warning/30" : "bg-primary/10 text-primary border-primary/20"}`}>
@@ -97,7 +165,7 @@ const NovaAnalise = () => {
             </div>
             <div>
               <Label className="text-sm font-medium text-foreground mb-2 block">Metodologia</Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {methodologies.map(m => (
                   <button
                     key={m}
@@ -114,8 +182,8 @@ const NovaAnalise = () => {
           </div>
         )}
 
-        {/* Step 2 */}
-        {step === 1 && (
+        {/* Step 2 — Detalhes */}
+        {step === 2 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Descreva o escopo</h2>
             <div>
@@ -149,8 +217,8 @@ const NovaAnalise = () => {
           </div>
         )}
 
-        {/* Step 3 */}
-        {step === 2 && (
+        {/* Step 3 — Classificação */}
+        {step === 3 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Classificação da iniciativa</h2>
             <div>
@@ -165,8 +233,8 @@ const NovaAnalise = () => {
             </div>
             <div>
               <Label className="mb-2 block">Tipo de iniciativa</Label>
-              <div className="flex gap-2">
-                {["Melhoria", "Inovação", "Regulatória"].map(i => (
+              <div className="flex gap-2 flex-wrap">
+                {initiativeTypes.map(i => (
                   <button key={i} onClick={() => setInitiative(i)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     initiative === i ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}>{i}</button>
@@ -189,15 +257,11 @@ const NovaAnalise = () => {
                 </div>
               )}
             </div>
-            <div>
-              <Label>Nome do projeto *</Label>
-              <Input value={projectName} onChange={e => setProjectName(e.target.value)} placeholder="Ex: Módulo Relatórios RH" className="mt-1" />
-            </div>
           </div>
         )}
 
-        {/* Step 4 */}
-        {step === 3 && (
+        {/* Step 4 — Fornecedor */}
+        {step === 4 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Selecione os fornecedores</h2>
             <div className="grid grid-cols-3 gap-3">
@@ -217,11 +281,13 @@ const NovaAnalise = () => {
             </div>
             <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-1">
               <h4 className="font-semibold text-foreground mb-2">Resumo do pedido</h4>
-              <p><span className="text-muted-foreground">Serviço:</span> {serviceTypes.find(s => s.id === serviceType)?.label || "—"}</p>
+              <p><span className="text-muted-foreground">Código projeto:</span> {projectCode || "—"}</p>
+              <p><span className="text-muted-foreground">Centro de custo:</span> {costCenter || "—"}</p>
+              <p><span className="text-muted-foreground">Responsável:</span> {responsible || "—"}</p>
+              <p><span className="text-muted-foreground">Serviço:</span> {selectedService ? `${selectedService.code} · ${selectedService.label}` : "—"}</p>
               <p><span className="text-muted-foreground">Metodologia:</span> {methodology || "—"}</p>
               <p><span className="text-muted-foreground">Classificação:</span> {finType} · {initiative}</p>
               <p><span className="text-muted-foreground">Urgência:</span> {urgency === "emergencial" ? "Emergencial" : "Normal"}</p>
-              <p><span className="text-muted-foreground">Projeto:</span> {projectName || "—"}</p>
               <p><span className="text-muted-foreground">Prazo proposta:</span> {deadline} dias</p>
             </div>
           </div>
@@ -232,8 +298,8 @@ const NovaAnalise = () => {
           <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/solicitante/projetos")} className="text-sm">
             Voltar
           </Button>
-          {step < 3 ? (
-            <Button onClick={() => setStep(step + 1)} className="text-sm">Próximo</Button>
+          {step < steps.length - 1 ? (
+            <Button onClick={() => setStep(step + 1)} disabled={!canAdvance()} className="text-sm">Próximo</Button>
           ) : (
             <Button onClick={handleSubmit} className="bg-success hover:bg-success/90 text-success-foreground text-sm">
               Enviar Pedido
