@@ -172,7 +172,7 @@ const NovaAnalise = () => {
               {serviceTypes.map(st => (
                 <button
                   key={st.id}
-                  onClick={() => setServiceType(st.id)}
+                  onClick={() => { setServiceType(st.id); setSubtype(""); setSeniority(""); }}
                   className={`relative p-4 rounded-xl border text-left transition-all ${
                     serviceType === st.id ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-primary/40"
                   }`}
@@ -183,13 +183,92 @@ const NovaAnalise = () => {
                   </div>
                   <p className="text-sm font-medium text-foreground">{st.label}</p>
                   {st.badge && (
-                    <Badge variant="outline" className={`mt-2 text-[10px] ${st.id === "custom" ? "bg-warning/15 text-warning border-warning/30" : "bg-primary/10 text-primary border-primary/20"}`}>
+                    <Badge variant="outline" className="mt-2 text-[10px] bg-primary/10 text-primary border-primary/20">
                       {st.badge}
                     </Badge>
                   )}
                 </button>
               ))}
             </div>
+
+            {serviceType === "dev" && (
+              <div className="rounded-xl border border-border p-4 bg-muted/20 space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Desenvolvimento de Software — subtipos disponíveis</h3>
+                  <p className="text-xs text-muted-foreground">Selecione o tipo de desenvolvimento</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {devSubtypes.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setSubtype(s)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left text-sm transition-colors ${
+                        subtype === s ? "border-primary bg-primary/5 text-foreground" : "border-border bg-background hover:border-primary/40 text-muted-foreground"
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${subtype === s ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                      <span className="flex-1">{s}</span>
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
+                  <div className="flex gap-2">
+                    {seniorityLevels.map(l => (
+                      <button
+                        key={l}
+                        onClick={() => setSeniority(l)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {serviceType === "pmo" && (
+              <div className="rounded-xl border border-border p-4 bg-muted/20 space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Gestão de Projetos e PMO — subtipos disponíveis</h3>
+                  <p className="text-xs text-muted-foreground">Selecione o serviço de gestão</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {pmoSubtypes.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setSubtype(s)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left text-sm transition-colors ${
+                        subtype === s ? "border-primary bg-primary/5 text-foreground" : "border-border bg-background hover:border-primary/40 text-muted-foreground"
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${subtype === s ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                      <span className="flex-1">{s}</span>
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
+                  <div className="flex gap-2">
+                    {seniorityLevels.map(l => (
+                      <button
+                        key={l}
+                        onClick={() => setSeniority(l)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <Label className="text-sm font-medium text-foreground mb-2 block">Metodologia</Label>
               <div className="flex gap-2 flex-wrap">
