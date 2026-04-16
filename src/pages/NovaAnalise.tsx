@@ -67,6 +67,8 @@ const NovaAnalise = () => {
   const [responsible, setResponsible] = useState("");
 
   const [serviceType, setServiceType] = useState("");
+  const [subtype, setSubtype] = useState("");
+  const [seniority, setSeniority] = useState("");
   const [methodology, setMethodology] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("5");
