@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Check, Upload, AlertTriangle, Code, Search, TestTube, Briefcase, Layers, Puzzle,
+  Check, Upload, AlertTriangle, Code, Search, TestTube, Layers,
   GitBranch, Network, Server, ClipboardList, FileCode,
 } from "lucide-react";
 import {
