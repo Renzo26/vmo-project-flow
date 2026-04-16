@@ -17,17 +17,42 @@ import {
 const steps = ["Configuração", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
 
 const serviceTypes = [
+  { id: "analise", label: "Análise e Levantamento", code: "ANA", icon: Search, badge: null },
   { id: "mapeamento", label: "Mapeamento de Processos", code: "MAP", icon: GitBranch, badge: null },
   { id: "arquitetura", label: "Arquitetura de Sistemas", code: "ARQ", icon: Network, badge: null },
   { id: "infra", label: "Infraestrutura", code: "INF", icon: Server, badge: null },
   { id: "pmo", label: "Gestão de Projetos e PMO", code: "PMO", icon: ClipboardList, badge: null },
   { id: "dev", label: "Desenvolvimento de Software", code: "DEV", icon: Code, badge: null },
-  { id: "analise", label: "Análise e Levantamento", code: "ANA", icon: Search, badge: null },
   { id: "testes", label: "Testes e Qualidade", code: "TST", icon: TestTube, badge: null },
-  { id: "gestao", label: "Gestão de Projeto", code: "GES", icon: Briefcase, badge: null },
   { id: "ciclo", label: "Ciclo Completo", code: "CIC", icon: Layers, badge: "Inclui todas as fases" },
-  { id: "custom", label: "Customizar Atividades", code: "CUS", icon: Puzzle, badge: "Você define as atividades" },
 ];
+
+const devSubtypes = [
+  "Novo desenvolvimento de sistema",
+  "Manutenção evolutiva",
+  "Manutenção corretiva / bug fix",
+  "Manutenção adaptativa",
+  "Integração de sistemas / APIs",
+  "Migração de sistema legado",
+  "Refatoração / modernização",
+  "Aplicativo mobile (iOS/Android)",
+  "Portal web / front-end",
+  "RPA / Automação de processos",
+  "Alocação de Recurso Especialista em Desenvolvimento de Software",
+];
+
+const pmoSubtypes = [
+  "PMO — Escritório de projetos",
+  "Gerente de projetos (tradicional / PMI)",
+  "Gestão de mudanças (Change Management)",
+  "Gestão de riscos",
+  "Gestão de portfólio de projetos",
+  "Planejamento de capacidade",
+  "Consultor PMBOK / PRINCE2 / PMP",
+  "Alocação de Recurso Especialista em Gestão de Projetos e PMO",
+];
+
+const seniorityLevels = ["Júnior", "Pleno", "Sênior"];
 
 const methodologies = ["Ágil", "Waterfall", "Híbrida", "Kanban", "Outro"];
 
