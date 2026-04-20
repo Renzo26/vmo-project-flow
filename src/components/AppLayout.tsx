@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply } from "lucide-react";
+import { LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply, BarChart3, Award, FileText, SlidersHorizontal } from "lucide-react";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,7 +11,6 @@ const solicitanteMenu = [
   { label: "Dashboard", path: "/solicitante/dashboard", icon: LayoutDashboard },
   { label: "Meus Projetos", path: "/solicitante/projetos", icon: FolderKanban },
   { label: "Nova Solicitação", path: "/solicitante/nova-analise", icon: PlusCircle },
-  { label: "Configurações", path: "/solicitante/configuracoes", icon: Settings },
 ];
 
 const fornecedorMenu = [
@@ -20,15 +19,24 @@ const fornecedorMenu = [
   { label: "Histórico", path: "/fornecedor/projetos", icon: History },
 ];
 
+const controleMenu = [
+  { label: "Dashboard", path: "/controle/dashboard", icon: LayoutDashboard },
+  { label: "Scorecard Fornecedores", path: "/controle/scorecard", icon: Award },
+  { label: "Contratos e Preços", path: "/controle/contratos", icon: FileText },
+  { label: "Config APF", path: "/controle/apf", icon: SlidersHorizontal },
+  { label: "Configuração de Usuário", path: "/controle/configuracoes", icon: Settings },
+];
+
 const AppLayout = ({ children }: AppLayoutProps) => {
   const { role, userName, userTeam, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isSolicitante = role === "solicitante";
-  const menu = isSolicitante ? solicitanteMenu : fornecedorMenu;
-  const sidebarBg = isSolicitante ? "bg-sidebar-sol-bg" : "bg-sidebar-forn-bg";
-  const sidebarText = isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
+  const isControle = role === "controle";
+  const menu = isControle ? controleMenu : isSolicitante ? solicitanteMenu : fornecedorMenu;
+  const sidebarBg = isControle ? "bg-sidebar-sol-bg" : isSolicitante ? "bg-sidebar-sol-bg" : "bg-sidebar-forn-bg";
+  const sidebarText = isControle ? "text-sidebar-sol-fg" : isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
 
   const currentTitle = menu.find(m => location.pathname.startsWith(m.path))?.label || "VMO";
 
