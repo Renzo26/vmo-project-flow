@@ -69,4 +69,5 @@ export const statusColors: Record<ProjectStatus, string> = {
 export const mockUsers = {
   solicitante: { name: "Carlos Mendes", email: "solicitante@vmo.com", team: "Equipe Digital" },
   fornecedor: { name: "TechSoft Soluções", email: "fornecedor@vmo.com", team: "Fornecedor A" },
+  controle: { name: "Juliana Costa", email: "controle@vmo.com", team: "Controle Econômico" },
 };
