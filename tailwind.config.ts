@@ -76,6 +76,10 @@ export default {
           bg: "hsl(var(--sidebar-forn-bg))",
           fg: "hsl(var(--sidebar-forn-fg))",
         },
+        "sidebar-ctrl": {
+          bg: "hsl(var(--sidebar-ctrl-bg))",
+          fg: "hsl(var(--sidebar-ctrl-fg))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

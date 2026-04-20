@@ -35,8 +35,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const isSolicitante = role === "solicitante";
   const isControle = role === "controle";
   const menu = isControle ? controleMenu : isSolicitante ? solicitanteMenu : fornecedorMenu;
-  const sidebarBg = isControle ? "bg-sidebar-sol-bg" : isSolicitante ? "bg-sidebar-sol-bg" : "bg-sidebar-forn-bg";
-  const sidebarText = isControle ? "text-sidebar-sol-fg" : isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
+  const sidebarBg = isControle ? "bg-sidebar-ctrl-bg" : isSolicitante ? "bg-sidebar-sol-bg" : "bg-sidebar-forn-bg";
+  const sidebarText = isControle ? "text-sidebar-ctrl-fg" : isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
+  const sidebarWidth = isControle ? "w-[230px]" : "w-[200px]";
 
   const currentTitle = menu.find(m => location.pathname.startsWith(m.path))?.label || "VMO";
 
@@ -48,7 +49,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className={`w-[200px] min-h-screen flex flex-col ${sidebarBg} ${sidebarText} shrink-0`}>
+      <aside className={`${sidebarWidth} min-h-screen flex flex-col ${sidebarBg} ${sidebarText} shrink-0`}>
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs font-bold">VMO</div>
@@ -63,12 +64,12 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               <button
                 key={item.label}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
                   active ? "bg-white/15 font-medium" : "hover:bg-white/10 opacity-80"
                 }`}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="leading-tight">{item.label}</span>
               </button>
             );
           })}
