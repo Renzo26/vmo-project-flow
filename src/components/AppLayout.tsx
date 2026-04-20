@@ -14,6 +14,7 @@ const solicitanteMenu = [
 ];
 
 const fornecedorMenu = [
+  { label: "Dashboard", path: "/fornecedor/dashboard", icon: LayoutDashboard },
   { label: "Meus Projetos", path: "/fornecedor/projetos", icon: FolderKanban },
   { label: "Responder Pedido", path: "/fornecedor/projetos", icon: MessageSquareReply },
   { label: "Histórico", path: "/fornecedor/projetos", icon: History },
