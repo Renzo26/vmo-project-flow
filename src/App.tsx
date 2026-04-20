@@ -17,6 +17,7 @@ import FornecedorProjectDetail from "./pages/FornecedorProjectDetail";
 import ControleScorecard from "./pages/controle/ControleScorecard";
 import ControleContratos from "./pages/controle/ControleContratos";
 import ControleAPF from "./pages/controle/ControleAPF";
+import ControleDashboard from "./pages/controle/ControleDashboard";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -39,7 +40,7 @@ const App = () => (
             <Route path="/fornecedor/projetos" element={<AppLayout><FornecedorProjects /></AppLayout>} />
             <Route path="/fornecedor/dashboard" element={<AppLayout><FornecedorDashboard /></AppLayout>} />
             <Route path="/fornecedor/projeto/:id" element={<AppLayout><FornecedorProjectDetail /></AppLayout>} />
-            <Route path="/controle/dashboard" element={<AppLayout><SolicitanteDashboard /></AppLayout>} />
+            <Route path="/controle/dashboard" element={<AppLayout><ControleDashboard /></AppLayout>} />
             <Route path="/controle/scorecard" element={<AppLayout><ControleScorecard /></AppLayout>} />
             <Route path="/controle/contratos" element={<AppLayout><ControleContratos /></AppLayout>} />
             <Route path="/controle/apf" element={<AppLayout><ControleAPF /></AppLayout>} />
