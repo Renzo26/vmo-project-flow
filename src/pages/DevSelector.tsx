@@ -45,9 +45,9 @@ const DevSelector = () => {
           </button>
           <button
             onClick={() => select("controle")}
-            className="group bg-card border border-border rounded-xl p-8 text-center hover:border-primary hover:shadow-lg transition-all duration-200"
+            className="group bg-card border border-border rounded-xl p-8 text-center hover:border-ctrl hover:shadow-lg transition-all duration-200"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-ctrl/10 text-ctrl mb-4 group-hover:bg-ctrl group-hover:text-ctrl-foreground transition-colors">
               <BarChart3 className="h-8 w-8" />
             </div>
             <h2 className="text-lg font-semibold text-foreground">Controle Econômico</h2>
