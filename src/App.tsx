@@ -11,6 +11,7 @@ import SolicitanteDashboard from "./pages/SolicitanteDashboard";
 import Configuracoes from "./pages/Configuracoes";
 import NovaAnalise from "./pages/NovaAnalise";
 import FornecedorProjects from "./pages/FornecedorProjects";
+import FornecedorDashboard from "./pages/FornecedorDashboard";
 import SolicitanteProjectDetail from "./pages/SolicitanteProjectDetail";
 import FornecedorProjectDetail from "./pages/FornecedorProjectDetail";
 import ControleScorecard from "./pages/controle/ControleScorecard";
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/solicitante/nova-analise" element={<AppLayout><NovaAnalise /></AppLayout>} />
             <Route path="/solicitante/projeto/:id" element={<AppLayout><SolicitanteProjectDetail /></AppLayout>} />
             <Route path="/fornecedor/projetos" element={<AppLayout><FornecedorProjects /></AppLayout>} />
+            <Route path="/fornecedor/dashboard" element={<AppLayout><FornecedorDashboard /></AppLayout>} />
             <Route path="/fornecedor/projeto/:id" element={<AppLayout><FornecedorProjectDetail /></AppLayout>} />
             <Route path="/controle/dashboard" element={<AppLayout><SolicitanteDashboard /></AppLayout>} />
             <Route path="/controle/scorecard" element={<AppLayout><ControleScorecard /></AppLayout>} />
