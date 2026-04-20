@@ -80,6 +80,10 @@ export default {
           bg: "hsl(var(--sidebar-ctrl-bg))",
           fg: "hsl(var(--sidebar-ctrl-fg))",
         },
+        ctrl: {
+          DEFAULT: "hsl(var(--ctrl))",
+          foreground: "hsl(var(--ctrl-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
