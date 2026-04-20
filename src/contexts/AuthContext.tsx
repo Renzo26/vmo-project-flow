@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-type UserRole = "solicitante" | "fornecedor" | null;
+type UserRole = "solicitante" | "fornecedor" | "controle" | null;
 
 interface AuthContextType {
   role: UserRole;

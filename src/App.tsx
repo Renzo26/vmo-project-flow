@@ -13,6 +13,9 @@ import NovaAnalise from "./pages/NovaAnalise";
 import FornecedorProjects from "./pages/FornecedorProjects";
 import SolicitanteProjectDetail from "./pages/SolicitanteProjectDetail";
 import FornecedorProjectDetail from "./pages/FornecedorProjectDetail";
+import ControleScorecard from "./pages/controle/ControleScorecard";
+import ControleContratos from "./pages/controle/ControleContratos";
+import ControleAPF from "./pages/controle/ControleAPF";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -30,11 +33,15 @@ const App = () => (
             <Route path="/dev" element={<DevSelector />} />
             <Route path="/solicitante/projetos" element={<AppLayout><SolicitanteProjects /></AppLayout>} />
             <Route path="/solicitante/dashboard" element={<AppLayout><SolicitanteDashboard /></AppLayout>} />
-            <Route path="/solicitante/configuracoes" element={<AppLayout><Configuracoes /></AppLayout>} />
             <Route path="/solicitante/nova-analise" element={<AppLayout><NovaAnalise /></AppLayout>} />
             <Route path="/solicitante/projeto/:id" element={<AppLayout><SolicitanteProjectDetail /></AppLayout>} />
             <Route path="/fornecedor/projetos" element={<AppLayout><FornecedorProjects /></AppLayout>} />
             <Route path="/fornecedor/projeto/:id" element={<AppLayout><FornecedorProjectDetail /></AppLayout>} />
+            <Route path="/controle/dashboard" element={<AppLayout><SolicitanteDashboard /></AppLayout>} />
+            <Route path="/controle/scorecard" element={<AppLayout><ControleScorecard /></AppLayout>} />
+            <Route path="/controle/contratos" element={<AppLayout><ControleContratos /></AppLayout>} />
+            <Route path="/controle/apf" element={<AppLayout><ControleAPF /></AppLayout>} />
+            <Route path="/controle/configuracoes" element={<AppLayout><Configuracoes /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
