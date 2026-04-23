@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
-const steps = ["Configuração", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
+const steps = ["Identificação", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
 
 const serviceTypes = [
   { id: "analise", label: "Análise e Levantamento", code: "ANA", icon: Search, badge: null },
@@ -58,13 +58,39 @@ const methodologies = ["Ágil", "Waterfall", "Híbrida", "Kanban", "Outro"];
 
 const initiativeTypes = ["Correção", "Estratégico", "Área", "Melhoria", "Inovação", "Regulatória"];
 
+const priorityOptions = ["Baixa", "Normal", "Alta", "Crítica"];
+const projectCategories = ["Estratégico", "De área / departamento", "Legal / Compliance", "Infraestrutura", "Melhoria operacional"];
+const complexityLevels = ["Baixa", "Média", "Alta"];
+const environmentOptions = ["Produção", "Homologação", "Desenvolvimento", "Múltiplos ambientes"];
+const contractModalities = ["Ponto de Função (PF)", "Hora trabalhada (H/H)", "Escopo fechado", "Sprint / iteração", "Mensalidade (alocação)"];
+const enabledSuppliers = ["Selecionar automaticamente por tipo de serviço", "TechSoft Ltda", "DevBrasil S.A.", "InfoSystems ME", "Soluções Corp"];
+
 const NovaAnalise = () => {
   const [step, setStep] = useState(0);
 
-  // Step 0 — Configuração inicial
-  const [projectCode, setProjectCode] = useState("");
-  const [costCenter, setCostCenter] = useState("");
-  const [responsible, setResponsible] = useState("");
+  // Step 0 — Identificação (Bloco 1, 2, 3)
+  // Bloco 1 — Identificação da solicitação
+  const [projectTitle, setProjectTitle] = useState("");
+  const requestNumber = "VMO-2024-043";
+  const [requestArea, setRequestArea] = useState("");
+  const [requestResponsible, setRequestResponsible] = useState("Carlos Mendes");
+  const requestDate = new Date().toLocaleDateString("pt-BR");
+  const [priority, setPriority] = useState("Normal");
+  const [projectCategory, setProjectCategory] = useState("");
+
+  // Bloco 2 — Escopo e detalhamento
+  const [scopeDescription, setScopeDescription] = useState("");
+  const [impactedSystems, setImpactedSystems] = useState("");
+  const [expectedDeliverables, setExpectedDeliverables] = useState("");
+  const [complexity, setComplexity] = useState("Média");
+  const [environment, setEnvironment] = useState("Produção");
+
+  // Bloco 3 — Fornecedor e prazo
+  const [deliveryDeadline, setDeliveryDeadline] = useState("");
+  const [supplierResponseDeadline, setSupplierResponseDeadline] = useState("");
+  const [contractModality, setContractModality] = useState("Ponto de Função (PF)");
+  const [enabledSupplier, setEnabledSupplier] = useState("Selecionar automaticamente por tipo de serviço");
+  const [supplierObservations, setSupplierObservations] = useState("");
 
   const [serviceType, setServiceType] = useState("");
   const [subtype, setSubtype] = useState("");
@@ -91,7 +117,7 @@ const NovaAnalise = () => {
   };
 
   const canAdvance = () => {
-    if (step === 0) return projectCode.trim() && costCenter.trim() && responsible.trim();
+    if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory && deliveryDeadline;
     if (step === 1) {
       if (!serviceType || !methodology) return false;
       if ((serviceType === "dev" || serviceType === "pmo") && (!subtype || !seniority)) return false;
