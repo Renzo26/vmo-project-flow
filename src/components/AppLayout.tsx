@@ -50,7 +50,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className={`${sidebarWidth} min-h-screen flex flex-col ${sidebarBg} ${sidebarText} shrink-0`}>
+      <aside className={`${sidebarWidth} h-screen sticky top-0 flex flex-col ${sidebarBg} ${sidebarText} shrink-0`}>
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs font-bold">VMO</div>
@@ -58,7 +58,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {menu.map(item => {
             const active = location.pathname === item.path;
             return (
