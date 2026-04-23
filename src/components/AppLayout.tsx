@@ -120,7 +120,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-none">
           {menu.map((m, idx) => {
             if (isSection(m)) {
               return (
