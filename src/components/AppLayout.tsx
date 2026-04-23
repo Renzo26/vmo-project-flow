@@ -58,7 +58,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="p-3 space-y-1 overflow-y-auto">
           {menu.map(item => {
             const active = location.pathname === item.path;
             return (
@@ -76,7 +76,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/10">
+        <div className="mt-4 p-3 border-t border-white/10">
           <div className="px-3 py-2">
             <p className="text-xs font-medium truncate">{userName}</p>
             <p className="text-xs opacity-60 truncate">{userTeam}</p>
