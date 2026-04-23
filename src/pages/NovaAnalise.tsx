@@ -120,7 +120,8 @@ const NovaAnalise = () => {
     if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory && deliveryDeadline;
     if (step === 1) {
       if (!serviceType || !methodology) return false;
-      if ((serviceType === "dev" || serviceType === "pmo") && (!subtype || !seniority)) return false;
+      if ((serviceType === "dev" || serviceType === "pmo") && !subtype) return false;
+      if (subtype.startsWith("Alocação de Recurso Especialista") && !seniority) return false;
       return true;
     }
     return true;
@@ -346,22 +347,24 @@ const NovaAnalise = () => {
                     </button>
                   ))}
                 </div>
-                <div>
-                  <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
-                  <div className="flex gap-2">
-                    {seniorityLevels.map(l => (
-                      <button
-                        key={l}
-                        onClick={() => setSeniority(l)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
-                      >
-                        {l}
-                      </button>
-                    ))}
+                {subtype.startsWith("Alocação de Recurso Especialista") && (
+                  <div>
+                    <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
+                    <div className="flex gap-2">
+                      {seniorityLevels.map(l => (
+                        <button
+                          key={l}
+                          onClick={() => setSeniority(l)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -385,22 +388,24 @@ const NovaAnalise = () => {
                     </button>
                   ))}
                 </div>
-                <div>
-                  <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
-                  <div className="flex gap-2">
-                    {seniorityLevels.map(l => (
-                      <button
-                        key={l}
-                        onClick={() => setSeniority(l)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
-                      >
-                        {l}
-                      </button>
-                    ))}
+                {subtype.startsWith("Alocação de Recurso Especialista") && (
+                  <div>
+                    <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
+                    <div className="flex gap-2">
+                      {seniorityLevels.map(l => (
+                        <button
+                          key={l}
+                          onClick={() => setSeniority(l)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
