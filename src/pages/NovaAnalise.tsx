@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
-const steps = ["Configuração", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
+const steps = ["Identificação", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
 
 const serviceTypes = [
   { id: "analise", label: "Análise e Levantamento", code: "ANA", icon: Search, badge: null },
@@ -58,13 +58,39 @@ const methodologies = ["Ágil", "Waterfall", "Híbrida", "Kanban", "Outro"];
 
 const initiativeTypes = ["Correção", "Estratégico", "Área", "Melhoria", "Inovação", "Regulatória"];
 
+const priorityOptions = ["Baixa", "Normal", "Alta", "Crítica"];
+const projectCategories = ["Estratégico", "De área / departamento", "Legal / Compliance", "Infraestrutura", "Melhoria operacional"];
+const complexityLevels = ["Baixa", "Média", "Alta"];
+const environmentOptions = ["Produção", "Homologação", "Desenvolvimento", "Múltiplos ambientes"];
+const contractModalities = ["Ponto de Função (PF)", "Hora trabalhada (H/H)", "Escopo fechado", "Sprint / iteração", "Mensalidade (alocação)"];
+const enabledSuppliers = ["Selecionar automaticamente por tipo de serviço", "TechSoft Ltda", "DevBrasil S.A.", "InfoSystems ME", "Soluções Corp"];
+
 const NovaAnalise = () => {
   const [step, setStep] = useState(0);
 
-  // Step 0 — Configuração inicial
-  const [projectCode, setProjectCode] = useState("");
-  const [costCenter, setCostCenter] = useState("");
-  const [responsible, setResponsible] = useState("");
+  // Step 0 — Identificação (Bloco 1, 2, 3)
+  // Bloco 1 — Identificação da solicitação
+  const [projectTitle, setProjectTitle] = useState("");
+  const requestNumber = "VMO-2024-043";
+  const [requestArea, setRequestArea] = useState("");
+  const [requestResponsible, setRequestResponsible] = useState("Carlos Mendes");
+  const requestDate = new Date().toLocaleDateString("pt-BR");
+  const [priority, setPriority] = useState("Normal");
+  const [projectCategory, setProjectCategory] = useState("");
+
+  // Bloco 2 — Escopo e detalhamento
+  const [scopeDescription, setScopeDescription] = useState("");
+  const [impactedSystems, setImpactedSystems] = useState("");
+  const [expectedDeliverables, setExpectedDeliverables] = useState("");
+  const [complexity, setComplexity] = useState("Média");
+  const [environment, setEnvironment] = useState("Produção");
+
+  // Bloco 3 — Fornecedor e prazo
+  const [deliveryDeadline, setDeliveryDeadline] = useState("");
+  const [supplierResponseDeadline, setSupplierResponseDeadline] = useState("");
+  const [contractModality, setContractModality] = useState("Ponto de Função (PF)");
+  const [enabledSupplier, setEnabledSupplier] = useState("Selecionar automaticamente por tipo de serviço");
+  const [supplierObservations, setSupplierObservations] = useState("");
 
   const [serviceType, setServiceType] = useState("");
   const [subtype, setSubtype] = useState("");
@@ -91,7 +117,7 @@ const NovaAnalise = () => {
   };
 
   const canAdvance = () => {
-    if (step === 0) return projectCode.trim() && costCenter.trim() && responsible.trim();
+    if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory && deliveryDeadline;
     if (step === 1) {
       if (!serviceType || !methodology) return false;
       if ((serviceType === "dev" || serviceType === "pmo") && (!subtype || !seniority)) return false;
@@ -122,49 +148,154 @@ const NovaAnalise = () => {
       <div className="bg-card rounded-xl border border-border p-6">
         {/* Step 0 — Configuração */}
         {step === 0 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Configuração inicial</h2>
-              <p className="text-sm text-muted-foreground mt-1">Identificação e responsáveis pelo projeto</p>
-            </div>
+          <div className="space-y-8">
+            {/* Bloco 1 — Identificação da solicitação */}
+            <section className="space-y-4">
+              <div className="border-b border-border pb-2">
+                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Bloco 1 — Identificação da solicitação</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <Label>Título do projeto *</Label>
+                  <Input value={projectTitle} onChange={e => setProjectTitle(e.target.value)} placeholder="Ex: Sistema de controle de estoque mobile" className="mt-1" />
+                </div>
+                <div>
+                  <Label>Número da solicitação</Label>
+                  <Input value={requestNumber} disabled className="mt-1 bg-muted/50" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Gerado automaticamente pelo sistema</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Área solicitante *</Label>
+                  <Input value={requestArea} onChange={e => setRequestArea(e.target.value)} placeholder="Ex: Logística e Operações" className="mt-1" />
+                </div>
+                <div>
+                  <Label>Solicitante responsável *</Label>
+                  <Input value={requestResponsible} onChange={e => setRequestResponsible(e.target.value)} className="mt-1" />
+                </div>
+                <div>
+                  <Label>Data da solicitação</Label>
+                  <Input value={requestDate} disabled className="mt-1 bg-muted/50" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Preenchida automaticamente</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Prioridade *</Label>
+                  <select
+                    value={priority}
+                    onChange={e => setPriority(e.target.value)}
+                    className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {priorityOptions.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label>Categoria do projeto *</Label>
+                  <select
+                    value={projectCategory}
+                    onChange={e => setProjectCategory(e.target.value)}
+                    className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Selecione...</option>
+                    {projectCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground mt-1">Alimenta o scorecard de fornecedores e os gráficos do Controle Econômico</p>
+                </div>
+              </div>
+            </section>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Código do projeto *</Label>
-                <Input
-                  value={projectCode}
-                  onChange={e => setProjectCode(e.target.value)}
-                  placeholder="Ex: PRJ-2024-001"
-                  className="mt-1"
-                />
+            {/* Bloco 2 — Escopo e detalhamento */}
+            <section className="space-y-4">
+              <div className="border-b border-border pb-2">
+                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Bloco 2 — Escopo e detalhamento</h3>
               </div>
               <div>
-                <Label>Centro de custo *</Label>
-                <Input
-                  value={costCenter}
-                  onChange={e => setCostCenter(e.target.value)}
-                  placeholder="Ex: CC-1042"
-                  className="mt-1"
+                <Label>Descrição / escopo do serviço *</Label>
+                <Textarea
+                  value={scopeDescription}
+                  onChange={e => setScopeDescription(e.target.value)}
+                  placeholder="Descreva os objetivos, sistemas impactados e entregáveis esperados..."
+                  className="mt-1 min-h-[100px]"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">A planilha de escopo detalhado deverá ser anexada ao final deste formulário</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Sistemas impactados / integrações</Label>
+                  <Input value={impactedSystems} onChange={e => setImpactedSystems(e.target.value)} placeholder="Ex: ERP Totvs, CRM Salesforce, Portal RH" className="mt-1" />
+                </div>
+                <div>
+                  <Label>Entregáveis esperados</Label>
+                  <Input value={expectedDeliverables} onChange={e => setExpectedDeliverables(e.target.value)} placeholder="Ex: Código-fonte, documentação técnica, treinamento" className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Nível de complexidade</Label>
+                  <select value={complexity} onChange={e => setComplexity(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {complexityLevels.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label>Ambiente</Label>
+                  <select value={environment} onChange={e => setEnvironment(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {environmentOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label>Anexar planilha de escopo</Label>
+                  <Input type="file" className="mt-1" />
+                </div>
+              </div>
+            </section>
+
+            {/* Bloco 3 — Fornecedor e prazo */}
+            <section className="space-y-4">
+              <div className="border-b border-border pb-2">
+                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Bloco 3 — Fornecedor e prazo</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Prazo desejado de entrega *</Label>
+                  <Input type="date" value={deliveryDeadline} onChange={e => setDeliveryDeadline(e.target.value)} className="mt-1" />
+                </div>
+                <div>
+                  <Label>Prazo para resposta dos fornecedores</Label>
+                  <Input type="date" value={supplierResponseDeadline} onChange={e => setSupplierResponseDeadline(e.target.value)} className="mt-1" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Padrão: 5 dias úteis configurado pelo sistema</p>
+                </div>
+                <div>
+                  <Label>Modalidade de contratação</Label>
+                  <select value={contractModality} onChange={e => setContractModality(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {contractModalities.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Fornecedores habilitados</Label>
+                  <select value={enabledSupplier} onChange={e => setEnabledSupplier(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {enabledSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground mt-1">O sistema filtra automaticamente os fornecedores cadastrados para a categoria selecionada</p>
+                </div>
+                <div>
+                  <Label>Outros documentos</Label>
+                  <Input type="file" className="mt-1" />
+                </div>
+              </div>
+              <div>
+                <Label>Observações para o fornecedor</Label>
+                <Textarea
+                  value={supplierObservations}
+                  onChange={e => setSupplierObservations(e.target.value)}
+                  placeholder="Informações adicionais, restrições técnicas, preferências de tecnologia..."
+                  className="mt-1 min-h-[80px]"
                 />
               </div>
-            </div>
-
-            <div>
-              <Label>Responsável pelo projeto *</Label>
-              <Input
-                value={responsible}
-                onChange={e => setResponsible(e.target.value)}
-                placeholder="Nome do responsável"
-                className="mt-1"
-              />
-            </div>
-
-            <div className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <FileCode className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <p className="text-xs text-foreground">
-                Cada tipo de serviço possui um código próprio que será associado ao centro de custo informado.
-              </p>
-            </div>
+            </section>
           </div>
         )}
 
@@ -402,9 +533,11 @@ const NovaAnalise = () => {
             </div>
             <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-1">
               <h4 className="font-semibold text-foreground mb-2">Resumo do pedido</h4>
-              <p><span className="text-muted-foreground">Código projeto:</span> {projectCode || "—"}</p>
-              <p><span className="text-muted-foreground">Centro de custo:</span> {costCenter || "—"}</p>
-              <p><span className="text-muted-foreground">Responsável:</span> {responsible || "—"}</p>
+              <p><span className="text-muted-foreground">Título do projeto:</span> {projectTitle || "—"}</p>
+              <p><span className="text-muted-foreground">Número da solicitação:</span> {requestNumber}</p>
+              <p><span className="text-muted-foreground">Área solicitante:</span> {requestArea || "—"}</p>
+              <p><span className="text-muted-foreground">Solicitante:</span> {requestResponsible || "—"}</p>
+              <p><span className="text-muted-foreground">Prioridade:</span> {priority} · <span className="text-muted-foreground">Categoria:</span> {projectCategory || "—"}</p>
               <p><span className="text-muted-foreground">Serviço:</span> {selectedService ? `${selectedService.code} · ${selectedService.label}` : "—"}</p>
               {subtype && <p><span className="text-muted-foreground">Subtipo:</span> {subtype}{seniority ? ` · ${seniority}` : ""}</p>}
               <p><span className="text-muted-foreground">Metodologia:</span> {methodology || "—"}</p>
