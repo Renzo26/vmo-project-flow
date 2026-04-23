@@ -40,7 +40,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const sidebarText = isControle ? "text-sidebar-ctrl-fg" : isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
   const sidebarWidth = isControle ? "w-[230px]" : "w-[200px]";
 
-  const currentTitle = menu.find(m => location.pathname.startsWith(m.path))?.label || "VMO";
+  const currentTitle = menu.find(m => location.pathname.startsWith(m.path))?.label || "Braesp";
 
   const handleLogout = () => {
     logout();
@@ -53,8 +53,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       <aside className={`${sidebarWidth} h-screen sticky top-0 flex flex-col ${sidebarBg} ${sidebarText} shrink-0`}>
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs font-bold">VMO</div>
-            <span className="font-semibold text-sm">VMO</span>
+            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-[10px] font-bold leading-none">BR</div>
+            <div className="flex flex-col leading-tight">
+              <span className="font-semibold text-sm">BRAESP</span>
+              <span className="text-[10px] opacity-70">Suprimentos TI</span>
+            </div>
           </div>
         </div>
 
