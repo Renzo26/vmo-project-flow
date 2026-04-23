@@ -347,22 +347,24 @@ const NovaAnalise = () => {
                     </button>
                   ))}
                 </div>
-                <div>
-                  <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
-                  <div className="flex gap-2">
-                    {seniorityLevels.map(l => (
-                      <button
-                        key={l}
-                        onClick={() => setSeniority(l)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
-                      >
-                        {l}
-                      </button>
-                    ))}
+                {subtype.startsWith("Alocação de Recurso Especialista") && (
+                  <div>
+                    <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
+                    <div className="flex gap-2">
+                      {seniorityLevels.map(l => (
+                        <button
+                          key={l}
+                          onClick={() => setSeniority(l)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -386,22 +388,24 @@ const NovaAnalise = () => {
                     </button>
                   ))}
                 </div>
-                <div>
-                  <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
-                  <div className="flex gap-2">
-                    {seniorityLevels.map(l => (
-                      <button
-                        key={l}
-                        onClick={() => setSeniority(l)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
-                      >
-                        {l}
-                      </button>
-                    ))}
+                {subtype.startsWith("Alocação de Recurso Especialista") && (
+                  <div>
+                    <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
+                    <div className="flex gap-2">
+                      {seniorityLevels.map(l => (
+                        <button
+                          key={l}
+                          onClick={() => setSeniority(l)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
