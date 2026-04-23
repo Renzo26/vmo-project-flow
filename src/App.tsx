@@ -18,6 +18,17 @@ import ControleScorecard from "./pages/controle/ControleScorecard";
 import ControleContratos from "./pages/controle/ControleContratos";
 import ControleAPF from "./pages/controle/ControleAPF";
 import ControleDashboard from "./pages/controle/ControleDashboard";
+import SolicitacoesRecebidas from "./pages/controle/SolicitacoesRecebidas";
+import SolicitacoesAnaliseAPF from "./pages/controle/SolicitacoesAnaliseAPF";
+import AcompanharProjetos from "./pages/controle/AcompanharProjetos";
+import APFNovaContagem from "./pages/controle/APFNovaContagem";
+import APFHistorico from "./pages/controle/APFHistorico";
+import FornecedoresBase from "./pages/controle/FornecedoresBase";
+import FornecedoresNovo from "./pages/controle/FornecedoresNovo";
+import FornecedoresHomologacao from "./pages/controle/FornecedoresHomologacao";
+import FornecedoresDocumentos from "./pages/controle/FornecedoresDocumentos";
+import ContratosAtivos from "./pages/controle/ContratosAtivos";
+import ContratosTabelaPF from "./pages/controle/ContratosTabelaPF";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -41,7 +52,18 @@ const App = () => (
             <Route path="/fornecedor/dashboard" element={<AppLayout><FornecedorDashboard /></AppLayout>} />
             <Route path="/fornecedor/projeto/:id" element={<AppLayout><FornecedorProjectDetail /></AppLayout>} />
             <Route path="/controle/dashboard" element={<AppLayout><ControleDashboard /></AppLayout>} />
+            <Route path="/controle/solicitacoes/recebidas" element={<AppLayout><SolicitacoesRecebidas /></AppLayout>} />
+            <Route path="/controle/solicitacoes/analise-apf" element={<AppLayout><SolicitacoesAnaliseAPF /></AppLayout>} />
+            <Route path="/controle/solicitacoes/acompanhar" element={<AppLayout><AcompanharProjetos /></AppLayout>} />
+            <Route path="/controle/apf/nova-contagem" element={<AppLayout><APFNovaContagem /></AppLayout>} />
+            <Route path="/controle/apf/historico" element={<AppLayout><APFHistorico /></AppLayout>} />
+            <Route path="/controle/fornecedores/base" element={<AppLayout><FornecedoresBase /></AppLayout>} />
+            <Route path="/controle/fornecedores/novo" element={<AppLayout><FornecedoresNovo /></AppLayout>} />
+            <Route path="/controle/fornecedores/homologacao" element={<AppLayout><FornecedoresHomologacao /></AppLayout>} />
+            <Route path="/controle/fornecedores/documentos" element={<AppLayout><FornecedoresDocumentos /></AppLayout>} />
             <Route path="/controle/scorecard" element={<AppLayout><ControleScorecard /></AppLayout>} />
+            <Route path="/controle/contratos/ativos" element={<AppLayout><ContratosAtivos /></AppLayout>} />
+            <Route path="/controle/contratos/tabela-pf" element={<AppLayout><ContratosTabelaPF /></AppLayout>} />
             <Route path="/controle/contratos" element={<AppLayout><ControleContratos /></AppLayout>} />
             <Route path="/controle/apf" element={<AppLayout><ControleAPF /></AppLayout>} />
             <Route path="/controle/configuracoes" element={<AppLayout><Configuracoes /></AppLayout>} />

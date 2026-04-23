@@ -1,11 +1,21 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply, BarChart3, Award, FileText, SlidersHorizontal } from "lucide-react";
+import {
+  LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply,
+  Award, FileText, SlidersHorizontal, Inbox, Calculator, ClipboardList, Building2, UserPlus,
+  ShieldCheck, FileCheck2, FileSignature, Table, Calculator as CalcIcon, Briefcase
+} from "lucide-react";
 
 interface AppLayoutProps {
   children: ReactNode;
 }
+
+type MenuItem = { label: string; path: string; icon: typeof LayoutDashboard };
+type MenuSection = { section: string; items: MenuItem[] };
+type MenuGroup = MenuItem | MenuSection;
+
+const isSection = (m: MenuGroup): m is MenuSection => "section" in m;
 
 const solicitanteMenu = [
   { label: "Dashboard", path: "/solicitante/dashboard", icon: LayoutDashboard },
@@ -20,11 +30,41 @@ const fornecedorMenu = [
   { label: "Histórico", path: "/fornecedor/projetos", icon: History },
 ];
 
-const controleMenu = [
+const controleMenu: MenuGroup[] = [
   { label: "Dashboard", path: "/controle/dashboard", icon: LayoutDashboard },
-  { label: "Scorecard Fornecedores", path: "/controle/scorecard", icon: Award },
-  { label: "Contratos e Preços", path: "/controle/contratos", icon: FileText },
-  { label: "Config APF", path: "/controle/apf", icon: SlidersHorizontal },
+  {
+    section: "Solicitações",
+    items: [
+      { label: "Solicitações recebidas", path: "/controle/solicitacoes/recebidas", icon: Inbox },
+      { label: "Em análise APF", path: "/controle/solicitacoes/analise-apf", icon: Calculator },
+      { label: "Acompanhar Projetos", path: "/controle/solicitacoes/acompanhar", icon: ClipboardList },
+    ],
+  },
+  {
+    section: "APF",
+    items: [
+      { label: "Configurar APF", path: "/controle/apf", icon: SlidersHorizontal },
+      { label: "Nova contagem", path: "/controle/apf/nova-contagem", icon: PlusCircle },
+      { label: "Histórico de contagens", path: "/controle/apf/historico", icon: History },
+    ],
+  },
+  {
+    section: "Fornecedores",
+    items: [
+      { label: "Base de fornecedores", path: "/controle/fornecedores/base", icon: Building2 },
+      { label: "Novo cadastro", path: "/controle/fornecedores/novo", icon: UserPlus },
+      { label: "Homologação", path: "/controle/fornecedores/homologacao", icon: ShieldCheck },
+      { label: "Documentos e certidões", path: "/controle/fornecedores/documentos", icon: FileCheck2 },
+      { label: "Scorecard", path: "/controle/scorecard", icon: Award },
+    ],
+  },
+  {
+    section: "Contratos",
+    items: [
+      { label: "Contratos ativos", path: "/controle/contratos/ativos", icon: FileSignature },
+      { label: "Tabela R$/PF", path: "/controle/contratos/tabela-pf", icon: Table },
+    ],
+  },
   { label: "Configuração de Usuário", path: "/controle/configuracoes", icon: Settings },
 ];
 
@@ -35,12 +75,31 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const isSolicitante = role === "solicitante";
   const isControle = role === "controle";
-  const menu = isControle ? controleMenu : isSolicitante ? solicitanteMenu : fornecedorMenu;
+  const menu: MenuGroup[] = isControle ? controleMenu : isSolicitante ? solicitanteMenu : fornecedorMenu;
   const sidebarBg = isControle ? "bg-sidebar-ctrl-bg" : isSolicitante ? "bg-sidebar-sol-bg" : "bg-sidebar-forn-bg";
   const sidebarText = isControle ? "text-sidebar-ctrl-fg" : isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
-  const sidebarWidth = isControle ? "w-[230px]" : "w-[200px]";
+  const sidebarWidth = isControle ? "w-[240px]" : "w-[200px]";
 
-  const currentTitle = menu.find(m => location.pathname.startsWith(m.path))?.label || "Braesp";
+  const flatItems: MenuItem[] = menu.flatMap(m => isSection(m) ? m.items : [m]);
+  const currentTitle = flatItems.find(m => location.pathname === m.path)?.label
+    || flatItems.find(m => location.pathname.startsWith(m.path))?.label
+    || "Braesp";
+
+  const renderItem = (item: MenuItem) => {
+    const active = location.pathname === item.path;
+    return (
+      <button
+        key={item.label + item.path}
+        onClick={() => navigate(item.path)}
+        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
+          active ? "bg-white/15 font-medium" : "hover:bg-white/10 opacity-80"
+        }`}
+      >
+        <item.icon className="h-4 w-4 shrink-0" />
+        <span className="leading-tight">{item.label}</span>
+      </button>
+    );
+  };
 
   const handleLogout = () => {
     logout();
@@ -62,20 +121,18 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {menu.map(item => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
-                  active ? "bg-white/15 font-medium" : "hover:bg-white/10 opacity-80"
-                }`}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span className="leading-tight">{item.label}</span>
-              </button>
-            );
+          {menu.map((m, idx) => {
+            if (isSection(m)) {
+              return (
+                <div key={m.section} className={idx === 0 ? "" : "pt-3"}>
+                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider opacity-50">
+                    {m.section}
+                  </p>
+                  <div className="space-y-1">{m.items.map(renderItem)}</div>
+                </div>
+              );
+            }
+            return renderItem(m);
           })}
         </nav>
 
