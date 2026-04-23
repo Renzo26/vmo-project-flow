@@ -36,10 +36,10 @@ const LoginPage = () => {
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-            <span className="text-2xl font-bold text-primary-foreground">VMO</span>
+            <span className="text-lg font-bold text-primary-foreground">BR</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">VMO</h1>
-          <p className="text-muted-foreground mt-1">Gestão de Contratos de TI</p>
+          <h1 className="text-2xl font-bold text-foreground">BRAESP</h1>
+          <p className="text-muted-foreground mt-1">Suprimentos TI</p>
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-sm p-6">
