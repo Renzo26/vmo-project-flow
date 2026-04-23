@@ -533,9 +533,11 @@ const NovaAnalise = () => {
             </div>
             <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-1">
               <h4 className="font-semibold text-foreground mb-2">Resumo do pedido</h4>
-              <p><span className="text-muted-foreground">Código projeto:</span> {projectCode || "—"}</p>
-              <p><span className="text-muted-foreground">Centro de custo:</span> {costCenter || "—"}</p>
-              <p><span className="text-muted-foreground">Responsável:</span> {responsible || "—"}</p>
+              <p><span className="text-muted-foreground">Título do projeto:</span> {projectTitle || "—"}</p>
+              <p><span className="text-muted-foreground">Número da solicitação:</span> {requestNumber}</p>
+              <p><span className="text-muted-foreground">Área solicitante:</span> {requestArea || "—"}</p>
+              <p><span className="text-muted-foreground">Solicitante:</span> {requestResponsible || "—"}</p>
+              <p><span className="text-muted-foreground">Prioridade:</span> {priority} · <span className="text-muted-foreground">Categoria:</span> {projectCategory || "—"}</p>
               <p><span className="text-muted-foreground">Serviço:</span> {selectedService ? `${selectedService.code} · ${selectedService.label}` : "—"}</p>
               {subtype && <p><span className="text-muted-foreground">Subtipo:</span> {subtype}{seniority ? ` · ${seniority}` : ""}</p>}
               <p><span className="text-muted-foreground">Metodologia:</span> {methodology || "—"}</p>
