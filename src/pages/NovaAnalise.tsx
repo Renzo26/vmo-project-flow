@@ -120,7 +120,8 @@ const NovaAnalise = () => {
     if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory && deliveryDeadline;
     if (step === 1) {
       if (!serviceType || !methodology) return false;
-      if ((serviceType === "dev" || serviceType === "pmo") && (!subtype || !seniority)) return false;
+      if ((serviceType === "dev" || serviceType === "pmo") && !subtype) return false;
+      if (subtype.startsWith("Alocação de Recurso Especialista") && !seniority) return false;
       return true;
     }
     return true;
