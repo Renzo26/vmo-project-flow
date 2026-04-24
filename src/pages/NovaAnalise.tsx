@@ -54,7 +54,7 @@ const pmoSubtypes = [
 
 const seniorityLevels = ["Júnior", "Pleno", "Sênior"];
 
-const methodologies = ["Ágil", "Waterfall", "Híbrida", "Kanban", "Outro"];
+const methodologies = ["Ágil", "Waterfall", "Híbrida", "Kanban", "SAFe", "Outro"];
 
 const initiativeTypes = ["Correção", "Estratégico", "Área", "Melhoria", "Inovação", "Regulatória"];
 
@@ -95,7 +95,7 @@ const NovaAnalise = () => {
   const [serviceType, setServiceType] = useState("");
   const [subtype, setSubtype] = useState("");
   const [seniority, setSeniority] = useState("");
-  const [methodology, setMethodology] = useState("");
+  const [methodology, setMethodology] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("5");
   const [finType, setFinType] = useState<"CAPEX" | "OPEX">("CAPEX");
@@ -106,7 +106,11 @@ const NovaAnalise = () => {
   const navigate = useNavigate();
 
   const selectedService = serviceTypes.find(s => s.id === serviceType);
-  const needsAttachment = (serviceType === "dev" || serviceType === "testes") && methodology === "Waterfall";
+  const needsAttachment = (serviceType === "dev" || serviceType === "testes") && methodology.includes("Waterfall");
+
+  const toggleMethodology = (m: string) => {
+    setMethodology(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
+  };
 
   const toggleSupplier = (id: string) => {
     setSelectedSuppliers(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
@@ -119,7 +123,7 @@ const NovaAnalise = () => {
   const canAdvance = () => {
     if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory;
     if (step === 1) {
-      if (!serviceType || !methodology) return false;
+      if (!serviceType || methodology.length === 0) return false;
       if ((serviceType === "dev" || serviceType === "pmo") && !subtype) return false;
       if (subtype.startsWith("Alocação de Recurso Especialista") && !seniority) return false;
       return true;
@@ -321,14 +325,16 @@ const NovaAnalise = () => {
             )}
 
             <div>
-              <Label className="text-sm font-medium text-foreground mb-2 block">Metodologia</Label>
+              <Label className="text-sm font-medium text-foreground mb-2 block">
+                Metodologia <span className="text-xs text-muted-foreground font-normal">(selecione uma ou mais)</span>
+              </Label>
               <div className="flex gap-2 flex-wrap">
                 {methodologies.map(m => (
                   <button
                     key={m}
-                    onClick={() => setMethodology(m)}
+                    onClick={() => toggleMethodology(m)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      methodology === m ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      methodology.includes(m) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
                     }`}
                   >
                     {m}
@@ -514,7 +520,7 @@ const NovaAnalise = () => {
               <p><span className="text-muted-foreground">Prioridade:</span> {priority} · <span className="text-muted-foreground">Categoria:</span> {projectCategory || "—"}</p>
               <p><span className="text-muted-foreground">Serviço:</span> {selectedService ? `${selectedService.code} · ${selectedService.label}` : "—"}</p>
               {subtype && <p><span className="text-muted-foreground">Subtipo:</span> {subtype}{seniority ? ` · ${seniority}` : ""}</p>}
-              <p><span className="text-muted-foreground">Metodologia:</span> {methodology || "—"}</p>
+              <p><span className="text-muted-foreground">Metodologia:</span> {methodology.length > 0 ? methodology.join(", ") : "—"}</p>
               <p><span className="text-muted-foreground">Classificação:</span> {finType} · {initiative}</p>
               <p><span className="text-muted-foreground">Urgência:</span> {urgency === "emergencial" ? "Emergencial" : "Normal"}</p>
               <p><span className="text-muted-foreground">Prazo proposta:</span> {deadline} dias</p>
