@@ -31,6 +31,17 @@ const fornecedorMenu = [
 const controleMenu: MenuGroup[] = [
   { label: "Dashboard", path: "/controle/dashboard", icon: LayoutDashboard },
   {
+    section: "Fornecedores",
+    items: [
+      { label: "Dashboard", path: "/controle/fornecedores/dashboard", icon: LayoutDashboard },
+      { label: "Base de fornecedores", path: "/controle/fornecedores/base", icon: Building2 },
+      { label: "Novo cadastro", path: "/controle/fornecedores/novo", icon: UserPlus },
+      { label: "Homologação", path: "/controle/fornecedores/homologacao", icon: ShieldCheck },
+      { label: "Documentos e certidões", path: "/controle/fornecedores/documentos", icon: FileCheck2 },
+      { label: "Scorecard", path: "/controle/scorecard", icon: Award },
+    ],
+  },
+  {
     section: "Solicitações",
     items: [
       { label: "Solicitações recebidas", path: "/controle/solicitacoes/recebidas", icon: Inbox },
@@ -44,16 +55,6 @@ const controleMenu: MenuGroup[] = [
       { label: "Configurar APF", path: "/controle/apf", icon: SlidersHorizontal },
       { label: "Nova contagem", path: "/controle/apf/nova-contagem", icon: PlusCircle },
       { label: "Histórico de contagens", path: "/controle/apf/historico", icon: History },
-    ],
-  },
-  {
-    section: "Fornecedores",
-    items: [
-      { label: "Base de fornecedores", path: "/controle/fornecedores/base", icon: Building2 },
-      { label: "Novo cadastro", path: "/controle/fornecedores/novo", icon: UserPlus },
-      { label: "Homologação", path: "/controle/fornecedores/homologacao", icon: ShieldCheck },
-      { label: "Documentos e certidões", path: "/controle/fornecedores/documentos", icon: FileCheck2 },
-      { label: "Scorecard", path: "/controle/scorecard", icon: Award },
     ],
   },
   {

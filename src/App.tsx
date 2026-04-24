@@ -24,6 +24,7 @@ import AcompanharProjetos from "./pages/controle/AcompanharProjetos";
 import APFNovaContagem from "./pages/controle/APFNovaContagem";
 import APFHistorico from "./pages/controle/APFHistorico";
 import FornecedoresBase from "./pages/controle/FornecedoresBase";
+import FornecedoresDashboard from "./pages/controle/FornecedoresDashboard";
 import FornecedoresNovo from "./pages/controle/FornecedoresNovo";
 import FornecedoresHomologacao from "./pages/controle/FornecedoresHomologacao";
 import FornecedoresDocumentos from "./pages/controle/FornecedoresDocumentos";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/controle/solicitacoes/acompanhar" element={<AppLayout><AcompanharProjetos /></AppLayout>} />
             <Route path="/controle/apf/nova-contagem" element={<AppLayout><APFNovaContagem /></AppLayout>} />
             <Route path="/controle/apf/historico" element={<AppLayout><APFHistorico /></AppLayout>} />
+            <Route path="/controle/fornecedores/dashboard" element={<AppLayout><FornecedoresDashboard /></AppLayout>} />
             <Route path="/controle/fornecedores/base" element={<AppLayout><FornecedoresBase /></AppLayout>} />
             <Route path="/controle/fornecedores/novo" element={<AppLayout><FornecedoresNovo /></AppLayout>} />
             <Route path="/controle/fornecedores/homologacao" element={<AppLayout><FornecedoresHomologacao /></AppLayout>} />
