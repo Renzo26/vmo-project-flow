@@ -29,11 +29,16 @@ const fornecedorMenu = [
 ];
 
 const controleMenu: MenuGroup[] = [
-  { label: "Dashboard", path: "/controle/dashboard", icon: LayoutDashboard },
+  {
+    section: "Dashboard",
+    items: [
+      { label: "Visão geral", path: "/controle/dashboard", icon: LayoutDashboard },
+      { label: "Fornecedores", path: "/controle/fornecedores/dashboard", icon: Building2 },
+    ],
+  },
   {
     section: "Fornecedores",
     items: [
-      { label: "Dashboard", path: "/controle/fornecedores/dashboard", icon: LayoutDashboard },
       { label: "Base de fornecedores", path: "/controle/fornecedores/base", icon: Building2 },
       { label: "Novo cadastro", path: "/controle/fornecedores/novo", icon: UserPlus },
       { label: "Homologação", path: "/controle/fornecedores/homologacao", icon: ShieldCheck },
