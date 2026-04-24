@@ -117,13 +117,14 @@ const NovaAnalise = () => {
   };
 
   const canAdvance = () => {
-    if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory && deliveryDeadline;
+    if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory;
     if (step === 1) {
       if (!serviceType || !methodology) return false;
       if ((serviceType === "dev" || serviceType === "pmo") && !subtype) return false;
       if (subtype.startsWith("Alocação de Recurso Especialista") && !seniority) return false;
       return true;
     }
+    if (step === 2) return scopeDescription.trim() && deliveryDeadline;
     return true;
   };
 
@@ -207,96 +208,6 @@ const NovaAnalise = () => {
               </div>
             </section>
 
-            {/* Bloco 2 — Escopo e detalhamento */}
-            <section className="space-y-4">
-              <div className="border-b border-border pb-2">
-                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Bloco 2 — Escopo e detalhamento</h3>
-              </div>
-              <div>
-                <Label>Descrição / escopo do serviço *</Label>
-                <Textarea
-                  value={scopeDescription}
-                  onChange={e => setScopeDescription(e.target.value)}
-                  placeholder="Descreva os objetivos, sistemas impactados e entregáveis esperados..."
-                  className="mt-1 min-h-[100px]"
-                />
-                <p className="text-[11px] text-muted-foreground mt-1">A planilha de escopo detalhado deverá ser anexada ao final deste formulário</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Sistemas impactados / integrações</Label>
-                  <Input value={impactedSystems} onChange={e => setImpactedSystems(e.target.value)} placeholder="Ex: ERP Totvs, CRM Salesforce, Portal RH" className="mt-1" />
-                </div>
-                <div>
-                  <Label>Entregáveis esperados</Label>
-                  <Input value={expectedDeliverables} onChange={e => setExpectedDeliverables(e.target.value)} placeholder="Ex: Código-fonte, documentação técnica, treinamento" className="mt-1" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>Nível de complexidade</Label>
-                  <select value={complexity} onChange={e => setComplexity(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    {complexityLevels.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <Label>Ambiente</Label>
-                  <select value={environment} onChange={e => setEnvironment(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    {environmentOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <Label>Anexar planilha de escopo</Label>
-                  <Input type="file" className="mt-1" />
-                </div>
-              </div>
-            </section>
-
-            {/* Bloco 3 — Fornecedor e prazo */}
-            <section className="space-y-4">
-              <div className="border-b border-border pb-2">
-                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Bloco 3 — Fornecedor e prazo</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>Prazo desejado de entrega *</Label>
-                  <Input type="date" value={deliveryDeadline} onChange={e => setDeliveryDeadline(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label>Prazo para resposta dos fornecedores</Label>
-                  <Input type="date" value={supplierResponseDeadline} onChange={e => setSupplierResponseDeadline(e.target.value)} className="mt-1" />
-                  <p className="text-[11px] text-muted-foreground mt-1">Padrão: 5 dias úteis configurado pelo sistema</p>
-                </div>
-                <div>
-                  <Label>Modalidade de contratação</Label>
-                  <select value={contractModality} onChange={e => setContractModality(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    {contractModalities.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Fornecedores habilitados</Label>
-                  <select value={enabledSupplier} onChange={e => setEnabledSupplier(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    {enabledSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <p className="text-[11px] text-muted-foreground mt-1">O sistema filtra automaticamente os fornecedores cadastrados para a categoria selecionada</p>
-                </div>
-                <div>
-                  <Label>Outros documentos</Label>
-                  <Input type="file" className="mt-1" />
-                </div>
-              </div>
-              <div>
-                <Label>Observações para o fornecedor</Label>
-                <Textarea
-                  value={supplierObservations}
-                  onChange={e => setSupplierObservations(e.target.value)}
-                  placeholder="Informações adicionais, restrições técnicas, preferências de tecnologia..."
-                  className="mt-1 min-h-[80px]"
-                />
-              </div>
-            </section>
           </div>
         )}
 
@@ -430,47 +341,105 @@ const NovaAnalise = () => {
 
         {/* Step 2 — Detalhes */}
         {step === 2 && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-bold text-foreground">Descreva o escopo</h2>
-            <div>
-              <Label>Descrição *</Label>
-              <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o escopo do projeto..." className="mt-1 min-h-[120px]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Label>Anexos</Label>
-                <Badge variant="outline" className={`text-[10px] ${needsAttachment ? "bg-destructive/15 text-destructive border-destructive/30" : "bg-muted text-muted-foreground"}`}>
-                  {needsAttachment ? "Obrigatório para escopo fechado" : "Opcional"}
-                </Badge>
+          <div className="space-y-8">
+            {/* Bloco 2 — Escopo e detalhamento */}
+            <section className="space-y-4">
+              <div className="border-b border-border pb-2">
+                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Bloco 2 — Escopo e detalhamento</h3>
               </div>
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer">
-                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Arraste arquivos ou clique para enviar</p>
+              <div>
+                <Label>Descrição / escopo do serviço *</Label>
+                <Textarea
+                  value={scopeDescription}
+                  onChange={e => setScopeDescription(e.target.value)}
+                  placeholder="Descreva os objetivos, sistemas impactados e entregáveis esperados..."
+                  className="mt-1 min-h-[100px]"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">A planilha de escopo detalhado deverá ser anexada ao final deste formulário</p>
               </div>
-            </div>
-            <div>
-              <Label className="mb-2 block">Prazo para proposta</Label>
-              <div className="flex gap-2 items-center flex-wrap">
-                {["3", "5", "7"].map(d => (
-                  <button key={d} onClick={() => setDeadline(d)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    deadline === d ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`}>
-                    {d} dias
-                  </button>
-                ))}
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={!["3","5","7"].includes(deadline) ? deadline : ""}
-                    onChange={e => setDeadline(e.target.value)}
-                    placeholder="Personalizado"
-                    className={`w-32 h-10 ${!["3","5","7"].includes(deadline) && deadline ? "border-primary ring-2 ring-primary/20" : ""}`}
-                  />
-                  <span className="text-sm text-muted-foreground">dias</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Sistemas impactados / integrações</Label>
+                  <Input value={impactedSystems} onChange={e => setImpactedSystems(e.target.value)} placeholder="Ex: ERP Totvs, CRM Salesforce, Portal RH" className="mt-1" />
+                </div>
+                <div>
+                  <Label>Entregáveis esperados</Label>
+                  <Input value={expectedDeliverables} onChange={e => setExpectedDeliverables(e.target.value)} placeholder="Ex: Código-fonte, documentação técnica, treinamento" className="mt-1" />
                 </div>
               </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Nível de complexidade</Label>
+                  <select value={complexity} onChange={e => setComplexity(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {complexityLevels.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label>Ambiente</Label>
+                  <select value={environment} onChange={e => setEnvironment(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {environmentOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Label>Planilhas (anexar) *</Label>
+                  <Badge variant="outline" className="text-[10px] bg-destructive/15 text-destructive border-destructive/30">
+                    Obrigatório
+                  </Badge>
+                </div>
+                <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Arraste arquivos ou clique para enviar</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Bloco 3 — Fornecedor e prazo */}
+            <section className="space-y-4">
+              <div className="border-b border-border pb-2">
+                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Bloco 3 — Fornecedor e prazo</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Prazo desejado de entrega *</Label>
+                  <Input type="date" value={deliveryDeadline} onChange={e => setDeliveryDeadline(e.target.value)} className="mt-1" />
+                </div>
+                <div>
+                  <Label>Prazo para resposta dos fornecedores</Label>
+                  <Input type="date" value={supplierResponseDeadline} onChange={e => setSupplierResponseDeadline(e.target.value)} className="mt-1" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Padrão: 5 dias úteis configurado pelo sistema</p>
+                </div>
+                <div>
+                  <Label>Modalidade de contratação</Label>
+                  <select value={contractModality} onChange={e => setContractModality(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {contractModalities.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Fornecedores habilitados</Label>
+                  <select value={enabledSupplier} onChange={e => setEnabledSupplier(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {enabledSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground mt-1">O sistema filtra automaticamente os fornecedores cadastrados para a categoria selecionada</p>
+                </div>
+                <div>
+                  <Label>Outros documentos</Label>
+                  <Input type="file" className="mt-1" />
+                </div>
+              </div>
+              <div>
+                <Label>Observações para o fornecedor</Label>
+                <Textarea
+                  value={supplierObservations}
+                  onChange={e => setSupplierObservations(e.target.value)}
+                  placeholder="Informações adicionais, restrições técnicas, preferências de tecnologia..."
+                  className="mt-1 min-h-[80px]"
+                />
+              </div>
+            </section>
           </div>
         )}
 
