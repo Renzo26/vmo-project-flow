@@ -203,7 +203,8 @@ const NovaAnalise = () => {
   const navigate = useNavigate();
 
   const selectedService = serviceTypes.find(s => s.id === serviceType);
-  const needsAttachment = (serviceType === "dev" || serviceType === "testes") && methodology.includes("Waterfall");
+  const currentSubtypePanel = subtypeMap[serviceType];
+  const needsAttachment = (serviceType === "dev" || serviceType === "qa") && methodology.includes("Waterfall");
 
   const toggleMethodology = (m: string) => {
     setMethodology(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
@@ -221,7 +222,7 @@ const NovaAnalise = () => {
     if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory;
     if (step === 1) {
       if (!serviceType || methodology.length === 0) return false;
-      if ((serviceType === "dev" || serviceType === "pmo") && !subtype) return false;
+      if (currentSubtypePanel && !subtype) return false;
       if (subtype.startsWith("Alocação de Recurso Especialista") && !seniority) return false;
       return true;
     }
