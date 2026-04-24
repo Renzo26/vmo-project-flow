@@ -22,7 +22,7 @@ const LoginPage = () => {
       navigate("/solicitante/projetos");
     } else if (email === "fornecedor@vmo.com" && password === "123456") {
       login("fornecedor", mockUsers.fornecedor.name, mockUsers.fornecedor.team);
-      navigate("/fornecedor/projetos");
+      navigate("/fornecedor/dashboard");
     } else if (email === "controle@vmo.com" && password === "123456") {
       login("controle", mockUsers.controle.name, mockUsers.controle.team);
       navigate("/controle/dashboard");
