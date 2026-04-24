@@ -317,7 +317,7 @@ const NovaAnalise = () => {
         {step === 1 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Qual o tipo de serviço a ser contratado?</h2>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {serviceTypes.map(st => (
                 <button
                   key={st.id}
@@ -331,6 +331,9 @@ const NovaAnalise = () => {
                     <Badge variant="outline" className="text-[9px] font-mono bg-muted/50">{st.code}</Badge>
                   </div>
                   <p className="text-sm font-medium text-foreground">{st.label}</p>
+                  {st.description && (
+                    <p className="text-xs text-muted-foreground mt-1 leading-snug">{st.description}</p>
+                  )}
                   {st.badge && (
                     <Badge variant="outline" className="mt-2 text-[10px] bg-primary/10 text-primary border-primary/20">
                       {st.badge}
@@ -340,55 +343,14 @@ const NovaAnalise = () => {
               ))}
             </div>
 
-            {serviceType === "dev" && (
+            {currentSubtypePanel && (
               <div className="rounded-xl border border-border p-4 bg-muted/20 space-y-4">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Desenvolvimento de Software — subtipos disponíveis</h3>
-                  <p className="text-xs text-muted-foreground">Selecione o tipo de desenvolvimento</p>
+                  <h3 className="text-sm font-bold text-foreground">{currentSubtypePanel.label}</h3>
+                  <p className="text-xs text-muted-foreground">{currentSubtypePanel.subtitle}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {devSubtypes.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => setSubtype(s)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left text-sm transition-colors ${
-                        subtype === s ? "border-primary bg-primary/5 text-foreground" : "border-border bg-background hover:border-primary/40 text-muted-foreground"
-                      }`}
-                    >
-                      <span className={`h-2 w-2 rounded-full ${subtype === s ? "bg-primary" : "bg-muted-foreground/30"}`} />
-                      <span className="flex-1">{s}</span>
-                    </button>
-                  ))}
-                </div>
-                {subtype.startsWith("Alocação de Recurso Especialista") && (
-                  <div>
-                    <Label className="text-xs font-medium text-foreground mb-2 block">Nível de senioridade</Label>
-                    <div className="flex gap-2">
-                      {seniorityLevels.map(l => (
-                        <button
-                          key={l}
-                          onClick={() => setSeniority(l)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            seniority === l ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
-                        >
-                          {l}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {serviceType === "pmo" && (
-              <div className="rounded-xl border border-border p-4 bg-muted/20 space-y-4">
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Gestão de Projetos e PMO — subtipos disponíveis</h3>
-                  <p className="text-xs text-muted-foreground">Selecione o serviço de gestão</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {pmoSubtypes.map(s => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {currentSubtypePanel.items.map(s => (
                     <button
                       key={s}
                       onClick={() => setSubtype(s)}
