@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Check, Upload, AlertTriangle, Code, Search, TestTube, Layers,
-  GitBranch, Network, Server, ClipboardList, FileCode,
+  Check, Upload, AlertTriangle, Code, TestTube, Zap,
+  ClipboardList, Wrench, Lock, BarChart3, Settings as SettingsIcon, Headphones,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -17,14 +17,15 @@ import {
 const steps = ["Identificação", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
 
 const serviceTypes = [
-  { id: "analise", label: "Análise e Levantamento", code: "ANA", icon: Search, badge: null },
-  { id: "mapeamento", label: "Mapeamento de Processos", code: "MAP", icon: GitBranch, badge: null },
-  { id: "arquitetura", label: "Arquitetura de Sistemas", code: "ARQ", icon: Network, badge: null },
-  { id: "infra", label: "Infraestrutura", code: "INF", icon: Server, badge: null },
-  { id: "pmo", label: "Gestão de Projetos e PMO", code: "PMO", icon: ClipboardList, badge: null },
-  { id: "dev", label: "Desenvolvimento de Software", code: "DEV", icon: Code, badge: null },
-  { id: "testes", label: "Testes e Qualidade", code: "TST", icon: TestTube, badge: null },
-  { id: "ciclo", label: "Ciclo Completo", code: "CIC", icon: Layers, badge: "Inclui todas as fases" },
+  { id: "dev", label: "Desenvolvimento de Software", description: "Novos sistemas, manutenção, APIs, mobile, web e automação", code: "DEV", icon: Code, badge: null },
+  { id: "qa", label: "QA e Testes", description: "Testes funcionais, automação, performance, segurança e UAT", code: "QA", icon: TestTube, badge: null },
+  { id: "agilidade", label: "Agilidade & Produto", description: "Scrum Master, PO, Agile Coach, RTE, OKR Coach e transformação ágil organizacional", code: "AGL", icon: Zap, badge: null },
+  { id: "pmo", label: "Gestão de Projetos e PMO", description: "PMO, gerente de projetos, gestão de mudanças e portfólio", code: "PMO", icon: ClipboardList, badge: null },
+  { id: "infra", label: "Infraestrutura e Cloud", description: "Cloud, redes, servidores, DevOps, monitoramento e sustentação", code: "INF", icon: Wrench, badge: null },
+  { id: "seguranca", label: "Segurança da Informação", description: "Pentest, SOC, LGPD, IAM, arquitetura de segurança e resposta a incidentes", code: "SEG", icon: Lock, badge: null },
+  { id: "dados", label: "Dados e Analytics", description: "BI, Data Warehouse, engenharia de dados, ML e governança", code: "DAD", icon: BarChart3, badge: null },
+  { id: "suporte", label: "Suporte e Service Desk", description: "N1, N2, N3, Help Desk, ITSM, outsourcing e field support", code: "SUP", icon: Headphones, badge: null },
+  { id: "processos", label: "Processos e Consultoria", description: "BPM, ERP, arquitetura de soluções, transformação digital e análise de negócios", code: "PRC", icon: SettingsIcon, badge: null },
 ];
 
 const devSubtypes = [
@@ -41,6 +42,34 @@ const devSubtypes = [
   "Alocação de Recurso Especialista em Desenvolvimento de Software",
 ];
 
+const qaSubtypes = [
+  "Testes funcionais (manual)",
+  "Automação de testes (Selenium / Cypress / Playwright)",
+  "Testes de regressão",
+  "Testes de performance e carga (JMeter / k6)",
+  "Testes de segurança / Pentest",
+  "Testes de API (Postman / Karate)",
+  "Testes de aceitação do usuário (UAT)",
+  "Testes mobile (iOS / Android)",
+  "Fábrica de testes",
+  "Consultoria de qualidade / Estratégia QA",
+  "Alocação de Recurso Especialista em QA e Testes",
+];
+
+const agilidadeSubtypes = [
+  "Scrum Master",
+  "Product Owner (PO)",
+  "Agile Coach",
+  "RTE — Release Train Engineer (SAFe)",
+  "Chapter Lead / Tech Lead",
+  "Business Agility Consultant",
+  "OKR Coach",
+  "Kanban Lead / Facilitador",
+  "Facilitador de cerimônias ágeis",
+  "Transformação ágil organizacional",
+  "Alocação de Recurso Especialista em Agilidade & Produto",
+];
+
 const pmoSubtypes = [
   "PMO — Escritório de projetos",
   "Gerente de projetos (tradicional / PMI)",
@@ -51,6 +80,74 @@ const pmoSubtypes = [
   "Consultor PMBOK / PRINCE2 / PMP",
   "Alocação de Recurso Especialista em Gestão de Projetos e PMO",
 ];
+
+const infraSubtypes = [
+  "Cloud computing (AWS / Azure / GCP)",
+  "Migração para nuvem",
+  "Administração de redes",
+  "Servidores e datacenter",
+  "Backup e recuperação de desastres (DR)",
+  "Monitoramento e observabilidade",
+  "DevOps / CI-CD / Pipeline",
+  "Virtualização e containerização",
+  "Sustentação de infraestrutura",
+  "Alocação de Recurso Especialista em Infraestrutura e Cloud",
+];
+
+const segurancaSubtypes = [
+  "Pentest / Teste de invasão",
+  "Análise de vulnerabilidades",
+  "SOC — Monitoramento contínuo de segurança",
+  "Adequação LGPD",
+  "Gestão de identidade e acesso (IAM)",
+  "Arquitetura de segurança",
+  "Resposta a incidentes (IR)",
+  "Security awareness / Treinamento corporativo",
+  "Alocação de Recurso Especialista em Segurança da Informação",
+];
+
+const dadosSubtypes = [
+  "Business Intelligence (BI)",
+  "Engenharia de dados / Data pipeline",
+  "Data Warehouse / Data Lake",
+  "Dashboards e relatórios gerenciais",
+  "Ciência de dados / Machine Learning",
+  "ETL / Integração de dados",
+  "Governança de dados",
+  "Alocação de Recurso Especialista em Dados e Analytics",
+];
+
+const suporteSubtypes = [
+  "Suporte N1 — Usuário final",
+  "Suporte N2 — Sistemas e aplicações",
+  "Suporte N3 — Especialista técnico",
+  "Help Desk / ITSM",
+  "Field support / suporte presencial",
+  "Outsourcing de TI",
+  "Alocação de Recurso Especialista em Suporte e Service Desk",
+];
+
+const processosSubtypes = [
+  "Mapeamento de processos (BPM)",
+  "Implantação de ERP (SAP / TOTVS)",
+  "Consultoria estratégica de TI",
+  "Arquitetura de soluções",
+  "Levantamento de requisitos / Análise de negócios (BA)",
+  "Transformação digital",
+  "Alocação de Recurso Especialista em Processos e Consultoria",
+];
+
+const subtypeMap: Record<string, { label: string; subtitle: string; items: string[] } | undefined> = {
+  dev: { label: "Desenvolvimento de Software — subtipos disponíveis", subtitle: "Selecione o tipo de desenvolvimento", items: devSubtypes },
+  qa: { label: "QA e Testes — subtipos disponíveis", subtitle: "Selecione o tipo de serviço de qualidade", items: qaSubtypes },
+  agilidade: { label: "Agilidade & Produto — subtipos disponíveis", subtitle: "Selecione o papel ágil ou serviço de transformação", items: agilidadeSubtypes },
+  pmo: { label: "Gestão de Projetos e PMO — subtipos disponíveis", subtitle: "Selecione o serviço de gestão", items: pmoSubtypes },
+  infra: { label: "Infraestrutura e Cloud — subtipos disponíveis", subtitle: "Selecione o serviço de infraestrutura", items: infraSubtypes },
+  seguranca: { label: "Segurança da Informação — subtipos disponíveis", subtitle: "Selecione o serviço de segurança", items: segurancaSubtypes },
+  dados: { label: "Dados e Analytics — subtipos disponíveis", subtitle: "Selecione o serviço de dados", items: dadosSubtypes },
+  suporte: { label: "Suporte e Service Desk — subtipos disponíveis", subtitle: "Selecione o tipo de suporte", items: suporteSubtypes },
+  processos: { label: "Processos e Consultoria — subtipos disponíveis", subtitle: "Selecione o tipo de consultoria", items: processosSubtypes },
+};
 
 const seniorityLevels = ["Júnior", "Pleno", "Sênior"];
 
