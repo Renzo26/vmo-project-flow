@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { mockProjects, statusLabels, statusColors } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertTriangle, Check, ArrowLeft, FileText, Calendar, User, Tag } from "lucide-react";
+import {
+  AlertTriangle, Check, ArrowLeft, FileText, Calendar, User, Tag,
+  Upload, X, Paperclip, RotateCcw, XCircle, SendHorizonal
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,25 +16,19 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-interface ActivityRow {
-  name: string;
-  hours: number;
-  rate: number;
-}
+type Action = "enviar" | "recusar" | "revisao" | null;
 
 const FornecedorProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const project = mockProjects.find(p => p.id === id);
 
-  const [activities, setActivities] = useState<ActivityRow[]>([
-    { name: "Análise", hours: 0, rate: 160 },
-    { name: "Codificação", hours: 0, rate: 200 },
-    { name: "Testes", hours: 0, rate: 180 },
-  ]);
-  const [observation, setObservation] = useState("");
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [action, setAction] = useState<Action>(null);
+  const [motivo, setMotivo] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [resultModal, setResultModal] = useState<"success" | "error" | null>(null);
+  const [resultModal, setResultModal] = useState<"success" | "recusado" | "revisao" | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   if (!project) {
     return (
@@ -45,23 +41,46 @@ const FornecedorProjectDetail = () => {
 
   const isActionable = project.status === "aguardando" || project.status === "corrigir";
 
-  const updateHours = (index: number, hours: number) => {
-    setActivities(prev => prev.map((a, i) => i === index ? { ...a, hours } : a));
+  const handleFile = (file: File) => setArquivo(file);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
   };
 
-  const totalCost = activities.reduce((sum, a) => sum + a.hours * a.rate, 0);
-
-  const handleSubmit = () => {
+  const handleConfirm = () => {
     setSubmitting(true);
     setTimeout(() => {
       setSubmitting(false);
-      const codHours = activities.find(a => a.name === "Codificação")?.hours || 0;
-      if (codHours > 40) {
-        setResultModal("error");
-      } else {
-        setResultModal("success");
-      }
-    }, 1500);
+      if (action === "enviar") setResultModal("success");
+      else if (action === "recusar") setResultModal("recusado");
+      else if (action === "revisao") setResultModal("revisao");
+    }, 1200);
+  };
+
+  const canConfirm = () => {
+    if (action === "enviar") return !!arquivo;
+    if (action === "recusar") return motivo.trim().length >= 10;
+    if (action === "revisao") return motivo.trim().length >= 10;
+    return false;
+  };
+
+  const actionLabel: Record<NonNullable<Action>, string> = {
+    enviar: "Enviar Proposta",
+    recusar: "Confirmar Recusa",
+    revisao: "Solicitar Revisão",
+  };
+
+  const actionColor: Record<NonNullable<Action>, string> = {
+    enviar: "bg-success hover:bg-success/90 text-success-foreground",
+    recusar: "bg-destructive hover:bg-destructive/90 text-destructive-foreground",
+    revisao: "bg-warning hover:bg-warning/90 text-warning-foreground",
+  };
+
+  const selectAction = (a: Action) => {
+    setAction(prev => prev === a ? null : a);
+    setMotivo("");
   };
 
   return (
@@ -164,76 +183,114 @@ const FornecedorProjectDetail = () => {
           </div>
         </div>
 
-        {/* Right: Response Form */}
+        {/* Right: Proposta */}
         <div className="space-y-4">
           {isActionable ? (
-            <div className="bg-card rounded-xl border border-border p-5 space-y-4">
-              <h3 className="font-bold text-foreground">
-                {project.status === "corrigir" ? "Corrigir Proposta" : "Elaborar Proposta"}
-              </h3>
-              <p className="text-xs text-muted-foreground">{project.type} · Metodologia Ágil</p>
-
-              <div className="border border-border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/50 border-b border-border">
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground text-xs">Atividade</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground text-xs">Horas</th>
-                      <th className="text-right px-3 py-2 font-medium text-muted-foreground text-xs">Custo R$</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activities.map((a, i) => (
-                      <tr key={a.name} className="border-b border-border last:border-0">
-                        <td className="px-3 py-2 text-foreground">{a.name}</td>
-                        <td className="px-3 py-2 text-center">
-                          <Input
-                            type="number"
-                            min={0}
-                            value={a.hours || ""}
-                            onChange={e => updateHours(i, Number(e.target.value))}
-                            className="w-20 h-7 text-center mx-auto text-sm"
-                          />
-                        </td>
-                        <td className="px-3 py-2 text-right text-foreground font-medium">
-                          {(a.hours * a.rate).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-muted/30">
-                      <td colSpan={2} className="px-3 py-2 font-bold text-foreground text-sm">Total</td>
-                      <td className="px-3 py-2 text-right font-bold text-foreground text-sm">
-                        {totalCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <div className="flex items-start gap-2 p-2.5 bg-warning/10 rounded-lg border border-warning/20">
-                <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-                <p className="text-xs text-foreground">Os valores serão validados automaticamente conforme contrato vigente antes de enviar</p>
-              </div>
-
+            <div className="bg-card rounded-xl border border-border p-5 space-y-5">
               <div>
-                <label className="text-xs font-medium text-foreground block mb-1">Observação / Justificativa</label>
-                <Textarea value={observation} onChange={e => setObservation(e.target.value)} placeholder="Adicione uma observação..." className="min-h-[80px] text-sm" />
+                <h3 className="font-bold text-foreground">
+                  {project.status === "corrigir" ? "Corrigir Proposta" : "Elaborar Proposta"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{project.type} · Metodologia Ágil</p>
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 text-sm border-warning/40 text-warning hover:bg-warning/10">
-                  Tenho uma dúvida
-                </Button>
-                <Button
-                  className="flex-1 text-sm bg-success hover:bg-success/90 text-success-foreground"
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                >
-                  {submitting ? "Enviando..." : "Enviar Proposta"}
-                </Button>
+              {/* Upload zone */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Anexar proposta</p>
+                {arquivo ? (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/40">
+                    <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground flex-1 truncate">{arquivo.name}</span>
+                    <button onClick={() => setArquivo(null)} className="text-muted-foreground hover:text-destructive transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                    onClick={() => fileRef.current?.click()}
+                    onDrop={handleDrop}
+                    onDragOver={e => e.preventDefault()}
+                  >
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm font-medium text-foreground">Arraste ou clique para anexar</p>
+                    <p className="text-xs text-muted-foreground">PDF, DOCX ou XLSX</p>
+                  </div>
+                )}
+                <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
               </div>
+
+              {/* Conditional field */}
+              {(action === "recusar" || action === "revisao") && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    {action === "recusar" ? "Motivo da recusa" : "O que precisa ser revisado"}
+                  </label>
+                  <Textarea
+                    value={motivo}
+                    onChange={e => setMotivo(e.target.value)}
+                    placeholder={action === "recusar" ? "Descreva o motivo pelo qual não é possível atender esta solicitação..." : "Descreva o que precisa ser alterado ou esclarecido..."}
+                    className="min-h-[90px] text-sm"
+                    autoFocus
+                  />
+                  {motivo.trim().length > 0 && motivo.trim().length < 10 && (
+                    <p className="text-xs text-destructive">Mínimo de 10 caracteres</p>
+                  )}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex flex-col gap-2 pt-1">
+                {action ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => { setAction(null); setMotivo(""); }}
+                      disabled={submitting}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      className={`flex-1 ${actionColor[action]}`}
+                      onClick={handleConfirm}
+                      disabled={!canConfirm() || submitting}
+                    >
+                      {submitting ? "Aguarde..." : actionLabel[action]}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 bg-success hover:bg-success/90 text-success-foreground gap-1.5"
+                      onClick={() => selectAction("enviar")}
+                    >
+                      <SendHorizonal className="h-4 w-4" />
+                      Enviar Proposta
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-warning/40 text-warning hover:bg-warning/10 gap-1.5"
+                      onClick={() => selectAction("revisao")}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Revisão
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10 gap-1.5"
+                      onClick={() => selectAction("recusar")}
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Recusar
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {action === "enviar" && !arquivo && (
+                <p className="text-xs text-muted-foreground text-center -mt-1">Anexe um arquivo para habilitar o envio</p>
+              )}
             </div>
           ) : (
             <div className="bg-card rounded-xl border border-border p-5">
@@ -261,30 +318,42 @@ const FornecedorProjectDetail = () => {
         </div>
       </div>
 
-      {/* Result Modals */}
+      {/* Success modal */}
       <Dialog open={resultModal === "success"} onOpenChange={() => setResultModal(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-success">
               <Check className="h-5 w-5" /> Proposta enviada com sucesso!
             </DialogTitle>
-            <DialogDescription>Sua proposta foi registrada e o solicitante será notificado.</DialogDescription>
+            <DialogDescription>Sua proposta foi registrada e o solicitante será notificado para análise.</DialogDescription>
           </DialogHeader>
           <Button onClick={() => { setResultModal(null); navigate("/fornecedor/projetos"); }} className="w-full">Fechar</Button>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={resultModal === "error"} onOpenChange={() => setResultModal(null)}>
+      {/* Recusado modal */}
+      <Dialog open={resultModal === "recusado"} onOpenChange={() => setResultModal(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" /> Proposta com pendências
+              <XCircle className="h-5 w-5" /> Proposta recusada
             </DialogTitle>
-            <DialogDescription>
-              Valor de Codificação acima do contrato (R$200/h). Corrija antes de enviar.
-            </DialogDescription>
+            <DialogDescription>O solicitante será notificado sobre a recusa e o motivo registrado.</DialogDescription>
           </DialogHeader>
-          <Button variant="destructive" onClick={() => setResultModal(null)} className="w-full">Corrigir valores</Button>
+          <Button variant="outline" onClick={() => { setResultModal(null); navigate("/fornecedor/projetos"); }} className="w-full">Fechar</Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revisão modal */}
+      <Dialog open={resultModal === "revisao"} onOpenChange={() => setResultModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-warning">
+              <RotateCcw className="h-5 w-5" /> Revisão solicitada
+            </DialogTitle>
+            <DialogDescription>Seu pedido de revisão foi enviado. O solicitante irá analisar e retornar com as correções.</DialogDescription>
+          </DialogHeader>
+          <Button variant="outline" onClick={() => { setResultModal(null); navigate("/fornecedor/projetos"); }} className="w-full">Fechar</Button>
         </DialogContent>
       </Dialog>
     </div>

@@ -14,12 +14,14 @@ import FornecedorProjects from "./pages/FornecedorProjects";
 import FornecedorDashboard from "./pages/FornecedorDashboard";
 import SolicitanteProjectDetail from "./pages/SolicitanteProjectDetail";
 import FornecedorProjectDetail from "./pages/FornecedorProjectDetail";
+import FornecedorDocumentos from "./pages/FornecedorDocumentos";
 import ControleScorecard from "./pages/controle/ControleScorecard";
 import ControleContratos from "./pages/controle/ControleContratos";
 import ControleAPF from "./pages/controle/ControleAPF";
 import ControleDashboard from "./pages/controle/ControleDashboard";
 import SolicitacoesRecebidas from "./pages/controle/SolicitacoesRecebidas";
 import SolicitacoesAnaliseAPF from "./pages/controle/SolicitacoesAnaliseAPF";
+import SolicitacoesRecebidasDetalhe from "./pages/controle/SolicitacoesRecebidasDetalhe";
 import AcompanharProjetos from "./pages/controle/AcompanharProjetos";
 import APFNovaContagem from "./pages/controle/APFNovaContagem";
 import APFHistorico from "./pages/controle/APFHistorico";
@@ -52,8 +54,10 @@ const App = () => (
             <Route path="/fornecedor/projetos" element={<AppLayout><FornecedorProjects /></AppLayout>} />
             <Route path="/fornecedor/dashboard" element={<AppLayout><FornecedorDashboard /></AppLayout>} />
             <Route path="/fornecedor/projeto/:id" element={<AppLayout><FornecedorProjectDetail /></AppLayout>} />
+            <Route path="/fornecedor/documentos" element={<AppLayout><FornecedorDocumentos /></AppLayout>} />
             <Route path="/controle/dashboard" element={<AppLayout><ControleDashboard /></AppLayout>} />
             <Route path="/controle/solicitacoes/recebidas" element={<AppLayout><SolicitacoesRecebidas /></AppLayout>} />
+            <Route path="/controle/solicitacoes/recebidas/:id" element={<AppLayout><SolicitacoesRecebidasDetalhe /></AppLayout>} />
             <Route path="/controle/solicitacoes/analise-apf" element={<AppLayout><SolicitacoesAnaliseAPF /></AppLayout>} />
             <Route path="/controle/solicitacoes/acompanhar" element={<AppLayout><AcompanharProjetos /></AppLayout>} />
             <Route path="/controle/apf/nova-contagem" element={<AppLayout><APFNovaContagem /></AppLayout>} />

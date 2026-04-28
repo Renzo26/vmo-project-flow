@@ -26,6 +26,7 @@ const solicitanteMenu = [
 const fornecedorMenu = [
   { label: "Dashboard", path: "/fornecedor/dashboard", icon: LayoutDashboard },
   { label: "Meus Projetos", path: "/fornecedor/projetos", icon: FolderKanban },
+  { label: "Documentos e Certidões", path: "/fornecedor/documentos", icon: FileCheck2 },
 ];
 
 const controleMenu: MenuGroup[] = [

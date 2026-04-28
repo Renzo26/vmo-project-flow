@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Check, Upload, AlertTriangle, Code, TestTube, Zap,
-  ClipboardList, Wrench, Lock, BarChart3, Settings as SettingsIcon, Headphones,
+  ClipboardList, Wrench, Lock, BarChart3, Settings as SettingsIcon, Headphones, ShoppingCart,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -26,6 +26,7 @@ const serviceTypes = [
   { id: "dados", label: "Dados e Analytics", description: "BI, Data Warehouse, engenharia de dados, ML e governança", code: "DAD", icon: BarChart3, badge: null },
   { id: "suporte", label: "Suporte e Service Desk", description: "N1, N2, N3, Help Desk, ITSM, outsourcing e field support", code: "SUP", icon: Headphones, badge: null },
   { id: "processos", label: "Processos e Consultoria", description: "BPM, ERP, arquitetura de soluções, transformação digital e análise de negócios", code: "PRC", icon: SettingsIcon, badge: null },
+  { id: "aquisicao", label: "Aquisição de Sistema Novo", description: "Licenciamento de software, implantação de ERP e aquisição de novos sistemas", code: "AQS", icon: ShoppingCart, badge: null },
 ];
 
 const devSubtypes = [
@@ -91,7 +92,15 @@ const infraSubtypes = [
   "DevOps / CI-CD / Pipeline",
   "Virtualização e containerização",
   "Sustentação de infraestrutura",
+  "Compra de Equipamentos",
+  "Uso de Equipamentos (Leasing)",
   "Alocação de Recurso Especialista em Infraestrutura e Cloud",
+];
+
+const aquisicaoSubtypes = [
+  "Sistema Novo",
+  "Licença de Software",
+  "Implantação de ERP",
 ];
 
 const segurancaSubtypes = [
@@ -147,6 +156,7 @@ const subtypeMap: Record<string, { label: string; subtitle: string; items: strin
   dados: { label: "Dados e Analytics — subtipos disponíveis", subtitle: "Selecione o serviço de dados", items: dadosSubtypes },
   suporte: { label: "Suporte e Service Desk — subtipos disponíveis", subtitle: "Selecione o tipo de suporte", items: suporteSubtypes },
   processos: { label: "Processos e Consultoria — subtipos disponíveis", subtitle: "Selecione o tipo de consultoria", items: processosSubtypes },
+  aquisicao: { label: "Aquisição de Sistema Novo — subtipos disponíveis", subtitle: "Selecione o tipo de aquisição", items: aquisicaoSubtypes },
 };
 
 const seniorityLevels = ["Júnior", "Pleno", "Sênior"];
