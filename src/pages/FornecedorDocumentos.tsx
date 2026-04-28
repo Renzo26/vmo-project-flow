@@ -319,7 +319,7 @@ const FornecedorDocumentos = () => {
   const temQualquerDoc = docs.some(d => d.arquivo);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="space-y-6">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4">

@@ -464,10 +464,11 @@ const NovaAnalise = () => {
                     Obrigatório
                   </Badge>
                 </div>
-                <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer">
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <label className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer flex flex-col items-center">
+                  <input type="file" multiple className="hidden" />
+                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">Arraste arquivos ou clique para enviar</p>
-                </div>
+                </label>
               </div>
             </section>
 

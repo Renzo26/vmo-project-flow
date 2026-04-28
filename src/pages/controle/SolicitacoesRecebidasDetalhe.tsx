@@ -596,6 +596,7 @@ type Conclusao = "aprovada" | "aprovada_ressalvas" | "rejeitada";
 interface ParecerForm {
   conclusao: Conclusao | "";
   estimativaAprovada: string;
+  valorFornecedor: string;
   fornecedorIndicado: string;
   justificativa: string;
   observacoes: string;
@@ -642,6 +643,7 @@ const TabParecer = ({
         : det.estimativaSolicitante !== "Não informada"
         ? det.estimativaSolicitante
         : "",
+    valorFornecedor: "",
     fornecedorIndicado: det.fornecedores[0] ?? "",
     justificativa: "",
     observacoes: "",
@@ -747,9 +749,38 @@ const TabParecer = ({
           <div className="bg-card rounded-xl border border-border p-5 space-y-3">
             <SectionLabel>Decisão econômica</SectionLabel>
             <Row
-              label="Estimativa aprovada"
+              label="Estimativa aprovada (APF)"
               value={<span className="text-success font-semibold">{emitido.estimativaAprovada || "—"}</span>}
             />
+            {emitido.valorFornecedor && (
+              <Row
+                label="Valor informado pelo fornecedor"
+                value={<span className="font-medium">{emitido.valorFornecedor}</span>}
+              />
+            )}
+            {emitido.valorFornecedor && emitido.estimativaAprovada && (() => {
+              const parseVal = (s: string) =>
+                parseFloat(s.replace(/[R$\s.]/g, "").replace(",", ".")) || 0;
+              const estimado = parseVal(emitido.estimativaAprovada);
+              const fornecedor = parseVal(emitido.valorFornecedor);
+              if (fornecedor === 0 || estimado === 0) return null;
+              const dentro = fornecedor <= estimado;
+              return (
+                <Row
+                  label="Status orçamentário"
+                  value={
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                      dentro
+                        ? "bg-success/10 text-success border-success/30"
+                        : "bg-destructive/10 text-destructive border-destructive/30"
+                    }`}>
+                      {dentro ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                      {dentro ? "Dentro do orçamento" : "Acima do orçamento"}
+                    </span>
+                  }
+                />
+              );
+            })()}
             <Row label="Fornecedor indicado" value={emitido.fornecedorIndicado || "—"} />
             {contagemResultado.dsfp > 0 && (
               <Row
@@ -851,7 +882,7 @@ const TabParecer = ({
           <SectionLabel>Decisão econômica</SectionLabel>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Estimativa aprovada</label>
+            <label className="text-xs font-medium text-foreground">Estimativa aprovada (APF)</label>
             <Input
               placeholder="Ex: R$ 111.684"
               value={form.estimativaAprovada}
@@ -875,6 +906,55 @@ const TabParecer = ({
               </p>
             )}
           </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Valor informado pelo fornecedor</label>
+            <Input
+              placeholder="Ex: R$ 108.000"
+              value={form.valorFornecedor}
+              onChange={(e) => setForm((f) => ({ ...f, valorFornecedor: e.target.value }))}
+              className="h-9 text-sm"
+            />
+          </div>
+
+          {/* Indicador de orçamento */}
+          {(() => {
+            const parseVal = (s: string) =>
+              parseFloat(s.replace(/[R$\s.]/g, "").replace(",", ".")) || 0;
+            const estimado = parseVal(form.estimativaAprovada);
+            const fornecedor = parseVal(form.valorFornecedor);
+            if (!form.valorFornecedor || !form.estimativaAprovada || fornecedor === 0 || estimado === 0)
+              return null;
+            const dentroOrcamento = fornecedor <= estimado;
+            const diff = Math.abs(estimado - fornecedor);
+            const pct = ((diff / estimado) * 100).toFixed(1);
+            return (
+              <div className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 ${
+                dentroOrcamento
+                  ? "bg-success/5 border-success/25"
+                  : "bg-destructive/5 border-destructive/25"
+              }`}>
+                {dentroOrcamento ? (
+                  <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <p className={`text-xs font-semibold ${dentroOrcamento ? "text-success" : "text-destructive"}`}>
+                    {dentroOrcamento ? "Dentro do orçamento" : "Acima do orçamento"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {dentroOrcamento
+                      ? `Economia de R$ ${diff.toLocaleString("pt-BR")} (${pct}% abaixo da estimativa)`
+                      : `Excede em R$ ${diff.toLocaleString("pt-BR")} (${pct}% acima da estimativa)`}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                    Validação automática pelo backend será ativada futuramente
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Fornecedor indicado</label>

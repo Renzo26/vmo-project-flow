@@ -20,10 +20,7 @@ import ControleContratos from "./pages/controle/ControleContratos";
 import ControleAPF from "./pages/controle/ControleAPF";
 import ControleDashboard from "./pages/controle/ControleDashboard";
 import SolicitacoesRecebidas from "./pages/controle/SolicitacoesRecebidas";
-import SolicitacoesAnaliseAPF from "./pages/controle/SolicitacoesAnaliseAPF";
 import SolicitacoesRecebidasDetalhe from "./pages/controle/SolicitacoesRecebidasDetalhe";
-import AcompanharProjetos from "./pages/controle/AcompanharProjetos";
-import APFNovaContagem from "./pages/controle/APFNovaContagem";
 import APFHistorico from "./pages/controle/APFHistorico";
 import FornecedoresBase from "./pages/controle/FornecedoresBase";
 import FornecedoresDashboard from "./pages/controle/FornecedoresDashboard";
@@ -58,9 +55,6 @@ const App = () => (
             <Route path="/controle/dashboard" element={<AppLayout><ControleDashboard /></AppLayout>} />
             <Route path="/controle/solicitacoes/recebidas" element={<AppLayout><SolicitacoesRecebidas /></AppLayout>} />
             <Route path="/controle/solicitacoes/recebidas/:id" element={<AppLayout><SolicitacoesRecebidasDetalhe /></AppLayout>} />
-            <Route path="/controle/solicitacoes/analise-apf" element={<AppLayout><SolicitacoesAnaliseAPF /></AppLayout>} />
-            <Route path="/controle/solicitacoes/acompanhar" element={<AppLayout><AcompanharProjetos /></AppLayout>} />
-            <Route path="/controle/apf/nova-contagem" element={<AppLayout><APFNovaContagem /></AppLayout>} />
             <Route path="/controle/apf/historico" element={<AppLayout><APFHistorico /></AppLayout>} />
             <Route path="/controle/fornecedores/dashboard" element={<AppLayout><FornecedoresDashboard /></AppLayout>} />
             <Route path="/controle/fornecedores/base" element={<AppLayout><FornecedoresBase /></AppLayout>} />

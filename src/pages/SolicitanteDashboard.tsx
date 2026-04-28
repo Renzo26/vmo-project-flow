@@ -51,7 +51,7 @@ const SolicitanteDashboard = () => {
   const { userName, userTeam } = useAuth();
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">Dashboard — Solicitante</h2>

@@ -84,7 +84,7 @@ const FornecedorProjectDetail = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <Button variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground" onClick={() => navigate("/fornecedor/projetos")}>
         <ArrowLeft className="h-4 w-4" /> Voltar aos Projetos
       </Button>

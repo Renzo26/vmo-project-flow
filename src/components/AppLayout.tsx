@@ -41,7 +41,7 @@ const controleMenu: MenuGroup[] = [
     section: "Fornecedores",
     items: [
       { label: "Base de fornecedores", path: "/controle/fornecedores/base", icon: Building2 },
-      { label: "Novo cadastro", path: "/controle/fornecedores/novo", icon: UserPlus },
+      { label: "Cadastro de fornecedor", path: "/controle/fornecedores/novo", icon: UserPlus },
       { label: "Homologação", path: "/controle/fornecedores/homologacao", icon: ShieldCheck },
       { label: "Documentos e certidões", path: "/controle/fornecedores/documentos", icon: FileCheck2 },
       { label: "Scorecard", path: "/controle/scorecard", icon: Award },
@@ -51,15 +51,12 @@ const controleMenu: MenuGroup[] = [
     section: "Solicitações",
     items: [
       { label: "Solicitações recebidas", path: "/controle/solicitacoes/recebidas", icon: Inbox },
-      { label: "Em análise APF", path: "/controle/solicitacoes/analise-apf", icon: Calculator },
-      { label: "Acompanhar Projetos", path: "/controle/solicitacoes/acompanhar", icon: ClipboardList },
     ],
   },
   {
     section: "APF",
     items: [
       { label: "Configurar APF", path: "/controle/apf", icon: SlidersHorizontal },
-      { label: "Nova contagem", path: "/controle/apf/nova-contagem", icon: PlusCircle },
       { label: "Histórico de contagens", path: "/controle/apf/historico", icon: History },
     ],
   },
@@ -70,7 +67,12 @@ const controleMenu: MenuGroup[] = [
       { label: "Tabela R$/PF", path: "/controle/contratos/tabela-pf", icon: Table },
     ],
   },
-  { label: "Configuração de Usuário", path: "/controle/configuracoes", icon: Settings },
+  {
+    section: "Configurações",
+    items: [
+      { label: "Configuração de Usuário", path: "/controle/configuracoes", icon: Settings },
+    ],
+  },
 ];
 
 const AppLayout = ({ children }: AppLayoutProps) => {

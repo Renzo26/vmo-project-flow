@@ -3,7 +3,7 @@ import { mockSuppliers, mockPriceTable } from "@/data/mockData";
 
 const ControleContratos = () => {
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-foreground">Contratos e Preços</h2>
         <p className="text-sm text-muted-foreground mt-1">Tabela de preços por fornecedor</p>

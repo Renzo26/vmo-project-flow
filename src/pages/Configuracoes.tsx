@@ -92,7 +92,7 @@ const Configuracoes = () => {
   const getTeamName = (teamId: string) => teams.find(t => t.id === teamId)?.name || "Sem equipe";
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div>
       <h2 className="text-xl font-bold text-foreground mb-6">Configurações</h2>
 
       <Tabs defaultValue="users">

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Zap,
   Plus,
   Search,
   SlidersHorizontal,
@@ -14,6 +13,10 @@ import {
   Database,
   Boxes,
   Workflow,
+  PlayCircle,
+  Layers,
+  AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -254,7 +257,7 @@ const CATEGORIA_CONFIG: Record<Categoria, { label: string; className: string }> 
 };
 
 const ACTION_CONFIG: Record<StatusSol, { label: string; isCtrl: boolean }> = {
-  apf_pendente: { label: "⚡ Contar APF", isCtrl: true },
+  apf_pendente: { label: "⚡ Validar APF", isCtrl: true },
   em_contagem: { label: "Continuar APF", isCtrl: false },
   em_analise: { label: "Ver análise", isCtrl: false },
   em_cotacao: { label: "Analisar", isCtrl: false },
@@ -300,6 +303,45 @@ const SolicitacoesRecebidas = () => {
 
   return (
     <div className="space-y-5">
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-card rounded-xl border border-border border-t-4 border-t-primary p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <PlayCircle className="h-4 w-4 text-primary" />
+            <p className="text-xs text-muted-foreground font-medium">Em andamento</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground">8</p>
+          <p className="text-xs text-muted-foreground mt-0.5">projetos ativos</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border border-t-4 border-t-ctrl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Layers className="h-4 w-4 text-ctrl" />
+            <p className="text-xs text-muted-foreground font-medium">PF em desenvolvimento</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground">1.240 PF</p>
+          <p className="text-xs text-muted-foreground mt-0.5">3 contratos</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border border-t-4 border-t-warning p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="h-4 w-4 text-warning" />
+            <p className="text-xs text-muted-foreground font-medium">Próximos de vencer</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground">3</p>
+          <p className="text-xs text-warning mt-0.5 font-medium">até 30 dias</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border border-t-4 border-t-success p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="h-4 w-4 text-success" />
+            <p className="text-xs text-muted-foreground font-medium">Aderência média R$/PF</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground">97%</p>
+          <p className="text-xs text-success mt-0.5 font-medium">dentro do contrato</p>
+        </div>
+      </div>
+
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -312,15 +354,6 @@ const SolicitacoesRecebidas = () => {
           <span className="text-xs text-muted-foreground hidden sm:block">
             Aguardando análise e parecer
           </span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5 border-ctrl text-ctrl hover:bg-ctrl/10"
-            onClick={() => navigate("/controle/apf/nova-contagem")}
-          >
-            <Zap className="h-3.5 w-3.5" />
-            Nova contagem APF
-          </Button>
           <Button
             size="sm"
             className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
