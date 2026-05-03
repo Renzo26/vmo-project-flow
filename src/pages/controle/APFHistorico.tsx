@@ -170,33 +170,6 @@ const APFHistorico = () => {
 
   return (
     <div className="space-y-5">
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-card rounded-xl border border-border border-t-4 border-t-ctrl p-4">
-          <p className="text-xs text-muted-foreground font-medium mb-1">Total de contagens</p>
-          <p className="text-2xl font-bold text-foreground">{HISTORICO.length}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">no histórico</p>
-        </div>
-        <div className="bg-card rounded-xl border border-border border-t-4 border-t-primary p-4">
-          <p className="text-xs text-muted-foreground font-medium mb-1">Total PFS</p>
-          <p className="text-2xl font-bold text-foreground">{totalPFS.toFixed(1)}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">pontos de função</p>
-        </div>
-        <div className="bg-card rounded-xl border border-border border-t-4 border-t-warning p-4">
-          <p className="text-xs text-muted-foreground font-medium mb-1">Valor estimado total</p>
-          <p className="text-2xl font-bold text-foreground">{fmt(totalEstimado)}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">pelo APF</p>
-        </div>
-        <div className="bg-card rounded-xl border border-border border-t-4 border-t-success p-4">
-          <p className="text-xs text-muted-foreground font-medium mb-1">Saving total</p>
-          <p className={`text-2xl font-bold ${totalSaving >= 0 ? "text-success" : "text-destructive"}`}>
-            {fmt(Math.abs(totalSaving))}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {totalSaving >= 0 ? "economia negociada" : "acima do estimado"}
-          </p>
-        </div>
-      </div>
 
       {/* Header + actions */}
       <div className="flex items-center justify-between gap-3 flex-wrap">

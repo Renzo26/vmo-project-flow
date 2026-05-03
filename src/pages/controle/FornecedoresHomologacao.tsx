@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, PlusCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 type Etapa = 1 | 2 | 3 | 4 | 5;
 
@@ -69,8 +67,6 @@ const etapas = [
 const alerta = FORNECEDORES.find(f => f.prazoStatus === "atrasado");
 
 const FornecedoresHomologacao = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -78,15 +74,6 @@ const FornecedoresHomologacao = () => {
         <div>
           <h2 className="text-xl font-bold text-foreground">Qualificação e Homologação</h2>
           <p className="text-sm text-muted-foreground mt-0.5">Pipeline de aprovação — 5 etapas sequenciais</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            className="gap-1.5 bg-ctrl hover:bg-ctrl/90 text-ctrl-foreground border-0 text-xs"
-            onClick={() => navigate("/controle/fornecedores/novo")}
-          >
-            <PlusCircle className="h-3.5 w-3.5" /> Analisar solicitação
-          </Button>
         </div>
       </div>
 
