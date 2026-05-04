@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ChevronLeft,
   Zap,
-  Plus,
   Info,
   Minus,
   CheckCircle2,
@@ -306,9 +305,9 @@ const TabResumo = ({
         <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <p className="text-sm text-foreground">
-            O Controle Econômico deve realizar a contagem PFS conforme configuração do Módulo APF antes de emitir o parecer.
-            Clique na aba{" "}
-            <span className="font-semibold text-primary">Contagem APF</span> para iniciar.
+            O Controle Econômico deve emitir o parecer com base na configuração do Módulo APF.
+            Clique em{" "}
+            <span className="font-semibold text-primary">Emitir parecer automático</span> para iniciar.
           </p>
         </div>
       ) : sol.status === "parecer_emitido" || sol.status === "aprovada" ? (
@@ -1057,11 +1056,10 @@ const TabParecer = ({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-type TabDetalhe = "resumo" | "contagem" | "parecer";
+type TabDetalhe = "resumo" | "parecer";
 
 const TABS_DETALHE: { key: TabDetalhe; label: string }[] = [
   { key: "resumo", label: "Resumo da solicitação" },
-  { key: "contagem", label: "Contagem APF" },
   { key: "parecer", label: "Parecer" },
 ];
 
@@ -1110,27 +1108,6 @@ const SolicitacoesRecebidasDetalhe = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted-foreground hidden sm:block">
-            Contagem e parecer automático
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5 border-ctrl text-ctrl hover:bg-ctrl/10"
-            onClick={() => navigate("/controle/apf/nova-contagem")}
-          >
-            <Zap className="h-3.5 w-3.5" />
-            Nova contagem APF
-          </Button>
-          <Button
-            size="sm"
-            className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Analisar solicitação
-          </Button>
-        </div>
       </div>
 
       {/* ── Sub-header: Voltar + Emitir ── */}
@@ -1149,7 +1126,7 @@ const SolicitacoesRecebidasDetalhe = () => {
           <Button
             size="sm"
             className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground"
-            onClick={() => setActiveTab("contagem")}
+            onClick={() => setActiveTab("parecer")}
           >
             <FileText className="h-3.5 w-3.5" />
             Emitir parecer automático
@@ -1179,15 +1156,6 @@ const SolicitacoesRecebidasDetalhe = () => {
 
       {/* ── Tab content ── */}
       {activeTab === "resumo" && <TabResumo sol={sol} det={det} />}
-      {activeTab === "contagem" && (
-        <TabContagemAPF
-          det={det}
-          contagem={contagem}
-          onChange={handleContagemChange}
-          onEmitir={() => setActiveTab("parecer")}
-          onFinalizar={() => setActiveTab("parecer")}
-        />
-      )}
       {activeTab === "parecer" && (
         <TabParecer
           det={det}

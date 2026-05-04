@@ -235,13 +235,17 @@ const APFHistorico = () => {
                     i % 2 === 0 ? "" : "bg-muted/10"
                   }`}
                 >
-                  <td className="px-4 py-3 text-primary font-medium text-xs">{c.solicitacao}</td>
-                  <td className="px-4 py-3 text-foreground font-medium">{c.projeto}</td>
+                  <td className="px-4 py-3 text-primary font-medium text-xs whitespace-nowrap">{c.solicitacao}</td>
+                  <td className="px-4 py-3 text-foreground font-medium min-w-[120px]">{c.projeto}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{c.data}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${METODO_CFG[c.metodo]}`}>
-                      {c.metodo}
-                    </span>
+                    <div className="flex flex-col gap-0.5 items-start">
+                      {c.metodo.split(" ").map((part) => (
+                        <span key={part} className={`px-2 py-0.5 rounded text-[11px] font-medium ${METODO_CFG[c.metodo]}`}>
+                          {part}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center text-foreground">{c.pe}</td>
                   <td className="px-4 py-3 text-center text-foreground">{c.al}</td>
