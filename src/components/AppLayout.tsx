@@ -48,7 +48,7 @@ const controleMenu: MenuGroup[] = [
     ],
   },
   {
-    section: "Solicitações",
+    section: "Solicitações de contratação",
     items: [
       { label: "Solicitações recebidas", path: "/controle/solicitacoes/recebidas", icon: Inbox },
     ],
