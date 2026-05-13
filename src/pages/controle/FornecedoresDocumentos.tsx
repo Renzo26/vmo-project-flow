@@ -77,12 +77,6 @@ const FornecedoresDocumentos = () => {
         <div>
           <h2 className="text-xl font-bold text-foreground">Documentos e certidões</h2>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Monitoramento automático</span>
-          <Button size="sm" className="gap-1.5 bg-ctrl hover:bg-ctrl/90 text-ctrl-foreground border-0 text-xs">
-            <PlusCircle className="h-3.5 w-3.5" /> Analisar solicitação
-          </Button>
-        </div>
       </div>
 
       {/* Subtítulo */}
