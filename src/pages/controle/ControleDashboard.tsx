@@ -112,9 +112,6 @@ const ControleDashboard = () => {
           <h2 className="text-xl font-bold text-foreground">Dashboard — Controle Econômico</h2>
           <p className="text-sm text-muted-foreground mt-0.5">{userTeam || "Gestão de Suprimentos TI"}</p>
         </div>
-        <Button onClick={() => navigate("/solicitante/nova-analise")} className="gap-2 bg-ctrl hover:bg-ctrl/90 text-ctrl-foreground">
-          <Plus className="h-4 w-4" /> Nova Análise
-        </Button>
       </div>
 
       {/* Visão financeira consolidada */}
