@@ -209,19 +209,6 @@ const ControleAPF = () => {
             automaticamente a todas as demandas de desenvolvimento de software.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm text-muted-foreground hidden md:block">Motor de análise automática</span>
-          <Button
-            size="sm"
-            className="gap-1.5 bg-ctrl hover:bg-ctrl/90 text-ctrl-foreground"
-            onClick={() => navigate("/controle/apf/nova-contagem")}
-          >
-            <Zap className="h-4 w-4" /> Nova contagem APF
-          </Button>
-          <Button size="sm" variant="outline" className="gap-1.5">
-            <Plus className="h-4 w-4" /> Analisar solicitação
-          </Button>
-        </div>
       </div>
 
       {/* Configuração */}
