@@ -46,20 +46,6 @@ const FornecedoresDashboard = () => {
           >
             Base de fornecedores
           </button>
-          <Button
-            onClick={() => navigate("/controle/apf/nova-contagem")}
-            className="bg-purple-600 hover:bg-purple-700 text-white gap-1.5"
-            size="sm"
-          >
-            <Zap className="h-4 w-4" /> Nova contagem APF
-          </Button>
-          <Button
-            onClick={() => navigate("/controle/solicitacoes/recebidas")}
-            className="gap-1.5"
-            size="sm"
-          >
-            <Plus className="h-4 w-4" /> Analisar solicitação
-          </Button>
         </div>
       </div>
 
