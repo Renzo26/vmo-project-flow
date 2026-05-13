@@ -354,14 +354,6 @@ const SolicitacoesRecebidas = () => {
           <span className="text-xs text-muted-foreground hidden sm:block">
             Aguardando análise e parecer
           </span>
-          <Button
-            size="sm"
-            className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => navigate("/controle/solicitacoes/analise-apf")}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Analisar solicitação
-          </Button>
         </div>
       </div>
 
