@@ -60,9 +60,6 @@ const FornecedorDashboard = () => {
           <span className="text-sm text-muted-foreground">
             {userTeam || userName || "TechSoft Soluções"}
           </span>
-          <Button onClick={() => navigate("/fornecedor/projetos")} className="gap-1 rounded-full">
-            <Plus className="h-4 w-4" /> Nova Análise
-          </Button>
         </div>
       </div>
 
