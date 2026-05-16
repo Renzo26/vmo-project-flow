@@ -118,7 +118,7 @@ const ControleAPF = () => {
   const versao = "v2026.1";
 
   // Step 2 — Deflatores
-  const [deflatores, setDeflatores] = useState<Deflator[]>(JSON.parse(JSON.stringify(DEFLATORES_PADRAO)));
+  const [deflatores, setDeflatores] = useState<Deflator[]>([]);
   const [usarDeflatores, setUsarDeflatores] = useState(true);
   const [expandedDeflator, setExpandedDeflator] = useState<string | null>(null);
 
@@ -429,6 +429,14 @@ const ControleAPF = () => {
                   </div>
 
                   <div className="rounded-xl border border-border overflow-hidden">
+                    {deflatores.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <p className="text-sm font-medium text-foreground">Nenhum deflator cadastrado</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Use o formulário abaixo para adicionar deflatores ao catálogo.
+                        </p>
+                      </div>
+                    ) : (
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-muted/40 border-b border-border">
@@ -517,14 +525,12 @@ const ControleAPF = () => {
                                 </button>
                               </td>
                               <td className="px-2 py-2 text-center">
-                                {d.personalizado && (
-                                  <button
-                                    onClick={() => removeDeflator(d.id)}
-                                    className="text-muted-foreground hover:text-destructive transition-colors"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                )}
+                                <button
+                                  onClick={() => removeDeflator(d.id)}
+                                  className="text-muted-foreground hover:text-destructive transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
                               </td>
                             </tr>
 
@@ -545,6 +551,7 @@ const ControleAPF = () => {
                         ))}
                       </tbody>
                     </table>
+                    )}
 
                     {/* Adicionar novo deflator */}
                     <button
