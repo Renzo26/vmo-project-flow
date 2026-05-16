@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   SlidersHorizontal, Zap, Check, Plus, Trash2, ToggleLeft, ToggleRight,
-  CheckCircle2, AlertTriangle, XCircle, RefreshCw, ShieldCheck,
+  CheckCircle2, AlertTriangle, XCircle, RefreshCw, ShieldCheck, ChevronRight,
 } from "lucide-react";
 
 const STEPS = ["Metodologia", "Deflatores", "Parâmetros Econômicos", "Regras de Parecer"];
@@ -16,30 +16,33 @@ interface Deflator {
   id: string;
   mne: string;
   descricao: string;
+  regra: string;
   valor: number;
   tipo: string;
   destaque: boolean;
   ativo: boolean;
+  personalizado?: boolean;
 }
 
 const DEFLATORES_PADRAO: Deflator[] = [
-  { id: "d1",  mne: "Inc-4.1",   descricao: "4.1 Aplicação / 4.1 Novo sistema / 4.2 Projeto de Melhoria – Nova",                                                valor: 1.00, tipo: "Func", destaque: false, ativo: true },
-  { id: "d2",  mne: "A50-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (50%) (Mesma empresa que desenvolveu a funcionalidade s/ redoc)",                valor: 0.50, tipo: "Func", destaque: false, ativo: true },
-  { id: "d3",  mne: "A65-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (65%) (Mesma empresa que desenvolveu a funcionalidade c/ redoc)",                valor: 0.65, tipo: "Func", destaque: false, ativo: true },
-  { id: "d4",  mne: "A75-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (75%) (Empresa diferente daquela que desenvolveu a funcionalidade s/ redoc)",   valor: 0.75, tipo: "Func", destaque: false, ativo: true },
-  { id: "d5",  mne: "A80-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (80%) (Cláusula de Contrato)",                                                  valor: 0.80, tipo: "Func", destaque: true,  ativo: true },
-  { id: "d6",  mne: "A90-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (90%) (Empresa diferente daquela que desenvolveu a funcionalidade c/ redoc)",   valor: 0.90, tipo: "Func", destaque: false, ativo: true },
-  { id: "d7",  mne: "Exc-4.2",   descricao: "4.2 Projeto de Melhoria - Excluída",                                                                               valor: 0.30, tipo: "Func", destaque: false, ativo: true },
-  { id: "d8",  mne: "Exc25-4.2", descricao: "4.2 Projeto de Melhoria - Excluída",                                                                               valor: 0.25, tipo: "Func", destaque: true,  ativo: true },
-  { id: "d9",  mne: "MD-4.3",    descricao: "4.3 Projetos de Migração de Dados",                                                                                 valor: 1.00, tipo: "Func", destaque: false, ativo: true },
-  { id: "d10", mne: "MC-4.4",    descricao: "4.4 Manutenção Corretiva - 0% (Garantia)",                                                                          valor: 0.00, tipo: "Func", destaque: false, ativo: true },
-  { id: "d11", mne: "MC50-4.4",  descricao: "4.4 Manutenção Corretiva - 50% (Mesma empresa que desenvolveu a funcionalidade s/ redoc)",                          valor: 0.50, tipo: "Func", destaque: false, ativo: true },
-  { id: "d12", mne: "MC65-4.4",  descricao: "4.4 Manutenção Corretiva - 65% (Mesma empresa que desenvolveu a funcionalidade c/ redoc)",                          valor: 0.65, tipo: "Func", destaque: false, ativo: true },
-  { id: "d13", mne: "MC75-4.4",  descricao: "4.4 Manutenção Corretiva - 75% (Empresa diferente daquela que desenvolveu a funcionalidade s/ redoc)",              valor: 0.75, tipo: "Func", destaque: false, ativo: true },
-  { id: "d14", mne: "MC90-4.4",  descricao: "4.4 Manutenção Corretiva - 90% (Empresa diferente daquela que desenvolveu a funcionalidade c/ redoc)",              valor: 0.90, tipo: "Func", destaque: false, ativo: true },
-  { id: "d15", mne: "MD1-4.5.1", descricao: "4.5.1 Mudança de Plataforma - Linguagem de Programação",                                                           valor: 1.00, tipo: "Func", destaque: false, ativo: true },
-  { id: "d16", mne: "MD2-4.5.2", descricao: "4.5.2 Mudança de Plataforma - Banco de Dados (BD_HIERÁRQUICO)",                                                    valor: 1.00, tipo: "Func", destaque: false, ativo: true },
+  { id: "d1",  mne: "Inc-4.1",   descricao: "4.1 Aplicação / 4.1 Novo sistema / 4.2 Projeto de Melhoria – Nova",                                                valor: 1.00, tipo: "Func", destaque: false, ativo: true, regra: "Contagem plena para projetos novos ou projetos de melhoria com funcionalidade nova. Nenhuma redução é aplicada — fator 1,00." },
+  { id: "d2",  mne: "A50-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (50%) (Mesma empresa que desenvolveu a funcionalidade s/ redoc)",                valor: 0.50, tipo: "Func", destaque: false, ativo: true, regra: "Mesma empresa que desenvolveu a funcionalidade original, sem redocumentação. Redução de 50% no custo de alteração — fator 0,50." },
+  { id: "d3",  mne: "A65-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (65%) (Mesma empresa que desenvolveu a funcionalidade c/ redoc)",                valor: 0.65, tipo: "Func", destaque: false, ativo: true, regra: "Mesma empresa que desenvolveu a funcionalidade original, com redocumentação exigida. Redução de 35% — fator 0,65." },
+  { id: "d4",  mne: "A75-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (75%) (Empresa diferente daquela que desenvolveu a funcionalidade s/ redoc)",   valor: 0.75, tipo: "Func", destaque: false, ativo: true, regra: "Empresa diferente da que desenvolveu originalmente, sem redocumentação. Redução de 25% — fator 0,75." },
+  { id: "d5",  mne: "A80-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (80%) (Cláusula de Contrato)",                                                  valor: 0.80, tipo: "Func", destaque: true,  ativo: true, regra: "Percentual definido por cláusula contratual específica. Verifique o instrumento contratual antes de aplicar. Fator 0,80." },
+  { id: "d6",  mne: "A90-4.2",   descricao: "4.2 Projeto de Melhoria - Alterada (90%) (Empresa diferente daquela que desenvolveu a funcionalidade c/ redoc)",   valor: 0.90, tipo: "Func", destaque: false, ativo: true, regra: "Empresa diferente da que desenvolveu originalmente, com redocumentação exigida. Redução de 10% — fator 0,90." },
+  { id: "d7",  mne: "Exc-4.2",   descricao: "4.2 Projeto de Melhoria - Excluída",                                                                               valor: 0.30, tipo: "Func", destaque: false, ativo: true, regra: "Exclusão de funcionalidade em projeto de melhoria. Contagem parcial — fator 0,30." },
+  { id: "d8",  mne: "Exc25-4.2", descricao: "4.2 Projeto de Melhoria - Excluída",                                                                               valor: 0.25, tipo: "Func", destaque: true,  ativo: true, regra: "Exclusão de funcionalidade com cláusula contratual específica. Fator reduzido — fator 0,25." },
+  { id: "d9",  mne: "MD-4.3",    descricao: "4.3 Projetos de Migração de Dados",                                                                                 valor: 1.00, tipo: "Func", destaque: false, ativo: true, regra: "Migração de dados contabilizada integralmente como funcionalidade nova. Nenhuma redução — fator 1,00." },
+  { id: "d10", mne: "MC-4.4",    descricao: "4.4 Manutenção Corretiva - 0% (Garantia)",                                                                          valor: 0.00, tipo: "Func", destaque: false, ativo: true, regra: "Período de garantia contratual. A manutenção corretiva é obrigação do fornecedor, sem custo adicional — fator 0,00." },
+  { id: "d11", mne: "MC50-4.4",  descricao: "4.4 Manutenção Corretiva - 50% (Mesma empresa que desenvolveu a funcionalidade s/ redoc)",                          valor: 0.50, tipo: "Func", destaque: false, ativo: true, regra: "Manutenção corretiva pela empresa original, sem redocumentação. Redução de 50% — fator 0,50." },
+  { id: "d12", mne: "MC65-4.4",  descricao: "4.4 Manutenção Corretiva - 65% (Mesma empresa que desenvolveu a funcionalidade c/ redoc)",                          valor: 0.65, tipo: "Func", destaque: false, ativo: true, regra: "Manutenção corretiva pela empresa original, com redocumentação. Redução de 35% — fator 0,65." },
+  { id: "d13", mne: "MC75-4.4",  descricao: "4.4 Manutenção Corretiva - 75% (Empresa diferente daquela que desenvolveu a funcionalidade s/ redoc)",              valor: 0.75, tipo: "Func", destaque: false, ativo: true, regra: "Manutenção corretiva por empresa diferente, sem redocumentação. Redução de 25% — fator 0,75." },
+  { id: "d14", mne: "MC90-4.4",  descricao: "4.4 Manutenção Corretiva - 90% (Empresa diferente daquela que desenvolveu a funcionalidade c/ redoc)",              valor: 0.90, tipo: "Func", destaque: false, ativo: true, regra: "Manutenção corretiva por empresa diferente, com redocumentação. Redução de 10% — fator 0,90." },
+  { id: "d15", mne: "MD1-4.5.1", descricao: "4.5.1 Mudança de Plataforma - Linguagem de Programação",                                                           valor: 1.00, tipo: "Func", destaque: false, ativo: true, regra: "Mudança de linguagem de programação. Contagem integral, pois o esforço é equivalente ao desenvolvimento original — fator 1,00." },
+  { id: "d16", mne: "MD2-4.5.2", descricao: "4.5.2 Mudança de Plataforma - Banco de Dados (BD_HIERÁRQUICO)",                                                    valor: 1.00, tipo: "Func", destaque: false, ativo: true, regra: "Mudança de banco de dados hierárquico. Contagem integral pelo impacto na arquitetura de dados — fator 1,00." },
 ];
+
 type TipoParecer = "Aprovado" | "Negociar" | "Revisar" | "Recusado";
 
 interface Alcada {
@@ -51,7 +54,7 @@ interface Alcada {
 interface FaixaDesvio {
   id: string;
   desvioMin: number;
-  desvioMax: number | null; // null = sem limite superior ("acima de X%")
+  desvioMax: number | null;
   acao: TipoParecer;
   alcadaId: string;
   ativa: boolean;
@@ -116,12 +119,47 @@ const ControleAPF = () => {
 
   // Step 2 — Deflatores
   const [deflatores, setDeflatores] = useState<Deflator[]>(JSON.parse(JSON.stringify(DEFLATORES_PADRAO)));
+  const [usarDeflatores, setUsarDeflatores] = useState(true);
+  const [expandedDeflator, setExpandedDeflator] = useState<string | null>(null);
+
+  // Step 2 — Formulário de novo deflator
+  const [mostrarFormDeflator, setMostrarFormDeflator] = useState(false);
+  const [novoMne, setNovoMne] = useState("");
+  const [novaDescricao, setNovaDescricao] = useState("");
+  const [novoValorPercent, setNovoValorPercent] = useState("100");
+  const [novoTipo, setNovoTipo] = useState("Func");
+  const [novaRegra, setNovaRegra] = useState("");
 
   const updateDeflator = (id: string, patch: Partial<Deflator>) =>
     setDeflatores(prev => prev.map(d => d.id === id ? { ...d, ...patch } : d));
 
   const resetDeflatores = () =>
     setDeflatores(JSON.parse(JSON.stringify(DEFLATORES_PADRAO)));
+
+  const removeDeflator = (id: string) =>
+    setDeflatores(prev => prev.filter(d => d.id !== id));
+
+  const salvarNovoDeflator = () => {
+    if (!novoMne.trim()) return;
+    const valorDecimal = Math.min(Math.max(Number(novoValorPercent) / 100, 0), 1);
+    setDeflatores(prev => [...prev, {
+      id: `custom_${nextId++}`,
+      mne: novoMne.trim(),
+      descricao: novaDescricao.trim(),
+      regra: novaRegra.trim(),
+      valor: parseFloat(valorDecimal.toFixed(4)),
+      tipo: novoTipo,
+      destaque: false,
+      ativo: true,
+      personalizado: true,
+    }]);
+    setNovoMne("");
+    setNovaDescricao("");
+    setNovoValorPercent("100");
+    setNovoTipo("Func");
+    setNovaRegra("");
+    setMostrarFormDeflator(false);
+  };
 
   // Step 3
   const [valorPF, setValorPF] = useState("820");
@@ -131,7 +169,7 @@ const ControleAPF = () => {
   const [prazoFornecedor, setPrazoFornecedor] = useState("5");
   const [modalidade, setModalidade] = useState("Ponto de Função (PF)");
 
-  // Step 3
+  // Step 4
   const [alcadas, setAlcadas] = useState<Alcada[]>(JSON.parse(JSON.stringify(ALCADAS_PADRAO)));
   const [faixas, setFaixas] = useState<Record<MetodologiaKey, FaixaDesvio[]>>(
     JSON.parse(JSON.stringify(FAIXAS_PADRAO))
@@ -344,90 +382,278 @@ const ControleAPF = () => {
                   </p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">Fonte: SISP 2.3</p>
                 </div>
+                {usarDeflatores && (
+                  <button
+                    onClick={resetDeflatores}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Restaurar padrões
+                  </button>
+                )}
+              </div>
+
+              {/* Toggle — usar ou não deflatores */}
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Aplicar deflatores nesta configuração</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {usarDeflatores
+                      ? "Deflatores ativos — os fatores abaixo serão aplicados às contagens."
+                      : "Deflatores desativados — todas as contagens usam fator 100% (sem redução)."}
+                  </p>
+                </div>
                 <button
-                  onClick={resetDeflatores}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setUsarDeflatores(v => !v)}
+                  className={`transition-colors ${usarDeflatores ? "text-ctrl" : "text-muted-foreground"}`}
                 >
-                  <RefreshCw className="h-3.5 w-3.5" /> Restaurar padrões
+                  {usarDeflatores
+                    ? <ToggleRight className="h-7 w-7" />
+                    : <ToggleLeft className="h-7 w-7" />
+                  }
                 </button>
               </div>
 
-              <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
-                Linhas em <span className="font-semibold">destaque amarelo</span> indicam itens de{" "}
-                <span className="font-semibold">Cláusula de Contrato</span>. O campo{" "}
-                <span className="font-semibold">Valor</span> é editável; ative ou desative cada deflator
-                conforme a política vigente.
-              </div>
+              {!usarDeflatores && (
+                <div className="p-4 rounded-lg border border-border bg-muted/10 text-sm text-muted-foreground text-center">
+                  Nenhum deflator configurado. O fluxo seguirá com <span className="font-semibold text-foreground">fator 100%</span> para todos os projetos.
+                </div>
+              )}
 
-              <div className="rounded-xl border border-border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/40 border-b border-border">
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-28">
-                        Mnemônico
-                      </th>
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Descrição
-                      </th>
-                      <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">
-                        Valor
-                      </th>
-                      <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-16">
-                        Tipo
-                      </th>
-                      <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-16">
-                        Ativo
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {deflatores.map((d, i) => (
-                      <tr
-                        key={d.id}
-                        className={`border-b border-border last:border-0 transition-opacity ${
-                          !d.ativo ? "opacity-40" : ""
-                        } ${d.destaque ? "bg-amber-50" : i % 2 === 0 ? "" : "bg-muted/10"}`}
-                      >
-                        <td className="px-4 py-2">
-                          <span className={`font-mono text-xs font-semibold ${d.destaque ? "text-amber-700" : "text-foreground"}`}>
-                            {d.mne}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-sm text-foreground">
-                          {d.descricao}
-                        </td>
-                        <td className="px-4 py-2 text-center">
+              {usarDeflatores && (
+                <>
+                  <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
+                    Linhas em <span className="font-semibold">destaque amarelo</span> indicam itens de{" "}
+                    <span className="font-semibold">Cláusula de Contrato</span>. O campo{" "}
+                    <span className="font-semibold">Valor</span> é editável; ative ou desative cada deflator
+                    conforme a política vigente. Clique no <span className="font-semibold">código da regra</span> para ver a descrição detalhada.
+                  </div>
+
+                  <div className="rounded-xl border border-border overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-muted/40 border-b border-border">
+                          <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-32">
+                            Código da regra
+                          </th>
+                          <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Descrição
+                          </th>
+                          <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-28">
+                            Calibragem (%)
+                          </th>
+                          <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-16">
+                            Tipo
+                          </th>
+                          <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-16">
+                            Ativo
+                          </th>
+                          <th className="w-8" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deflatores.map((d, i) => (
+                          <>
+                            <tr
+                              key={d.id}
+                              className={`border-b border-border transition-opacity ${
+                                !d.ativo ? "opacity-40" : ""
+                              } ${d.destaque ? "bg-amber-50" : i % 2 === 0 ? "" : "bg-muted/10"} ${
+                                expandedDeflator === d.id ? "border-b-0" : ""
+                              }`}
+                            >
+                              <td className="px-4 py-2">
+                                <button
+                                  onClick={() => setExpandedDeflator(expandedDeflator === d.id ? null : d.id)}
+                                  className="flex items-center gap-1 group"
+                                >
+                                  <ChevronRight
+                                    className={`h-3 w-3 text-muted-foreground transition-transform shrink-0 ${
+                                      expandedDeflator === d.id ? "rotate-90" : ""
+                                    }`}
+                                  />
+                                  <span className={`font-mono text-xs font-semibold group-hover:underline ${
+                                    d.destaque ? "text-amber-700" : "text-foreground"
+                                  }`}>
+                                    {d.mne}
+                                  </span>
+                                  {d.personalizado && (
+                                    <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-ctrl/10 text-ctrl">
+                                      custom
+                                    </span>
+                                  )}
+                                </button>
+                              </td>
+                              <td className="px-4 py-2 text-sm text-foreground">
+                                {d.descricao}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <Input
+                                    type="number"
+                                    step="1"
+                                    min={0}
+                                    max={100}
+                                    value={Math.round(d.valor * 100)}
+                                    onChange={e => updateDeflator(d.id, { valor: Number(e.target.value) / 100 })}
+                                    className="h-8 w-16 text-sm text-center mx-auto"
+                                  />
+                                  <span className="text-xs text-muted-foreground">%</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-ctrl/10 text-ctrl">
+                                  {d.tipo}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <button
+                                  onClick={() => updateDeflator(d.id, { ativo: !d.ativo })}
+                                  className={`transition-colors ${d.ativo ? "text-ctrl" : "text-muted-foreground"}`}
+                                >
+                                  {d.ativo
+                                    ? <ToggleRight className="h-5 w-5" />
+                                    : <ToggleLeft className="h-5 w-5" />
+                                  }
+                                </button>
+                              </td>
+                              <td className="px-2 py-2 text-center">
+                                {d.personalizado && (
+                                  <button
+                                    onClick={() => removeDeflator(d.id)}
+                                    className="text-muted-foreground hover:text-destructive transition-colors"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+
+                            {/* Linha expansível com a descrição da regra */}
+                            {expandedDeflator === d.id && d.regra && (
+                              <tr
+                                key={`${d.id}_regra`}
+                                className={`border-b border-border ${d.destaque ? "bg-amber-50/60" : "bg-muted/5"}`}
+                              >
+                                <td colSpan={6} className="px-8 pb-3 pt-1">
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    <span className="font-semibold text-foreground">Regra: </span>{d.regra}
+                                  </p>
+                                </td>
+                              </tr>
+                            )}
+                          </>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {/* Adicionar novo deflator */}
+                    <button
+                      onClick={() => { setMostrarFormDeflator(true); setExpandedDeflator(null); }}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 border-t border-dashed border-ctrl/30 text-sm text-ctrl hover:bg-ctrl/5 transition-colors"
+                    >
+                      <Plus className="h-4 w-4" /> Novo deflator personalizado
+                    </button>
+                  </div>
+
+                  {/* Formulário de cadastro de novo deflator */}
+                  {mostrarFormDeflator && (
+                    <div className="rounded-xl border border-ctrl/20 bg-ctrl/5 p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">Cadastro de deflator personalizado</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Defina o percentual de calibragem e vincule ao catálogo de deflatores.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setMostrarFormDeflator(false)}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label>Código da regra *</Label>
                           <Input
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            max={1}
-                            value={d.valor}
-                            onChange={e => updateDeflator(d.id, { valor: Number(e.target.value) })}
-                            className="h-8 w-20 text-sm text-center mx-auto"
+                            value={novoMne}
+                            onChange={e => setNovoMne(e.target.value)}
+                            placeholder="Ex: A70-4.2"
+                            className="mt-1"
                           />
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-ctrl/10 text-ctrl">
-                            {d.tipo}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          <button
-                            onClick={() => updateDeflator(d.id, { ativo: !d.ativo })}
-                            className={`transition-colors ${d.ativo ? "text-ctrl" : "text-muted-foreground"}`}
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            Identificador único do deflator
+                          </p>
+                        </div>
+                        <div>
+                          <Label>Percentual de calibragem (%) *</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={novoValorPercent}
+                              onChange={e => setNovoValorPercent(e.target.value)}
+                              className="flex-1"
+                            />
+                            <span className="text-sm text-muted-foreground">%</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            Fator aplicado sobre a contagem APF (0 a 100%)
+                          </p>
+                        </div>
+                        <div>
+                          <Label>Tipo</Label>
+                          <select
+                            value={novoTipo}
+                            onChange={e => setNovoTipo(e.target.value)}
+                            className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                           >
-                            {d.ativo
-                              ? <ToggleRight className="h-5 w-5" />
-                              : <ToggleLeft className="h-5 w-5" />
-                            }
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                            <option>Func</option>
+                            <option>Não-Func</option>
+                            <option>Infra</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Descrição</Label>
+                        <Input
+                          value={novaDescricao}
+                          onChange={e => setNovaDescricao(e.target.value)}
+                          placeholder="Ex: 4.2 Projeto de Melhoria - Alterada (70%)"
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Descrição da regra <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                        <Input
+                          value={novaRegra}
+                          onChange={e => setNovaRegra(e.target.value)}
+                          placeholder="Explique quando e como este deflator deve ser aplicado..."
+                          className="mt-1"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Exibida ao expandir o código da regra na tabela
+                        </p>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          onClick={salvarNovoDeflator}
+                          disabled={!novoMne.trim()}
+                          className="bg-ctrl hover:bg-ctrl/90 text-ctrl-foreground"
+                        >
+                          <Check className="h-4 w-4 mr-2" /> Vincular deflator
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
