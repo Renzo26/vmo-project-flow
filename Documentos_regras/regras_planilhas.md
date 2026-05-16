@@ -2,10 +2,11 @@
 
 ## Contexto
 
-Este documento descreve as regras de negócio extraídas de dois arquivos na pasta `Documentos_regras`:
+Este documento descreve as regras de negócio extraídas dos arquivos na pasta `Documentos_regras`:
 
 - **`Planilha PFS - 2.2 - 2026.xlsx`** — Template oficial de contagem pelo método **PFS (Ponto Funcional Simplificado) versão 2.2**, usado nas contagens internas do VMO.
 - **`PlanilhaContagemPontoFuncaoExemplo.xls`** — Exemplo real de contagem detalhada pelo método **IFPUG/APF (Análise de Ponto de Função)**, com complexidade funcional completa.
+- **`EST-Calculadora de Contagem e Auditoria de PF Sefaz V2.13_370622.xlsm`** — Calculadora oficial SISP 2.3 com catálogo completo de deflatores, INMs e deflator por fase. Usada como referência para a etapa **Deflatores** do `ControleAPF`.
 
 No sistema VMO, o módulo **Controle > APF** implementa estas planilhas digitalmente. As páginas relevantes são: `ControleAPF`, `APFHistorico` e `APFNovaContagem`.
 
@@ -293,3 +294,198 @@ O módulo **Controle > APF** do VMO implementa estas regras. O fluxo é:
 - PEs aceitam no máximo 30 itens por contagem
 - Campos de CFB sem tipo de operação selecionado não contribuem para o total
 - Para Melhoria: ASFPA nunca pode ser negativo (DEL não pode superar ASFPB + ADD)
+
+---
+
+## Deflatores SISP 2.3 — EST-Calculadora de Contagem e Auditoria de PF
+
+**Fonte:** Aba `SISP_Deflatores_e_INMs` do arquivo `EST-Calculadora de Contagem e Auditoria de PF Sefaz V2.13_370622.xlsm`
+
+Os deflatores são usados na **Contagem Detalhada** (método IFPUG/SISP) para ajustar o PF bruto de cada função conforme o tipo de operação ou natureza da entrega. O campo `IFPUG SISP` na aba `Contagem` referencia o mnemônico do deflator a aplicar.
+
+```
+PF Local (deflacionado) = PF_bruto × valor_do_deflator
+Total PFL               = SOMA(PF Local de todas as funções)
+```
+
+> Se a empresa não quiser usar deflatores, o sistema mantém fator 1,00 (100%) para todas as funções — equivalente a aplicar apenas `Inc-4.1`.
+
+### Tipos de Deflator
+
+| Tipo | Descrição |
+|---|---|
+| **Func** | Deflator funcional — multiplica diretamente o PF bruto (ex: 0,80 = 80%) |
+| **INM** | Item Não Mensurável — calculado por fórmula própria (não é fator direto sobre PF) |
+| **Fase** | Deflator acumulativo por fase do projeto — representa a fração do esforço entregue |
+
+---
+
+### Deflatores Funcionais (Tipo = Func)
+
+#### 4.1 — Aplicação / Sistema Novo / Melhoria Nova
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `Inc-4.1` | Aplicação nova / Novo sistema / Melhoria com função nova | **1,00** |
+
+#### 4.2 — Projeto de Melhoria — Funcionalidade Alterada
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `A50-4.2` | Alterada — mesma empresa que desenvolveu, **sem** redocumentação | **0,50** |
+| `A65-4.2` | Alterada — mesma empresa que desenvolveu, **com** redocumentação | **0,65** |
+| `A75-4.2` | Alterada — empresa **diferente** da que desenvolveu, **sem** redocumentação | **0,75** |
+| `A80-4.2` | Alterada — **Cláusula de Contrato** (percentual definido contratualmente) | **0,80** |
+| `A90-4.2` | Alterada — empresa **diferente** da que desenvolveu, **com** redocumentação | **0,90** |
+| `Exc-4.2` | Excluída | **0,30** |
+| `Exc25-4.2` | Excluída (variante 25%) | **0,25** |
+
+> **Critério de seleção:** O deflator de melhoria depende de (a) se a empresa contratada é a mesma que desenvolveu originalmente e (b) se há redocumentação (`redoc`). Cláusula contratual específica pode sobrepor com `A80-4.2`.
+
+#### 4.3 — Migração de Dados
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `MD-4.3` | Projetos de Migração de Dados | **1,00** |
+
+#### 4.4 — Manutenção Corretiva
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `MC-4.4` | Manutenção Corretiva — 0% (em garantia) | **0,00** |
+| `MC50-4.4` | Manutenção Corretiva — mesma empresa, **sem** redocumentação | **0,50** |
+| `MC65-4.4` | Manutenção Corretiva — mesma empresa, **com** redocumentação | **0,65** |
+| `MC75-4.4` | Manutenção Corretiva — empresa diferente, **sem** redocumentação | **0,75** |
+| `MC90-4.4` | Manutenção Corretiva — empresa diferente, **com** redocumentação | **0,90** |
+
+#### 4.5 — Mudança de Plataforma
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `MD1-4.5.1` | Mudança de Plataforma — Linguagem de Programação | **1,00** |
+| `MD2-4.5.2` | Mudança de Plataforma — Banco de Dados Hierárquico | **1,00** |
+| `MD3-4.5.2` | Mudança de Plataforma — Banco de Dados Relacional | **0,30** |
+
+#### 4.6 — Atualização de Versão
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `AV1-4.6.1` | Atualização de Versão — Linguagem de Programação | **0,30** |
+| `AV2-4.6.2` | Atualização de Versão — Browser | **0,30** |
+
+#### 4.8 — Adaptação sem Alteração de Requisitos Funcionais
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `Ad40-4.8` | Desenvolvida/mantida pela contratada, **sem** redoc — Cláusula de Contrato | **0,40** |
+| `Ad50-4.8` | Desenvolvida/mantida pela contratada, **sem** redocumentação | **0,50** |
+| `Ad65-4.8` | Desenvolvida/mantida pela contratada, **com** redocumentação | **0,65** |
+| `Ad75-4.8` | **Não** desenvolvida/mantida pela contratada, **sem** redocumentação | **0,75** |
+| `Ad90-4.8` | **Não** desenvolvida/mantida pela contratada, **com** redocumentação | **0,90** |
+
+#### 4.9 — Apuração Especial
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `AE1-4.9.1` | Base de Dados — Atualização **sem** Consulta Prévia | **1,00** |
+| `AE2-4.9.1` | Base de Dados — Consulta Prévia **sem** Atualização | **1,00** |
+| `AE3-4.9.1` | Base de Dados — Atualização **com** Consulta Prévia | **0,60** |
+| `AE4-4.9.2` | Geração de Relatórios | **1,00** |
+| `AE5-4.9.3` | Reexecução | **0,10** |
+
+#### 4.10 a 4.16 — Outros Deflatores Funcionais
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `AD-4.10` | Atualização de Dados | **0,10** |
+| `MDSL-4.12` | Manutenção de Documentação de Sistemas Legados | **0,25** |
+| `VE-4.13` | Verificação de Erros **sem** Testes | **0,15** |
+| `VET-4.13` | Verificação de Erros **com** Testes | **0,20** |
+| `PFT-4.14` | Pontos de Função de Teste | **0,15** |
+| `CIR-4.15` | Componente Interno Reusável | **1,00** |
+| `CMM-4.16` | Contrato Complementar — Múltiplas Mídias | **1,00** |
+
+#### Sem Alteração
+
+| Mnemônico | Descrição | Valor |
+|---|---|---|
+| `SA` | Sem Alteração — item incluído conforme solicitado pelo cliente | **0,00** |
+
+---
+
+### Itens Não Mensuráveis — INM (Tipo = INM)
+
+Estes itens **não** usam um fator multiplicativo sobre PF bruto. Cada um tem sua própria fórmula de cálculo baseada em quantidade:
+
+| Mnemônico | Descrição | Fórmula |
+|---|---|---|
+| `MI-4.7` | 4.7 Manutenção em Interface | `PF_INTERFACE = 0,6 × Qtd. de Funções Transacionais Impactadas` |
+| `DMP-4.11` | 4.11 Desenvolvimento, Manutenção e Publicação de Páginas Estáticas (Intranet/Internet/Portal) | `PF_PUBLICAÇÃO = 0,6 × Qtd. de Páginas Alteradas ou Incluídas` |
+| `Comp.Arq-4.15` | 4.15 Componente Interno Reusável — por arquivo | `PF_COMPONENTE_ARQUIVO = 0,6 × Qtd. de Arquivos Alterados` |
+
+> **Na planilha:** A coluna `QTD INM` da aba `Contagem` recebe a quantidade e o sistema calcula automaticamente o PF do INM com base na fórmula acima.
+
+---
+
+### Deflatores de Fase (Tipo = Fase)
+
+Usados quando a contagem representa uma entrega parcial por fase do projeto. O valor é **acumulativo** — indica a fração do esforço total que foi entregue até aquela fase:
+
+| Mnemônico | Fase | Valor acumulado |
+|---|---|---|
+| `FREQ` | Engenharia de Requisitos | **0,25** (25%) |
+| `FDES` | Design / Arquitetura | **0,35** (35%) |
+| `FIMP` | Implementação | **0,75** (75%) |
+| `FTEST` | Teste | **0,90** (90%) |
+| `FHOM` | Homologação | **0,95** (95%) |
+| `FIMPL` | Implantação | **1,00** (100%) |
+
+---
+
+### Tabela de Faturamento por Manutenção
+
+Aplicada na aba `Faturamento` da planilha para ajuste do valor a faturar conforme o tipo de alteração contratual:
+
+| Situação | Percentual |
+|---|---|
+| Alteração de Requisitos — Incluir Função | 75% |
+| Alteração de Requisitos — Alterar Função | 75% |
+| Desistência — Incluir Função | 140% |
+| Desistência — Alterar Função | 115% |
+| Desistência — Excluir Função | 40% |
+| N/A | 100% |
+| Acréscimo | 100% |
+
+---
+
+### Estrutura da Aba Contagem (EST-Calculadora)
+
+A aba `Contagem` registra cada função individualmente com as seguintes colunas-chave:
+
+| Coluna | Conteúdo |
+|---|---|
+| `PBI` | Identificador da demanda/OS |
+| `Função` | Nome da função mensurada |
+| `Tipo` | Tipo IFPUG: `EE`, `SE`, `CE`, `ALI`, `AIE` ou `INM` |
+| `IFPUG SISP` | **Mnemônico do deflator** a aplicar (ex: `MI-4.7`, `A80-4.2`) |
+| `QTD TD` | Quantidade de Dados Elementares (DER/TD) |
+| `QTD AR/TR` | Quantidade de Arquivos Referenciados (ALR/TR) |
+| `QTD INM` | Quantidade para cálculo de INM (quando Tipo = INM) |
+| `C` | Complexidade: `L` (Baixa), `A` (Média), `H` (Alta) |
+| `ctl` | Código de controle: tipo + complexidade + operação (ex: `EEA`, `ALIH`, `INMAD`) |
+| `Tipo da Contagem` | `D` = Contagem Detalhada |
+
+### Fluxo de cálculo do PF Local na EST-Calculadora
+
+```
+Para cada função na aba Contagem:
+  1. PF_bruto   = tabela IFPUG [Tipo × Complexidade]
+  2. deflator   = SISP_Deflatores_e_INMs[mne].valor
+  3. PF_local   = PF_bruto × deflator          ← para Tipo Func
+     PF_local   = fórmula INM × QTD_INM        ← para Tipo INM
+
+Total PF  (bruto)  = SOMA(PF_bruto de todas as funções)
+Total PFL (deflat) = SOMA(PF_local de todas as funções)
+```
+
+O `Total PFL` aparece no `Resumo` como **"Total PFL (Deflação)"** e é a base para o cálculo de esforço e faturamento.
