@@ -9,12 +9,39 @@ import { Badge } from "@/components/ui/badge";
 import {
   Check, Upload, AlertTriangle, Code, TestTube, Zap,
   ClipboardList, Wrench, Lock, BarChart3, Settings as SettingsIcon, Headphones, ShoppingCart,
+  FileSpreadsheet, Download, FileText,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
-const steps = ["Identificação", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Fornecedor"];
+const steps = ["Identificação", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Padrão de Entrada PF", "Fornecedor"];
+
+type PfMethodology = "apf" | "nesma" | "sfp";
+
+const pfMethodologies: { id: PfMethodology; label: string; code: string; description: string; recommended?: boolean }[] = [
+  { id: "sfp", label: "SFP — Simple Function Point", code: "SFP", description: "Recomendado pela equipe: fácil de medir comparado ao PF clássico do IFPUG.", recommended: true },
+  { id: "nesma", label: "NESMA Estimada", code: "NESMA", description: "Contagem estimada baseada em requisitos ou histórias do repositório." },
+  { id: "apf", label: "APF IFPUG (Detalhada)", code: "APF", description: "Contagem detalhada de pontos de função com DER e ALR/RLR." },
+];
+
+const pfRequiredFields = [
+  "Código Projeto/Iniciativa",
+  "Nome do Projeto/Iniciativa",
+  "Aplicação/Sistema",
+  "Código da funcionalidade/serviço",
+  "Nome da funcionalidade/serviço",
+  "Comportamento atual",
+  "Melhoria proposta",
+  "Comportamento esperado após a melhoria",
+  "Medição para contratação? (Sim/Não)",
+  "Entidades de dados acionadas antes da melhoria",
+  "Entidades de dados acionadas após a melhoria",
+  "Layout de campos da funcionalidade/serviço (antes e após)",
+  "Possui entidade de dados nova ou alterada em razão da funcionalidade?",
+  "Entidade de dados alterada é mantida nesta aplicação ou é externa?",
+  "Nome e layout das entidades de dados criadas/alteradas pela funcionalidade",
+];
 
 const serviceTypes = [
   { id: "dev", label: "Desenvolvimento de Software", description: "Novos sistemas, manutenção, APIs, mobile, web e automação", code: "DEV", icon: Code, badge: null },
@@ -209,6 +236,11 @@ const NovaAnalise = () => {
   const [initiative, setInitiative] = useState("Correção");
   const [urgency, setUrgency] = useState<"normal" | "emergencial">("normal");
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
+  const [pfMethodology, setPfMethodology] = useState<PfMethodology>("sfp");
+  const [pfAttachments, setPfAttachments] = useState<File[]>([]);
+  const [pfRepositoryUrl, setPfRepositoryUrl] = useState("");
+  const [pfCutoffDate, setPfCutoffDate] = useState("");
+  const [pfObservations, setPfObservations] = useState("");
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
@@ -237,7 +269,17 @@ const NovaAnalise = () => {
       return true;
     }
     if (step === 2) return scopeDescription.trim() && deliveryDeadline;
+    if (step === 4) return pfMethodology && (pfAttachments.length > 0 || pfRepositoryUrl.trim());
     return true;
+  };
+
+  const handlePfFiles = (files: FileList | null) => {
+    if (!files) return;
+    setPfAttachments(prev => [...prev, ...Array.from(files)]);
+  };
+
+  const removePfAttachment = (idx: number) => {
+    setPfAttachments(prev => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -563,8 +605,167 @@ const NovaAnalise = () => {
           </div>
         )}
 
-        {/* Step 4 — Fornecedor */}
+        {/* Step 4 — Padrão de Entrada PF */}
         {step === 4 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <FileSpreadsheet className="h-5 w-5 text-primary" />
+                Padrão de Entrada PF
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecione a metodologia de contagem e anexe o documento com os campos necessários para aplicar a regra. O modelo é a planilha <span className="font-medium text-foreground">Padrão de Entrada PF.xlsx</span>.
+              </p>
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Metodologia de contagem *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {pfMethodologies.map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setPfMethodology(m.id)}
+                    className={`relative p-4 rounded-xl border text-left transition-all ${
+                      pfMethodology === m.id ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge variant="outline" className="text-[9px] font-mono bg-muted/50">{m.code}</Badge>
+                      {m.recommended && (
+                        <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">Recomendado</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-foreground">{m.label}</p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-snug">{m.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-muted/20 p-4">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    Campos obrigatórios do documento
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Estes são os campos esperados na aba <span className="font-medium text-foreground">{pfMethodologies.find(m => m.id === pfMethodology)?.code}</span> da planilha modelo.
+                  </p>
+                </div>
+                <a
+                  href="/Documentos_regras/Padrão de Entrada PF.xlsx"
+                  download
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background hover:border-primary/40 transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Baixar modelo
+                </a>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                {pfRequiredFields.map(f => (
+                  <div key={f} className="flex items-start gap-2 text-xs text-foreground">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
+                    <span className="leading-snug">{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Label>Anexar documento preenchido *</Label>
+                <Badge variant="outline" className="text-[10px] bg-destructive/15 text-destructive border-destructive/30">Obrigatório</Badge>
+              </div>
+              <label className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer flex flex-col items-center">
+                <input
+                  type="file"
+                  multiple
+                  accept=".xlsx,.xls,.csv,.pdf,.docx"
+                  className="hidden"
+                  onChange={e => handlePfFiles(e.target.files)}
+                />
+                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Arraste a planilha preenchida ou clique para enviar</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Formatos aceitos: .xlsx, .xls, .csv, .pdf, .docx</p>
+              </label>
+              {pfAttachments.length > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {pfAttachments.map((f, i) => (
+                    <li key={`${f.name}-${i}`} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg border border-border bg-background">
+                      <span className="flex items-center gap-2 text-foreground truncate">
+                        <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <span className="truncate">{f.name}</span>
+                        <span className="text-muted-foreground shrink-0">({(f.size / 1024).toFixed(1)} KB)</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removePfAttachment(i)}
+                        className="text-muted-foreground hover:text-destructive ml-2 shrink-0"
+                      >
+                        Remover
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-border p-4 space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Repositório de requisitos (alternativa)</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Se os requisitos/histórias estão em uma ferramenta (Jira, Azure DevOps etc.), informe a URL e a data corte para garantir a foto do escopo medido.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>URL do repositório de requisitos</Label>
+                  <Input
+                    value={pfRepositoryUrl}
+                    onChange={e => setPfRepositoryUrl(e.target.value)}
+                    placeholder="Ex: https://empresa.atlassian.net/jira/projects/ABC"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Data corte *</Label>
+                  <Input
+                    type="date"
+                    value={pfCutoffDate}
+                    onChange={e => setPfCutoffDate(e.target.value)}
+                    className="mt-1"
+                    disabled={!pfRepositoryUrl.trim()}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">Foto do escopo na data informada</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label>Observações para a medição</Label>
+              <Textarea
+                value={pfObservations}
+                onChange={e => setPfObservations(e.target.value)}
+                placeholder="Premissas, padrões de ID, particularidades da contagem..."
+                className="mt-1 min-h-[80px]"
+              />
+            </div>
+
+            {pfMethodology === "apf" && (
+              <div className="flex items-start gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground">
+                  Contagem APF detalhada: os campos DER (padrão 20) e ALR/RLR (padrão 1) serão abertos para edição pelo solicitante e fornecedor após o importe.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 5 — Fornecedor */}
+        {step === 5 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Selecione os fornecedores</h2>
             <div className="grid grid-cols-3 gap-3">

@@ -1,0 +1,67 @@
+Formulário do lado do solicitante
+
+Sempre vinculada a um pedido de proposta de desenvolvimento de software o solicitante preenche os seguintes campos obrigatoriamente:
+
+Projeto/Iniciativa: Identificação do projeto ou iniciativa sendo medido, ideal é que tenha um campo de código do projeto e um com o nome pelo qual é conhecido e esta descrição seja recuperada do sistema, sem qualquer preenchimento manual
+
+Aplicação (fronteira): Nome da aplicação ou aplicações sendo medidas
+
+Tipo de Contagem: Estimada (NESMA), Desenvolvimento Detalhado (IFPUG), Melhoria Detalhado (IFPUG), Desenvolvimento Simplificado (SFP), Melhoria Simplificado (SFP) => O solicitante seleciona qual tipo de medição será considerada para submeter a medição
+
+Responsável: Nome do responsável pela Solicitação
+
+Data: Data da solicitação será um campo preenchido pelo próprio sistema
+
+
+
+Planilha SFP (motor)
+
+Se for estimada ou simplificada, basta inserir o documento de requisitos padrão ou disponibilizar a ferramenta onde estão armazenadas histórias ou requisitos. Para o caso em que for disponibilizada ferramenta com requisitos é importante que seja definida uma data corte com a foto do que está sendo medido, tendo em vista que buscar de forma dinâmica irá comprometer o resultado, em razão de dinamismos que irão impedir um entendimento de ambas as partes
+
+Recuperar a descrição da funcionalidade ou história direto da ferramenta repositório, gerando funcionalidade 1 para 1 entre história ou requisito, por definição. Posteriormente o agente irá aprender as nuances da análise e calibrar a forma de medir
+
+Requer um ID padrão para registrar as funcionalidades, que deverá ser o que se encontra descrito na ferramenta repositório de requisitos ou seguir um padrão estabelecido na documentação funcional.
+
+A IA precisa aprender a medir fazendo as ponderações de funcionalidades em princípio 1 para 1, tirando repetições antes de fechar a medição.
+
+O resultado desse importe será gerado automaticamente apresentando o tamanho em PF ou SFP.
+
+Devemos recomendar o uso de SFP como premissa padrão, dada a facilidade de medir, comparado com o PF clássico do IFPUG.
+
+Internamente deve ser associado o tamanho automático inicial com o esforço de referência para conhecimento do solicitante como estimativa, porém este valor não deve ser apresentado aos fornecedores, que deverão informar esforços e custos ao receber a estimativa automatizada
+
+
+Planilha APF detalhada (motor)
+
+O sistema importa os requisitos e transforma em funcionalidades da mesma forma que faz com o SFP, porém abre para edição os campos de DER e ALR/RLR. Por definição esses campos devem vir preenchidos com 1 "ALR/RLR" e 20 "DERs", podendo ser editados tanto pelo solicitante, quanto pelo fornecedor. A classificação das funcionalidades vão demandar um trabalho de ensinar a aplicação sobre verbos chave como "gerar, consultar, disponibilizar, enviar" e outros para classificar como SE ou CE. Já os verbos "Incluir, agendar, provisionar, guardar, pagar, liberar, contratar" e outros deverão ser inicialmente vinculados a EE, bem como qualquer outros verbos de definição de funcionalidade ao longo do tempo.
+
+Para as entidades de dados impactadas a documentação deverá identificar o impacto nestas e deixar claro que se trata de inclusões ou alterações demandadas por processos, de forma interna. Para as chamadas de informações externas a aplicação também deverá ter esta indicação na documentação.
+
+Uma vez preenchidos estes campos, Eles devem ser apresentados de forma que possam ser editados pelos usuários, tanto solicitante, quanto fornecedor, de forma a aglutinar requisitos em uma única funcionalidade ou de expandir em mais funcionalidades um requisito, de forma que seja sempre obrigatório descrever a justificativa desse ajuste, que permita à IA aprender a motivação destes ajustes, de forma que em situações semelhantes no futuro, seja feita sugestão no momento do importe.
+
+
+Formulário do lado do fornecedor
+
+Do lado do fornecedor ele receberá os dados de funcionalidade preenchidos a partir do pedido do solicitante, porém ele não poderá criar nenhum id novo de funcionalidade, diferente daqueles que foram obtidos dos insumos disponibilizados. Ele poderá desabilitar uma funcionalidade, caso entenda que não é sua responsabilidade desenvolver, caso a mesma seja parte de uma funcionalidade descrita em outro requisito e portanto não seja mensurável de forma independente, devendo haver uma opção de criar vínculo para associar a outro requisito. Essa opção deve existir desde o pedido do solicitante, o mesmo poderá fazer esta associação.
+
+Da mesma forma que é possível uma associação, será possível fazer uma quebra do mesmo requisito em n funcionalidades, tanto da parte do solicitante quando do fornecedor. Isso pode acontecer em casos onde o requisito venha no nível de épico, como manter dados de cliente, que pode ser pulverizado em n funcionalidades, tais como: incluir dados de cliente, excluir dados de cliente, alterar dados de cliente, consultar dados de cliente, importar arquivo com dados de cliente, exportar arquivo com dados de cliente, bloquear/desbloquear dados de cliente, etc. Dessa forma o mesmo código de referência de requisito poderá aparecer em n linhas, desde que a descrição de funcionalidade seja distinta das outras linhas do escopo. Neste caso o nome da funcionalidade deve ser distinto, inclusive de funcionalidades vinculadas a outros códigos. Exemplo: "Incluir dados de cliente" associado ao UC02 não será considerado caso exista "Incluir dados de cliente" vinculado ao UC01 ou qualquer outro requisito apresentado no escopo. Uma mensagem de trava deve ser apresentada quando o usuário tentar fazer a edição com estas linhas redundantes.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
