@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Check, Upload, AlertTriangle, Code, TestTube, Zap,
   ClipboardList, Wrench, Lock, BarChart3, Settings as SettingsIcon, Headphones, ShoppingCart,
-  FileSpreadsheet, Download, FileText,
+  FileSpreadsheet, Download, FileText, Sparkles, Loader2, CheckCircle2, XCircle,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -24,6 +24,26 @@ const pfMethodologies: { id: PfMethodology; label: string; code: string; descrip
   { id: "nesma", label: "NESMA Estimada", code: "NESMA", description: "Contagem estimada baseada em requisitos ou histórias do repositório." },
   { id: "apf", label: "APF IFPUG (Detalhada)", code: "APF", description: "Contagem detalhada de pontos de função com DER e ALR/RLR." },
 ];
+
+interface PfFieldResult {
+  campo: string;
+  preenchido: boolean;
+  valor: string | null;
+  observacao: string | null;
+}
+
+interface PfAnalysisResult {
+  metodologia: PfMethodology;
+  aba: string;
+  arquivo: string;
+  total_campos: number;
+  total_preenchidos: number;
+  total_pendentes: number;
+  completo: boolean;
+  campos: PfFieldResult[];
+  pendentes: string[];
+  resumo: string | null;
+}
 
 const pfRequiredFields = [
   "Código Projeto/Iniciativa",
@@ -241,6 +261,9 @@ const NovaAnalise = () => {
   const [pfRepositoryUrl, setPfRepositoryUrl] = useState("");
   const [pfCutoffDate, setPfCutoffDate] = useState("");
   const [pfObservations, setPfObservations] = useState("");
+  const [pfAnalyzing, setPfAnalyzing] = useState(false);
+  const [pfAnalysis, setPfAnalysis] = useState<PfAnalysisResult | null>(null);
+  const [pfError, setPfError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
@@ -276,10 +299,36 @@ const NovaAnalise = () => {
   const handlePfFiles = (files: FileList | null) => {
     if (!files) return;
     setPfAttachments(prev => [...prev, ...Array.from(files)]);
+    setPfAnalysis(null);
+    setPfError(null);
   };
 
   const removePfAttachment = (idx: number) => {
     setPfAttachments(prev => prev.filter((_, i) => i !== idx));
+    setPfAnalysis(null);
+  };
+
+  const analyzePfDocument = async () => {
+    if (pfAttachments.length === 0) return;
+    setPfAnalyzing(true);
+    setPfError(null);
+    setPfAnalysis(null);
+    try {
+      const formData = new FormData();
+      formData.append("metodologia", pfMethodology);
+      formData.append("arquivo", pfAttachments[0]);
+      const res = await fetch("/api/entrada-pf/analisar", { method: "POST", body: formData });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail || `Erro ${res.status} ao analisar o documento.`);
+      }
+      const data: PfAnalysisResult = await res.json();
+      setPfAnalysis(data);
+    } catch (err) {
+      setPfError(err instanceof Error ? err.message : "Falha ao analisar o documento.");
+    } finally {
+      setPfAnalyzing(false);
+    }
   };
 
   return (
@@ -682,13 +731,13 @@ const NovaAnalise = () => {
                 <input
                   type="file"
                   multiple
-                  accept=".xlsx,.xls,.csv,.pdf,.docx"
+                  accept=".xlsx,.csv,.pdf,.docx"
                   className="hidden"
                   onChange={e => handlePfFiles(e.target.files)}
                 />
                 <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Arraste a planilha preenchida ou clique para enviar</p>
-                <p className="text-[11px] text-muted-foreground mt-1">Formatos aceitos: .xlsx, .xls, .csv, .pdf, .docx</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Formatos aceitos: .xlsx, .csv, .pdf, .docx</p>
               </label>
               {pfAttachments.length > 0 && (
                 <ul className="mt-3 space-y-1.5">
@@ -710,7 +759,94 @@ const NovaAnalise = () => {
                   ))}
                 </ul>
               )}
+
+              {pfAttachments.length > 0 && (
+                <div className="mt-3">
+                  <Button
+                    type="button"
+                    onClick={analyzePfDocument}
+                    disabled={pfAnalyzing}
+                    className="text-sm"
+                  >
+                    {pfAnalyzing ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Analisando documento...</>
+                    ) : (
+                      <><Sparkles className="h-4 w-4 mr-2" /> Analisar documento com IA</>
+                    )}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    A IA organiza as informações do documento e verifica os campos exigidos pela metodologia <span className="font-medium text-foreground">{pfMethodologies.find(m => m.id === pfMethodology)?.code}</span>.
+                  </p>
+                </div>
+              )}
+
+              {pfError && (
+                <div className="mt-3 flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-xs text-foreground">{pfError}</p>
+                </div>
+              )}
             </div>
+
+            {pfAnalysis && (
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className={`p-4 flex items-start gap-3 ${pfAnalysis.completo ? "bg-success/10" : "bg-amber-500/10"}`}>
+                  {pfAnalysis.completo ? (
+                    <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {pfAnalysis.completo
+                        ? "Todos os campos foram identificados no documento"
+                        : `${pfAnalysis.total_pendentes} campo(s) pendente(s) por falta de informação`}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {pfAnalysis.total_preenchidos} de {pfAnalysis.total_campos} campos preenchidos · aba {pfAnalysis.aba}
+                    </p>
+                    {pfAnalysis.resumo && (
+                      <p className="text-xs text-foreground mt-2">{pfAnalysis.resumo}</p>
+                    )}
+                  </div>
+                </div>
+
+                {pfAnalysis.pendentes.length > 0 && (
+                  <div className="p-4 border-t border-border bg-amber-500/5">
+                    <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                      <XCircle className="h-3.5 w-3.5 text-amber-600" />
+                      Informações pendentes
+                    </h4>
+                    <ul className="space-y-1">
+                      {pfAnalysis.campos.filter(c => !c.preenchido).map(c => (
+                        <li key={c.campo} className="text-xs text-foreground">
+                          <span className="font-medium">{c.campo}</span>
+                          {c.observacao && <span className="text-muted-foreground"> — {c.observacao}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="p-4 border-t border-border">
+                  <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                    Campos identificados
+                  </h4>
+                  <div className="space-y-2">
+                    {pfAnalysis.campos.filter(c => c.preenchido).map(c => (
+                      <div key={c.campo} className="text-xs">
+                        <p className="font-medium text-foreground">{c.campo}</p>
+                        <p className="text-muted-foreground leading-snug">{c.valor}</p>
+                      </div>
+                    ))}
+                    {pfAnalysis.total_preenchidos === 0 && (
+                      <p className="text-xs text-muted-foreground">Nenhum campo pôde ser preenchido a partir do documento.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="rounded-xl border border-border p-4 space-y-4">
               <div>
