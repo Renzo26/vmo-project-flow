@@ -1,7 +1,5 @@
 import io
 
-import pdfplumber
-from docx import Document
 from openpyxl import load_workbook
 
 MAX_CHARS = 60_000
@@ -12,71 +10,65 @@ class UnsupportedDocumentError(Exception):
 
 
 def _from_xlsx(data: bytes) -> str:
-    workbook = load_workbook(filename=io.BytesIO(data), read_only=True, data_only=True)
+    try:
+        workbook = load_workbook(filename=io.BytesIO(data), read_only=True, data_only=True)
+    except Exception as exc:  # noqa: BLE001
+        raise UnsupportedDocumentError(
+            "Não foi possível abrir o arquivo Excel. Envie o modelo "
+            "'Padrão de Entrada PF.xlsx' preenchido."
+        ) from exc
+
     parts: list[str] = []
     for sheet in workbook.worksheets:
-        parts.append(f"## Planilha: {sheet.title}")
-        for row in sheet.iter_rows(values_only=True):
-            cells = [str(c).strip() for c in row if c is not None and str(c).strip()]
-            if cells:
-                parts.append(" | ".join(cells))
-    workbook.close()
-    return "\n".join(parts)
-
-
-def _from_csv(data: bytes) -> str:
-    for encoding in ("utf-8-sig", "utf-8", "latin-1"):
-        try:
-            return data.decode(encoding)
-        except UnicodeDecodeError:
+        rows = list(sheet.iter_rows(values_only=True))
+        if not rows:
             continue
-    return data.decode("utf-8", errors="replace")
 
+        headers = [
+            str(c).strip() if c is not None else "" for c in rows[0]
+        ]
+        data_rows = rows[1:]
 
-def _from_pdf(data: bytes) -> str:
-    parts: list[str] = []
-    with pdfplumber.open(io.BytesIO(data)) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text() or ""
-            if text.strip():
-                parts.append(text)
-            for table in page.extract_tables():
-                for row in table:
-                    cells = [str(c).strip() for c in row if c]
-                    if cells:
-                        parts.append(" | ".join(cells))
-    return "\n".join(parts)
+        # Mantém apenas registros que tenham ao menos uma célula preenchida.
+        records: list[list[tuple[str, str]]] = []
+        for row in data_rows:
+            pairs: list[tuple[str, str]] = []
+            for idx, cell in enumerate(row):
+                if cell is None:
+                    continue
+                value = str(cell).strip()
+                if not value:
+                    continue
+                header = headers[idx] if idx < len(headers) and headers[idx] else f"Coluna {idx + 1}"
+                pairs.append((header, value))
+            if pairs:
+                records.append(pairs)
 
+        if not records:
+            continue
 
-def _from_docx(data: bytes) -> str:
-    document = Document(io.BytesIO(data))
-    parts: list[str] = [p.text for p in document.paragraphs if p.text.strip()]
-    for table in document.tables:
-        for row in table.rows:
-            cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-            if cells:
-                parts.append(" | ".join(cells))
+        parts.append(f"## Aba: {sheet.title}")
+        for i, pairs in enumerate(records, start=1):
+            parts.append(f"Registro {i}:")
+            for header, value in pairs:
+                parts.append(f"  - {header}: {value}")
+
+    workbook.close()
     return "\n".join(parts)
 
 
 def extract_text(filename: str, data: bytes) -> str:
     name = (filename or "").lower()
-    if name.endswith((".xlsx", ".xlsm")):
-        text = _from_xlsx(data)
-    elif name.endswith(".csv"):
-        text = _from_csv(data)
-    elif name.endswith(".pdf"):
-        text = _from_pdf(data)
-    elif name.endswith(".docx"):
-        text = _from_docx(data)
-    else:
+    if not name.endswith(".xlsx"):
         raise UnsupportedDocumentError(
-            "Formato não suportado. Envie .xlsx, .csv, .pdf ou .docx."
+            "Formato não suportado. Envie apenas o modelo Excel (.xlsx) "
+            "'Padrão de Entrada PF'."
         )
 
-    text = text.strip()
+    text = _from_xlsx(data).strip()
     if not text:
         raise UnsupportedDocumentError(
-            "Não foi possível extrair texto do documento enviado."
+            "O modelo Excel enviado está vazio. Preencha a aba da metodologia "
+            "escolhida antes de anexar."
         )
     return text[:MAX_CHARS]

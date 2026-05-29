@@ -297,10 +297,16 @@ const NovaAnalise = () => {
   };
 
   const handlePfFiles = (files: FileList | null) => {
-    if (!files) return;
-    setPfAttachments(prev => [...prev, ...Array.from(files)]);
+    if (!files || files.length === 0) return;
+    const file = files[0];
     setPfAnalysis(null);
     setPfError(null);
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
+      setPfAttachments([]);
+      setPfError("Envie apenas o modelo Excel (.xlsx). Baixe o modelo em \"Baixar modelo\", preencha e anexe.");
+      return;
+    }
+    setPfAttachments([file]);
   };
 
   const removePfAttachment = (idx: number) => {
@@ -663,7 +669,7 @@ const NovaAnalise = () => {
                 Padrão de Entrada PF
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Selecione a metodologia de contagem e anexe o documento com os campos necessários para aplicar a regra. O modelo é a planilha <span className="font-medium text-foreground">Padrão de Entrada PF.xlsx</span>.
+                Selecione a metodologia de contagem, baixe o modelo <span className="font-medium text-foreground">Padrão de Entrada PF.xlsx</span>, preencha a aba correspondente e anexe o arquivo Excel para a análise.
               </p>
             </div>
 
@@ -724,20 +730,19 @@ const NovaAnalise = () => {
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Label>Anexar documento preenchido *</Label>
+                <Label>Anexar modelo Excel preenchido (.xlsx) *</Label>
                 <Badge variant="outline" className="text-[10px] bg-destructive/15 text-destructive border-destructive/30">Obrigatório</Badge>
               </div>
               <label className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer flex flex-col items-center">
                 <input
                   type="file"
-                  multiple
-                  accept=".xlsx,.csv,.pdf,.docx"
+                  accept=".xlsx"
                   className="hidden"
                   onChange={e => handlePfFiles(e.target.files)}
                 />
                 <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Arraste a planilha preenchida ou clique para enviar</p>
-                <p className="text-[11px] text-muted-foreground mt-1">Formatos aceitos: .xlsx, .csv, .pdf, .docx</p>
+                <p className="text-sm text-muted-foreground">Arraste o modelo preenchido ou clique para enviar</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Apenas o modelo Excel (.xlsx) — use o arquivo em "Baixar modelo"</p>
               </label>
               {pfAttachments.length > 0 && (
                 <ul className="mt-3 space-y-1.5">

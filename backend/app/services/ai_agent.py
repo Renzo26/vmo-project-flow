@@ -39,12 +39,19 @@ def _build_schema(expected_fields: list[str]) -> dict:
             },
             "campos": {
                 "type": "array",
+                "description": "Um item para cada campo esperado, identificado pelo seu índice.",
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
-                    "required": ["campo", "preenchido", "valor", "observacao"],
+                    "required": ["indice", "preenchido", "valor", "observacao"],
                     "properties": {
-                        "campo": {"type": "string", "enum": expected_fields},
+                        "indice": {
+                            "type": "integer",
+                            "description": (
+                                "Índice do campo esperado, conforme a lista numerada "
+                                f"(de 0 a {len(expected_fields) - 1})."
+                            ),
+                        },
                         "preenchido": {"type": "boolean"},
                         "valor": {
                             "type": ["string", "null"],
@@ -72,13 +79,14 @@ def analyze_document(
 
     user_prompt = (
         f"Metodologia de contagem escolhida: {sheet}.\n\n"
-        f"Campos esperados (aba '{sheet}' da planilha modelo):\n"
-        + "\n".join(f"- {f}" for f in expected_fields)
+        f"Campos esperados (aba '{sheet}' da planilha modelo), numerados por índice:\n"
+        + "\n".join(f"[{i}] {f}" for i, f in enumerate(expected_fields))
         + "\n\n--- CONTEÚDO DO DOCUMENTO ENVIADO ---\n"
         + document_text
         + "\n--- FIM DO DOCUMENTO ---\n\n"
-        "Avalie cada campo esperado e retorne o resultado no formato estruturado solicitado. "
-        "Inclua TODOS os campos esperados na resposta, marcando preenchido=false para os ausentes."
+        "Avalie cada campo esperado e retorne o resultado no formato estruturado solicitado, "
+        "referenciando cada campo pelo seu índice. Inclua TODOS os campos esperados na resposta "
+        "(um item por índice), marcando preenchido=false para os ausentes."
     )
 
     completion = _client.chat.completions.create(
@@ -109,12 +117,16 @@ def _build_response(
     expected_fields: list[str],
     payload: dict,
 ) -> AnaliseResponse:
-    by_name: dict[str, dict] = {item["campo"]: item for item in payload.get("campos", [])}
+    by_index: dict[int, dict] = {}
+    for item in payload.get("campos", []):
+        idx = item.get("indice")
+        if isinstance(idx, int) and 0 <= idx < len(expected_fields):
+            by_index[idx] = item
 
     campos: list[FieldResult] = []
     pendentes: list[str] = []
-    for field in expected_fields:
-        item = by_name.get(field)
+    for i, field in enumerate(expected_fields):
+        item = by_index.get(i)
         if item is None:
             campos.append(
                 FieldResult(
