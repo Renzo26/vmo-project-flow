@@ -1,33 +1,59 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { api, ApiError } from "@/lib/api";
+import type { LoginResponse } from "@/lib/types";
 import { mockUsers } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, Code2 } from "lucide-react";
+import { Lock, Mail, Building2, Wrench, BarChart3, Loader2 } from "lucide-react";
+
+const ROUTE_BY_ROLE: Record<string, string> = {
+  solicitante: "/solicitante/projetos",
+  fornecedor: "/fornecedor/projetos",
+  controle: "/controle/solicitacoes/recebidas",
+};
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { setSessionData, login } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const DEV_ROLES = [
+    { role: "solicitante" as const, label: "Solicitante", icon: Building2, route: "/solicitante/projetos", color: "hover:border-primary hover:text-primary" },
+    { role: "fornecedor" as const, label: "Fornecedor", icon: Wrench, route: "/fornecedor/projetos", color: "hover:border-success hover:text-success" },
+    { role: "controle" as const, label: "Controle", icon: BarChart3, route: "/controle/dashboard", color: "hover:border-ctrl hover:text-ctrl" },
+  ];
+
+  const loginDev = (role: "solicitante" | "fornecedor" | "controle", route: string) => {
+    const u = mockUsers[role];
+    login(role, u.name, u.team);
+    navigate(route);
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (email === "solicitante@vmo.com" && password === "123456") {
-      login("solicitante", mockUsers.solicitante.name, mockUsers.solicitante.team);
-      navigate("/solicitante/projetos");
-    } else if (email === "fornecedor@vmo.com" && password === "123456") {
-      login("fornecedor", mockUsers.fornecedor.name, mockUsers.fornecedor.team);
-      navigate("/fornecedor/dashboard");
-    } else if (email === "controle@vmo.com" && password === "123456") {
-      login("controle", mockUsers.controle.name, mockUsers.controle.team);
-      navigate("/controle/dashboard");
-    } else {
-      setError("Credenciais inválidas. Tente novamente.");
+    setLoading(true);
+    try {
+      const res = await api.post<LoginResponse>("/auth/login", { email, senha: password });
+      setSessionData({
+        token: res.access_token,
+        role: res.user.role,
+        name: res.user.nome,
+        team: res.user.team ?? "",
+        userId: res.user.id,
+        fornecedorId: res.user.fornecedor_id,
+      });
+      navigate(ROUTE_BY_ROLE[res.user.role] ?? "/");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Falha ao conectar. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,22 +85,32 @@ const LoginPage = () => {
               </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full">Entrar</Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</> : "Entrar"}
+            </Button>
           </form>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">acesso rápido DEV</span></div>
           </div>
 
-          <Button variant="outline" className="w-full border-dashed border-muted-foreground/40 text-muted-foreground hover:text-foreground" onClick={() => navigate("/dev")}>
-            <Code2 className="mr-2 h-4 w-4" />
-            Entrar como DEV (sem login)
-          </Button>
+          <div className="grid grid-cols-3 gap-2">
+            {DEV_ROLES.map(({ role, label, icon: Icon, route, color }) => (
+              <button
+                key={role}
+                onClick={() => loginDev(role, route)}
+                className={`flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-muted-foreground/30 px-2 py-3 text-muted-foreground transition-colors ${color}`}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="text-xs font-medium">{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-6">
-          Dev: solicitante@vmo.com / fornecedor@vmo.com / controle@vmo.com — senha: 123456
+          Demo: solicitante@vmo.com / controle@vmo.com — senha: 123456
         </p>
       </div>
     </div>
