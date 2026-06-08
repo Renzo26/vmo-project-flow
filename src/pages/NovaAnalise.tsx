@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockSuppliers } from "@/data/mockData";
+import { useQuery } from "@tanstack/react-query";
+import { api, ApiError } from "@/lib/api";
+import type { SolicitacaoDetail } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,13 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   Check, Upload, AlertTriangle, Code, TestTube, Zap,
   ClipboardList, Wrench, Lock, BarChart3, Settings as SettingsIcon, Headphones, ShoppingCart,
-  FileSpreadsheet, Download, FileText, Sparkles, Loader2, CheckCircle2, XCircle,
+  FileSpreadsheet, Download, FileText, Sparkles, Loader2, CheckCircle2, XCircle, Building2,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
-const steps = ["Identificação", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Padrão de Entrada PF", "Fornecedor"];
+const steps = ["Identificação", "Tipo de Serviço", "Detalhes e Escopo", "Classificação", "Padrão de Entrada PF", "Revisão"];
 
 type PfMethodology = "apf" | "nesma" | "sfp";
 
@@ -265,7 +267,17 @@ const NovaAnalise = () => {
   const [pfAnalysis, setPfAnalysis] = useState<PfAnalysisResult | null>(null);
   const [pfError, setPfError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [fornecedorId, setFornecedorId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [createdNumero, setCreatedNumero] = useState<string>("");
   const navigate = useNavigate();
+
+  const { data: fornecedoresList } = useQuery<{ id: string; nome: string }[]>({
+    queryKey: ["fornecedores-lista"],
+    queryFn: () => api.get("/fornecedores/lista"),
+    enabled: step === 5,
+  });
 
   const selectedService = serviceTypes.find(s => s.id === serviceType);
   const currentSubtypePanel = subtypeMap[serviceType];
@@ -279,8 +291,57 @@ const NovaAnalise = () => {
     setSelectedSuppliers(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
   };
 
-  const handleSubmit = () => {
-    setShowModal(true);
+  const handleSubmit = async () => {
+    if (pfAttachments.length === 0) {
+      setSubmitError("Anexe o modelo Excel preenchido na etapa Padrão de Entrada PF antes de enviar.");
+      setStep(4);
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const fd = new FormData();
+      fd.append("titulo", projectTitle);
+      fd.append("area", requestArea);
+      fd.append("prioridade", priority);
+      fd.append("categoria", projectCategory);
+      fd.append("descricao", scopeDescription);
+      fd.append("sistemas_impactados", impactedSystems);
+      fd.append("entregaveis", expectedDeliverables);
+      fd.append("complexidade", complexity);
+      fd.append("ambiente", environment);
+      fd.append("prazo_entrega", deliveryDeadline);
+      fd.append("prazo_resposta", supplierResponseDeadline);
+      fd.append("modalidade", contractModality);
+      fd.append("tipo_servico", selectedService ? selectedService.label : "");
+      fd.append("subtipo", subtype);
+      fd.append("senioridade", seniority);
+      fd.append("fin_type", finType);
+      fd.append("iniciativa", initiative);
+      fd.append("urgencia", urgency);
+      fd.append("metodologia_pf", pfMethodology);
+      fd.append(
+        "form_json",
+        JSON.stringify({
+          responsavel: requestResponsible,
+          metodologia_servico: methodology,
+          observacoes_fornecedor: supplierObservations,
+          repositorio_url: pfRepositoryUrl,
+          data_corte: pfCutoffDate,
+          observacoes_pf: pfObservations,
+        }),
+      );
+      fd.append("arquivo", pfAttachments[0]);
+      if (fornecedorId) fd.append("fornecedor_id", fornecedorId);
+
+      const res = await api.upload<SolicitacaoDetail>("/solicitacoes", fd);
+      setCreatedNumero(res.numero);
+      setShowModal(true);
+    } catch (err) {
+      setSubmitError(err instanceof ApiError ? err.message : "Falha ao enviar a solicitação.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const canAdvance = () => {
@@ -905,52 +966,108 @@ const NovaAnalise = () => {
           </div>
         )}
 
-        {/* Step 5 — Fornecedor */}
+        {/* Step 5 — Revisão e envio */}
         {step === 5 && (
           <div className="space-y-6">
-            <h2 className="text-lg font-bold text-foreground">Selecione os fornecedores</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {mockSuppliers.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => toggleSupplier(s.id)}
-                  className={`p-4 rounded-xl border text-left transition-all ${
-                    selectedSuppliers.includes(s.id) ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-primary/40"
-                  }`}
-                >
-                  <p className="font-medium text-foreground">{s.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Homologado desde {s.since}</p>
-                  {selectedSuppliers.includes(s.id) && <Check className="h-4 w-4 text-primary mt-2" />}
-                </button>
-              ))}
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Revisão e envio</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Sua solicitação será enviada ao <span className="font-medium text-foreground">Controle Econômico</span>. Você pode indicar um fornecedor preferencial abaixo — o Controle poderá confirmar ou alterar a indicação.
+              </p>
             </div>
             <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-1">
               <h4 className="font-semibold text-foreground mb-2">Resumo do pedido</h4>
               <p><span className="text-muted-foreground">Título do projeto:</span> {projectTitle || "—"}</p>
-              <p><span className="text-muted-foreground">Número da solicitação:</span> {requestNumber}</p>
               <p><span className="text-muted-foreground">Área solicitante:</span> {requestArea || "—"}</p>
               <p><span className="text-muted-foreground">Solicitante:</span> {requestResponsible || "—"}</p>
               <p><span className="text-muted-foreground">Prioridade:</span> {priority} · <span className="text-muted-foreground">Categoria:</span> {projectCategory || "—"}</p>
               <p><span className="text-muted-foreground">Serviço:</span> {selectedService ? `${selectedService.code} · ${selectedService.label}` : "—"}</p>
               {subtype && <p><span className="text-muted-foreground">Subtipo:</span> {subtype}{seniority ? ` · ${seniority}` : ""}</p>}
-              <p><span className="text-muted-foreground">Metodologia:</span> {methodology.length > 0 ? methodology.join(", ") : "—"}</p>
+              <p><span className="text-muted-foreground">Metodologia (serviço):</span> {methodology.length > 0 ? methodology.join(", ") : "—"}</p>
               <p><span className="text-muted-foreground">Classificação:</span> {finType} · {initiative}</p>
               <p><span className="text-muted-foreground">Urgência:</span> {urgency === "emergencial" ? "Emergencial" : "Normal"}</p>
-              <p><span className="text-muted-foreground">Prazo proposta:</span> {deadline} dias</p>
+              <p><span className="text-muted-foreground">Metodologia PF:</span> {pfMethodologies.find(m => m.id === pfMethodology)?.code} · <span className="text-muted-foreground">Documento:</span> {pfAttachments[0]?.name ?? "—"}</p>
+              {pfAnalysis && (
+                <p><span className="text-muted-foreground">Análise IA:</span> {pfAnalysis.total_preenchidos}/{pfAnalysis.total_campos} campos · {pfAnalysis.total_pendentes} pendente(s)</p>
+              )}
             </div>
+
+            {/* Seleção de fornecedor */}
+            <div className="rounded-xl border border-border p-4 space-y-3">
+              <div>
+                <h4 className="text-sm font-semibold text-foreground">Fornecedor desejado</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Opcional — o Controle Econômico pode alterar a indicação antes de enviar ao fornecedor.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {/* Opção automático */}
+                <button
+                  type="button"
+                  onClick={() => setFornecedorId(null)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
+                    fornecedorId === null
+                      ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                      : "border-border hover:border-primary/30"
+                  }`}
+                >
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Decisão do Controle</p>
+                    <p className="text-xs text-muted-foreground">Controle Econômico define o fornecedor</p>
+                  </div>
+                  {fornecedorId === null && <Check className="h-4 w-4 text-primary ml-auto shrink-0" />}
+                </button>
+
+                {/* Fornecedores do banco */}
+                {(fornecedoresList ?? []).map(f => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFornecedorId(f.id)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
+                      fornecedorId === f.id
+                        ? "border-success bg-success/5 ring-2 ring-success/20"
+                        : "border-border hover:border-success/30"
+                    }`}
+                  >
+                    <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center shrink-0">
+                      <Building2 className="h-4 w-4 text-success" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground truncate">{f.nome}</p>
+                    {fornecedorId === f.id && <Check className="h-4 w-4 text-success ml-auto shrink-0" />}
+                  </button>
+                ))}
+
+                {!fornecedoresList && (
+                  <p className="text-xs text-muted-foreground col-span-2 flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Carregando fornecedores...
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {submitError && (
+              <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground">{submitError}</p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Navigation */}
         <div className="flex justify-between mt-8">
-          <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/solicitante/projetos")} className="text-sm">
+          <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/solicitante/projetos")} className="text-sm" disabled={submitting}>
             Voltar
           </Button>
           {step < steps.length - 1 ? (
             <Button onClick={() => setStep(step + 1)} disabled={!canAdvance()} className="text-sm">Próximo</Button>
           ) : (
-            <Button onClick={handleSubmit} className="bg-success hover:bg-success/90 text-success-foreground text-sm">
-              Enviar Pedido
+            <Button onClick={handleSubmit} disabled={submitting} className="bg-success hover:bg-success/90 text-success-foreground text-sm">
+              {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</> : "Enviar Pedido"}
             </Button>
           )}
         </div>
@@ -963,13 +1080,13 @@ const NovaAnalise = () => {
               <Check className="h-5 w-5" /> Pedido enviado com sucesso!
             </DialogTitle>
             <DialogDescription>
-              Protocolo: <span className="font-bold text-foreground">VMO-2024-043</span>
+              Protocolo: <span className="font-bold text-foreground">{createdNumero}</span>
               <br />
-              Seu pedido foi enviado aos fornecedores selecionados.
+              Sua solicitação foi enviada ao Controle Econômico para análise.
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => { setShowModal(false); navigate("/solicitante/projetos"); }} className="w-full">
-            Ver no Dashboard
+            Ver em Meus Projetos
           </Button>
         </DialogContent>
       </Dialog>
