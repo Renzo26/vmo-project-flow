@@ -19,7 +19,7 @@ const isSection = (m: MenuGroup): m is MenuSection => "section" in m;
 
 const solicitanteMenu = [
   { label: "Dashboard", path: "/solicitante/dashboard", icon: LayoutDashboard },
-  { label: "Meus Projetos", path: "/solicitante/projetos", icon: FolderKanban },
+  { label: "Minhas Solicitações", path: "/solicitante/projetos", icon: FolderKanban },
   { label: "Nova Solicitação", path: "/solicitante/nova-analise", icon: PlusCircle },
 ];
 
