@@ -273,10 +273,11 @@ const NovaAnalise = () => {
   const [createdNumero, setCreatedNumero] = useState<string>("");
   const navigate = useNavigate();
 
-  const { data: fornecedoresList } = useQuery<{ id: string; nome: string }[]>({
+  const { data: fornecedoresList, isLoading: fornLoading, isError: fornError } = useQuery<{ id: string; nome: string }[]>({
     queryKey: ["fornecedores-lista"],
     queryFn: () => api.get("/fornecedores/lista"),
     enabled: step === 5,
+    retry: 1,
   });
 
   const selectedService = serviceTypes.find(s => s.id === serviceType);
@@ -1041,9 +1042,14 @@ const NovaAnalise = () => {
                   </button>
                 ))}
 
-                {!fornecedoresList && (
+                {fornLoading && (
                   <p className="text-xs text-muted-foreground col-span-2 flex items-center gap-1.5">
                     <Loader2 className="h-3 w-3 animate-spin" /> Carregando fornecedores...
+                  </p>
+                )}
+                {fornError && (
+                  <p className="text-xs text-muted-foreground col-span-2 italic">
+                    Não foi possível carregar a lista de fornecedores. Selecione "Decisão do Controle" ou faça login com credenciais reais.
                   </p>
                 )}
               </div>
