@@ -16,7 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ChevronLeft, Loader2, FileSpreadsheet, CheckCircle2, AlertTriangle,
-  XCircle, ThumbsUp, ThumbsDown, Paperclip, MessageCircleQuestion, Check, X,
+  XCircle, ThumbsUp, ThumbsDown, Paperclip, MessageCircleQuestion,
+  Check, X, Clock, Send, CircleCheck, Ban, RefreshCcw,
 } from "lucide-react";
 
 const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
@@ -115,27 +116,43 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
         </div>
       )}
 
-      {/* Proposta existente */}
-      {s.proposta && (
+      {/* Parecer do controle */}
+      {(s.parecer_controle || s.estimativa_aprovada) && (
         <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Proposta do fornecedor</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <Info label="Valor" value={s.proposta.valor != null ? `R$ ${s.proposta.valor.toLocaleString("pt-BR")}` : null} />
-            <Info label="Prazo" value={s.proposta.prazo} />
-            <div className="col-span-2"><Info label="Observações" value={s.proposta.observacoes} /></div>
-            {s.proposta.url && (
-              <a href={s.proposta.url} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1 text-sm">
-                <Paperclip className="h-3.5 w-3.5" /> {s.proposta.arquivo_nome ?? "Arquivo da proposta"}
-              </a>
-            )}
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <CircleCheck className="h-4 w-4 text-success" /> Parecer do Controle Econômico
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            {s.estimativa_aprovada && <Info label="Estimativa aprovada" value={s.estimativa_aprovada} />}
+            {s.parecer_controle && <div className="md:col-span-2"><Info label="Parecer" value={s.parecer_controle} /></div>}
           </div>
         </div>
       )}
 
+      {/* Proposta do fornecedor */}
+      {s.proposta && (
+        <PropostaCard proposta={s.proposta} />
+      )}
+
       {/* Ações por perfil */}
-      {role === "controle" && s.status === "aguardando_controle" && <ControleAval onDone={invalidate} />}
-      {role === "fornecedor" && (s.status === "aguardando_proposta" || s.status === "proposta_enviada") && <FornecedorProposta onDone={invalidate} />}
-      {role === "solicitante" && s.status === "proposta_enviada" && <SolicitanteDecisao onDone={invalidate} />}
+      {role === "controle" && s.status === "aguardando_controle" && (
+        <ControleAval onDone={invalidate} />
+      )}
+      {role === "controle" && s.status !== "aguardando_controle" && (
+        <ControleLinha s={s} />
+      )}
+      {role === "fornecedor" && (s.status === "aguardando_proposta" || s.status === "proposta_enviada") && (
+        <FornecedorProposta s={s} onDone={invalidate} />
+      )}
+      {role === "fornecedor" && (s.status === "aceita" || s.status === "recusada") && (
+        <ResultadoFinal s={s} />
+      )}
+      {role === "solicitante" && s.status === "proposta_enviada" && (
+        <SolicitanteDecisao s={s} onDone={invalidate} />
+      )}
+      {role === "solicitante" && (s.status === "aceita" || s.status === "recusada") && (
+        <ResultadoFinal s={s} />
+      )}
     </div>
   );
 };
@@ -144,6 +161,61 @@ const Info = ({ label, value }: { label: string; value?: string | null }) => (
   <div>
     <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
     <p className="text-foreground">{value || "—"}</p>
+  </div>
+);
+
+// ─── Card da proposta ────────────────────────────────────────────────────────
+const PropostaCard = ({ proposta }: { proposta: NonNullable<SolicitacaoDetail["proposta"]> }) => {
+  const obs = proposta.observacoes ?? "";
+  const isRecusa = obs.startsWith("RECUSA:");
+  const isPergunta = obs.startsWith("PERGUNTA:");
+
+  return (
+    <div className={`rounded-xl border p-5 ${isRecusa ? "bg-destructive/5 border-destructive/30" : isPergunta ? "bg-primary/5 border-primary/30" : "bg-card border-border"}`}>
+      <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+        {isRecusa
+          ? <><Ban className="h-4 w-4 text-destructive" /> Resposta do Fornecedor — Recusa</>
+          : isPergunta
+          ? <><MessageCircleQuestion className="h-4 w-4 text-primary" /> Pergunta do Fornecedor</>
+          : <><Send className="h-4 w-4 text-success" /> Proposta do Fornecedor</>}
+      </h3>
+      {!isRecusa && !isPergunta && (
+        <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+          <Info label="Valor" value={proposta.valor != null ? `R$ ${proposta.valor.toLocaleString("pt-BR")}` : null} />
+          <Info label="Prazo" value={proposta.prazo} />
+        </div>
+      )}
+      {obs && (
+        <p className="text-sm text-foreground bg-muted/50 rounded-lg p-3">
+          {isRecusa ? obs.replace("RECUSA: ", "").replace("RECUSA:", "") : isPergunta ? obs.replace("PERGUNTA: ", "").replace("PERGUNTA:", "") : obs}
+        </p>
+      )}
+      {proposta.url && (
+        <a href={proposta.url} target="_blank" rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+          <Paperclip className="h-3.5 w-3.5" /> {proposta.arquivo_nome ?? "Arquivo da proposta"}
+        </a>
+      )}
+    </div>
+  );
+};
+
+// ─── Resultado final ─────────────────────────────────────────────────────────
+const ResultadoFinal = ({ s }: { s: SolicitacaoDetail }) => (
+  <div className={`rounded-xl border p-5 flex items-center gap-3 ${s.status === "aceita" ? "bg-success/10 border-success/30" : "bg-muted border-border"}`}>
+    {s.status === "aceita"
+      ? <CircleCheck className="h-6 w-6 text-success shrink-0" />
+      : <Ban className="h-6 w-6 text-muted-foreground shrink-0" />}
+    <div>
+      <p className="text-sm font-semibold text-foreground">
+        {s.status === "aceita" ? "Proposta aceita!" : "Proposta recusada"}
+      </p>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        {s.status === "aceita"
+          ? "O solicitante aceitou a proposta. Esta solicitação está concluída."
+          : "O solicitante recusou a proposta. Esta solicitação foi encerrada."}
+      </p>
+    </div>
   </div>
 );
 
@@ -190,11 +262,9 @@ const ControleAval = ({ onDone }: { onDone: () => void }) => {
           <p className="text-[11px] text-amber-600 mt-1">Nenhum fornecedor cadastrado. Cadastre em Fornecedores → Novo.</p>
         )}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label>Estimativa aprovada (opcional)</Label>
-          <Input value={estimativa} onChange={e => setEstimativa(e.target.value)} placeholder="Ex: 120 PF / R$ 98.400" className="mt-1" />
-        </div>
+      <div>
+        <Label>Estimativa aprovada (opcional)</Label>
+        <Input value={estimativa} onChange={e => setEstimativa(e.target.value)} placeholder="Ex: 120 PF / R$ 98.400" className="mt-1" />
       </div>
       <div>
         <Label>Parecer / observações</Label>
@@ -215,11 +285,63 @@ const ControleAval = ({ onDone }: { onDone: () => void }) => {
   );
 };
 
+// ─── Controle: linha do tempo após aval ─────────────────────────────────────
+const ControleLinha = ({ s }: { s: SolicitacaoDetail }) => {
+  const etapas = [
+    {
+      label: "Aval do Controle",
+      done: true,
+      detail: s.estimativa_aprovada ? `Estimativa: ${s.estimativa_aprovada}` : s.parecer_controle ?? "Aprovado",
+      icon: <CircleCheck className="h-4 w-4 text-success" />,
+    },
+    {
+      label: "Resposta do Fornecedor",
+      done: !!s.proposta,
+      detail: s.proposta
+        ? (s.proposta.observacoes?.startsWith("RECUSA:")
+            ? "Fornecedor recusou"
+            : s.proposta.observacoes?.startsWith("PERGUNTA:")
+            ? "Fornecedor fez uma pergunta"
+            : "Proposta enviada")
+        : "Aguardando...",
+      icon: s.proposta ? <Send className="h-4 w-4 text-success" /> : <Clock className="h-4 w-4 text-muted-foreground" />,
+    },
+    {
+      label: "Decisão do Solicitante",
+      done: s.status === "aceita" || s.status === "recusada",
+      detail: s.status === "aceita" ? "Proposta aceita" : s.status === "recusada" ? "Proposta recusada" : "Aguardando...",
+      icon: s.status === "aceita"
+        ? <CircleCheck className="h-4 w-4 text-success" />
+        : s.status === "recusada"
+        ? <Ban className="h-4 w-4 text-destructive" />
+        : <Clock className="h-4 w-4 text-muted-foreground" />,
+    },
+  ];
+
+  return (
+    <div className="bg-card rounded-xl border border-border p-5">
+      <h3 className="text-sm font-semibold text-foreground mb-4">Acompanhamento do fluxo</h3>
+      <div className="space-y-3">
+        {etapas.map((e, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <div className="mt-0.5 shrink-0">{e.icon}</div>
+            <div>
+              <p className={`text-sm font-medium ${e.done ? "text-foreground" : "text-muted-foreground"}`}>{e.label}</p>
+              <p className="text-xs text-muted-foreground">{e.detail}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── Ação: Fornecedor responde à solicitação ────────────────────────────────
 type FornecedorAcao = "aceitar" | "recusar" | "perguntar" | null;
 
-const FornecedorProposta = ({ onDone }: { onDone: () => void }) => {
+const FornecedorProposta = ({ s, onDone }: { s: SolicitacaoDetail; onDone: () => void }) => {
   const { id } = useParams<{ id: string }>();
+  const jaRespondeu = s.status === "proposta_enviada";
   const [acao, setAcao] = useState<FornecedorAcao>(null);
   const [motivo, setMotivo] = useState("");
   const [pergunta, setPergunta] = useState("");
@@ -238,7 +360,7 @@ const FornecedorProposta = ({ onDone }: { onDone: () => void }) => {
       }
       return api.upload(`/solicitacoes/${id}/proposta`, fd);
     },
-    onSuccess: onDone,
+    onSuccess: () => { setAcao(null); setFile(null); setMotivo(""); setPergunta(""); onDone(); },
     onError: (e) => setError(e instanceof ApiError ? e.message : "Falha ao enviar resposta."),
   });
 
@@ -268,7 +390,23 @@ const FornecedorProposta = ({ onDone }: { onDone: () => void }) => {
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4">
-      <h3 className="text-sm font-bold text-foreground">Responder à solicitação</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-foreground">
+          {jaRespondeu ? "Atualizar resposta" : "Responder à solicitação"}
+        </h3>
+        {jaRespondeu && (
+          <span className="flex items-center gap-1 text-xs text-success font-medium">
+            <CircleCheck className="h-3.5 w-3.5" /> Resposta enviada
+          </span>
+        )}
+      </div>
+
+      {jaRespondeu && !acao && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+          <RefreshCcw className="h-4 w-4 shrink-0" />
+          Você já enviou uma resposta. Selecione uma opção abaixo para atualizar.
+        </div>
+      )}
 
       {/* Seleção de ação */}
       <div className="grid grid-cols-3 gap-3">
@@ -323,36 +461,41 @@ const FornecedorProposta = ({ onDone }: { onDone: () => void }) => {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {acao && (
-        <Button
-          onClick={() => { setError(null); enviar.mutate(); }}
-          disabled={
-            enviar.isPending ||
-            (acao === "aceitar" && !file) ||
-            (acao === "perguntar" && !pergunta.trim())
-          }
-          className={`gap-1.5 ${
-            acao === "aceitar" ? "bg-success hover:bg-success/90 text-success-foreground" :
-            acao === "recusar" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""
-          }`}
-        >
-          {enviar.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : acao === "aceitar" ? (
-            <Paperclip className="h-4 w-4" />
-          ) : acao === "recusar" ? (
-            <X className="h-4 w-4" />
-          ) : (
-            <MessageCircleQuestion className="h-4 w-4" />
-          )}
-          {acao === "aceitar" ? "Enviar proposta" : acao === "recusar" ? "Confirmar recusa" : "Enviar pergunta"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => { setError(null); enviar.mutate(); }}
+            disabled={
+              enviar.isPending ||
+              (acao === "aceitar" && !file) ||
+              (acao === "perguntar" && !pergunta.trim())
+            }
+            className={`gap-1.5 ${
+              acao === "aceitar" ? "bg-success hover:bg-success/90 text-success-foreground" :
+              acao === "recusar" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : ""
+            }`}
+          >
+            {enviar.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : acao === "aceitar" ? (
+              <Paperclip className="h-4 w-4" />
+            ) : acao === "recusar" ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <MessageCircleQuestion className="h-4 w-4" />
+            )}
+            {acao === "aceitar" ? "Enviar proposta" : acao === "recusar" ? "Confirmar recusa" : "Enviar pergunta"}
+          </Button>
+          <Button variant="ghost" onClick={() => setAcao(null)} disabled={enviar.isPending}>
+            Cancelar
+          </Button>
+        </div>
       )}
     </div>
   );
 };
 
 // ─── Ação: Solicitante aceita ou recusa ─────────────────────────────────────
-const SolicitanteDecisao = ({ onDone }: { onDone: () => void }) => {
+const SolicitanteDecisao = ({ s, onDone }: { s: SolicitacaoDetail; onDone: () => void }) => {
   const { id } = useParams<{ id: string }>();
   const [error, setError] = useState<string | null>(null);
 
@@ -362,18 +505,53 @@ const SolicitanteDecisao = ({ onDone }: { onDone: () => void }) => {
     onError: (e) => setError(e instanceof ApiError ? e.message : "Falha ao registrar decisão."),
   });
 
+  const obs = s.proposta?.observacoes ?? "";
+  const isPergunta = obs.startsWith("PERGUNTA:");
+
+  if (isPergunta) {
+    return (
+      <div className="bg-primary/5 border border-primary/30 rounded-xl p-5 space-y-3">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <MessageCircleQuestion className="h-4 w-4 text-primary" /> O fornecedor tem uma pergunta
+        </h3>
+        <p className="text-sm text-foreground bg-background rounded-lg p-3">
+          {obs.replace("PERGUNTA: ", "").replace("PERGUNTA:", "")}
+        </p>
+        <p className="text-xs text-muted-foreground">Entre em contato com o fornecedor para responder à dúvida antes de tomar uma decisão.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-card rounded-xl border border-border p-5 space-y-3">
-      <h3 className="text-sm font-bold text-foreground">Decisão sobre a proposta</h3>
+    <div className="bg-card rounded-xl border border-border p-5 space-y-4">
+      <h3 className="text-sm font-bold text-foreground">Sua decisão sobre a proposta</h3>
+
+      {s.proposta && (
+        <div className="bg-muted/40 rounded-lg p-4 space-y-2 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Resumo da proposta recebida</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Info label="Valor" value={s.proposta.valor != null ? `R$ ${s.proposta.valor.toLocaleString("pt-BR")}` : null} />
+            <Info label="Prazo" value={s.proposta.prazo} />
+          </div>
+          {s.proposta.observacoes && <Info label="Observações" value={s.proposta.observacoes} />}
+          {s.proposta.url && (
+            <a href={s.proposta.url} target="_blank" rel="noreferrer"
+              className="mt-1 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+              <Paperclip className="h-3.5 w-3.5" /> {s.proposta.arquivo_nome ?? "Arquivo da proposta"}
+            </a>
+          )}
+        </div>
+      )}
+
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2">
         <Button onClick={() => { setError(null); decidir.mutate("aceita"); }} disabled={decidir.isPending}
           className="bg-success hover:bg-success/90 text-success-foreground gap-1.5">
-          <ThumbsUp className="h-4 w-4" /> Aceitar proposta
+          {decidir.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />} Aceitar proposta
         </Button>
         <Button variant="outline" onClick={() => { setError(null); decidir.mutate("recusada"); }} disabled={decidir.isPending}
           className="text-destructive border-destructive/40 gap-1.5">
-          <ThumbsDown className="h-4 w-4" /> Recusar
+          <ThumbsDown className="h-4 w-4" /> Recusar proposta
         </Button>
       </div>
     </div>
