@@ -56,8 +56,9 @@ const controleMenu: MenuGroup[] = [
   {
     section: "APF",
     items: [
-      { label: "Configurar APF", path: "/controle/apf", icon: SlidersHorizontal },
+      { label: "Nova Contagem", path: "/controle/apf/nova", icon: PlusCircle },
       { label: "Histórico de contagens", path: "/controle/apf/historico", icon: History },
+      { label: "Configurar APF", path: "/controle/apf", icon: SlidersHorizontal },
     ],
   },
   {

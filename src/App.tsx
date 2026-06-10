@@ -23,6 +23,8 @@ import ControleDashboard from "./pages/controle/ControleDashboard";
 import SolicitacoesRecebidas from "./pages/controle/SolicitacoesRecebidas";
 import SolicitacoesRecebidasDetalhe from "./pages/controle/SolicitacoesRecebidasDetalhe";
 import APFHistorico from "./pages/controle/APFHistorico";
+import APFNovaContagem from "./pages/controle/APFNovaContagem";
+import APFContagemDetalhe from "./pages/controle/APFContagemDetalhe";
 import FornecedoresBase from "./pages/controle/FornecedoresBase";
 import FornecedoresDashboard from "./pages/controle/FornecedoresDashboard";
 import FornecedoresNovo from "./pages/controle/FornecedoresNovo";
@@ -66,6 +68,8 @@ const App = () => (
             <Route path="/controle/solicitacoes/recebidas" element={<Guard roles={["controle"]}><SolicitacoesRecebidas /></Guard>} />
             <Route path="/controle/solicitacoes/recebidas/:id" element={<Guard roles={["controle"]}><SolicitacoesRecebidasDetalhe /></Guard>} />
             <Route path="/controle/apf/historico" element={<Guard roles={["controle"]}><APFHistorico /></Guard>} />
+            <Route path="/controle/apf/nova" element={<Guard roles={["controle"]}><APFNovaContagem /></Guard>} />
+            <Route path="/controle/apf/contagem/:id" element={<Guard roles={["controle"]}><APFContagemDetalhe /></Guard>} />
             <Route path="/controle/fornecedores/dashboard" element={<Guard roles={["controle"]}><FornecedoresDashboard /></Guard>} />
             <Route path="/controle/fornecedores/base" element={<Guard roles={["controle"]}><FornecedoresBase /></Guard>} />
             <Route path="/controle/fornecedores/novo" element={<Guard roles={["controle"]}><FornecedoresNovo /></Guard>} />

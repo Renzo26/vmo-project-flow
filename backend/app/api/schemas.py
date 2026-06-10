@@ -143,3 +143,63 @@ class AvalRequest(BaseModel):
 
 class DecisaoRequest(BaseModel):
     decisao: str  # "aceita" | "recusada"
+
+
+# ─── Contagem PF ─────────────────────────────────────────────────────────────
+
+class FuncaoIFPUGIn(BaseModel):
+    descricao: str
+    tipo: str           # EE | SE | CE | ALI | AIE
+    complexidade: str   # L | A | H
+    deflator_mnemonico: str = "Inc-4.1"
+
+
+class FuncaoSFPIn(BaseModel):
+    descricao: str
+    tipo: str      # AL | PE
+    operacao: str  # ADD | CHG | DEL | CFP
+
+
+class ContagemPFCreate(BaseModel):
+    titulo: str
+    metodologia: str        # sfp | ifpug
+    tipo_projeto: str       # desenvolvimento | melhoria
+    funcoes_ifpug: list[FuncaoIFPUGIn] = []
+    funcoes_sfp: list[FuncaoSFPIn] = []
+    asfpb: float = 0.0      # SFP melhoria: tamanho anterior
+    solicitacao_id: UUID | None = None
+
+
+class FuncaoPFOut(BaseModel):
+    id: UUID
+    ordem: int
+    descricao: str
+    tipo: str
+    complexidade: str | None = None
+    deflator_mnemonico: str | None = None
+    operacao: str | None = None
+    pf_bruto: float
+    pf_local: float
+
+    model_config = {"from_attributes": True}
+
+
+class ContagemPFOut(BaseModel):
+    id: UUID
+    titulo: str
+    metodologia: str
+    tipo_projeto: str
+    total_pf_bruto: float
+    total_pf_local: float
+    esforco_horas: float
+    created_at: datetime
+    usuario_nome: str | None = None
+    solicitacao_id: UUID | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class ContagemPFDetail(ContagemPFOut):
+    funcoes: list[FuncaoPFOut] = []
+    distribuicao: dict = {}
+    asfpb: float | None = None

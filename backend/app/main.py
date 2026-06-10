@@ -1,23 +1,57 @@
 import logging
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from dotenv import load_dotenv
+
+load_dotenv()  # garante que o .env é carregado antes dos imports que usam settings
+
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from app.config import settings
 from app.schemas import AnaliseResponse, Methodology
 from app.services.ai_agent import analyze_document
 from app.services.document_parser import UnsupportedDocumentError, extract_text
 from app.services.template_reader import get_expected_fields
+from app.services.storage_service import StorageError, ensure_bucket
+from app.api import auth, fornecedores, solicitacoes, pf
 
 logger = logging.getLogger("entrada_pf")
 
-app = FastAPI(title="VMO — Agente de Entrada PF", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Garante que o bucket do Supabase Storage existe antes de aceitar uploads.
+    if settings.supabase_url and settings.supabase_service_key:
+        try:
+            await ensure_bucket()
+            logger.info("Supabase Storage: bucket '%s' pronto.", settings.supabase_bucket)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Supabase Storage: falha ao verificar bucket — %s", exc)
+    yield
+
+
+app = FastAPI(title="VMO API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080"],
+    allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"https?://.*\.easypanel\.host",
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth.router, prefix="/api")
+app.include_router(fornecedores.router, prefix="/api")
+app.include_router(solicitacoes.router, prefix="/api")
+app.include_router(pf.router, prefix="/api")
+
+
+@app.exception_handler(StorageError)
+async def storage_error_handler(request: Request, exc: StorageError) -> JSONResponse:
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 MAX_FILE_BYTES = 15 * 1024 * 1024  # 15 MB
 
