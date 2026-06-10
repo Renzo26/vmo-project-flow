@@ -5,6 +5,7 @@ from app.models.solicitacao_documento import SolicitacaoDocumento
 from app.models.analise_pf import AnalisePF
 from app.models.proposta import Proposta, PropostaStatus
 from app.models.contagem_pf import ContagemPF, FuncaoPF
+from app.models.configuracao_apf import ConfiguracaoAPF
 
 __all__ = [
     "Usuario",
@@ -18,4 +19,5 @@ __all__ = [
     "PropostaStatus",
     "ContagemPF",
     "FuncaoPF",
+    "ConfiguracaoAPF",
 ]

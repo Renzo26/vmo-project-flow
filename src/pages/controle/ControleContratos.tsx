@@ -1,5 +1,6 @@
 import { FileText, DollarSign } from "lucide-react";
 import { mockSuppliers, mockPriceTable } from "@/data/mockData";
+import EmptyState from "@/components/EmptyState";
 
 const ControleContratos = () => {
   return (
@@ -8,6 +9,15 @@ const ControleContratos = () => {
         <h2 className="text-xl font-bold text-foreground">Contratos e Preços</h2>
         <p className="text-sm text-muted-foreground mt-1">Tabela de preços por fornecedor</p>
       </div>
+
+      {mockSuppliers.length === 0 && (
+        <div className="bg-card rounded-xl border border-border">
+          <EmptyState
+            title="Nenhum contrato cadastrado"
+            description="As tabelas de preço por fornecedor aparecerão aqui após a contratação."
+          />
+        </div>
+      )}
 
       <div className="grid gap-4">
         {mockSuppliers.map(s => {

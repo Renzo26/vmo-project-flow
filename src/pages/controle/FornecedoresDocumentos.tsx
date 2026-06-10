@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 type TipoDoc = "Fiscal" | "Trabalhista" | "Certificação" | "Jurídico" | "Técnico";
 type StatusDoc = "Vencido" | "Vencendo" | "Válido";
@@ -24,16 +24,7 @@ const TIPO_CONFIG: Record<TipoDoc, string> = {
   Técnico:      "bg-cyan-100 text-cyan-700",
 };
 
-const DOCUMENTOS: Documento[] = [
-  { id: "1", fornecedor: "TechSoft Ltda",    documento: "CND Federal",   tipo: "Fiscal",       vencimento: "08/04/2026", vencimentoTs: 1, status: "Vencido",   diasRestantes: null },
-  { id: "2", fornecedor: "DevBrasil S.A.",   documento: "CNDT — TST",    tipo: "Trabalhista",  vencimento: "28/04/2026", vencimentoTs: 2, status: "Vencendo",  diasRestantes: 5 },
-  { id: "3", fornecedor: "InfoSystems ME",   documento: "ISO 27001",     tipo: "Certificação", vencimento: "30/06/2026", vencimentoTs: 3, status: "Válido",    diasRestantes: 68 },
-  { id: "4", fornecedor: "TechSoft Ltda",    documento: "CND Estadual",  tipo: "Fiscal",       vencimento: "15/05/2026", vencimentoTs: 4, status: "Vencendo",  diasRestantes: 17 },
-  { id: "5", fornecedor: "CyberSec Ltda",    documento: "FGTS",          tipo: "Trabalhista",  vencimento: "01/03/2026", vencimentoTs: 5, status: "Vencido",   diasRestantes: null },
-  { id: "6", fornecedor: "DataMind S.A.",    documento: "Contrato Social",tipo: "Jurídico",    vencimento: "31/12/2026", vencimentoTs: 6, status: "Válido",    diasRestantes: 247 },
-  { id: "7", fornecedor: "AgileWorks Ltda",  documento: "ISO 9001",      tipo: "Certificação", vencimento: "20/05/2026", vencimentoTs: 7, status: "Vencendo",  diasRestantes: 22 },
-  { id: "8", fornecedor: "CloudBase ME",     documento: "CND Federal",   tipo: "Fiscal",       vencimento: "10/02/2026", vencimentoTs: 8, status: "Vencido",   diasRestantes: null },
-];
+const DOCUMENTOS: Documento[] = [];
 
 const statusLabel = (doc: Documento): string => {
   if (doc.status === "Vencido") return "Vencido";
@@ -114,8 +105,11 @@ const FornecedoresDocumentos = () => {
           <tbody>
             {lista.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-sm text-muted-foreground">
-                  Nenhum documento encontrado.
+                <td colSpan={6}>
+                  <EmptyState
+                    title="Nenhum documento monitorado"
+                    description="As certidões e documentos dos fornecedores aparecerão aqui para acompanhamento de vencimento."
+                  />
                 </td>
               </tr>
             )}

@@ -78,10 +78,12 @@ async def criar_contagem(
 async def listar_contagens(
     user: ControleUser,
     db: Annotated[AsyncSession, Depends(get_db)],
+    solicitacao_id: uuid.UUID | None = None,
 ) -> list[ContagemPFOut]:
-    rows = await db.scalars(
-        select(ContagemPF).order_by(ContagemPF.created_at.desc())
-    )
+    query = select(ContagemPF).order_by(ContagemPF.created_at.desc())
+    if solicitacao_id is not None:
+        query = query.where(ContagemPF.solicitacao_id == solicitacao_id)
+    rows = await db.scalars(query)
     result = []
     for c in rows:
         u = await db.get(Usuario, c.usuario_id)

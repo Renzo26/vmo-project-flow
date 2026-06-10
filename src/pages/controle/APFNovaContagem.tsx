@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
-import type { ContagemPFCreate, FuncaoIFPUGIn, FuncaoSFPIn } from "@/lib/types";
+import type { ContagemPFCreate, FuncaoIFPUGIn, FuncaoSFPIn, ConfiguracaoAPFOut, SolicitacaoListItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,10 +69,10 @@ const emptySFP = (): RowSFP => ({
 });
 
 // ─── Cálculo local (espelho do backend) ──────────────────────────────────────
-function calcIFPUG(rows: RowIFPUG[]) {
+function calcIFPUG(rows: RowIFPUG[], deflatores: Record<string, number> = DEFLATORES) {
   const detalhes = rows.map(r => {
     const bruto = TABELA_IFPUG[r.tipo]?.[r.complexidade] ?? 0;
-    const def = DEFLATORES[r.deflator_mnemonico] ?? 1;
+    const def = deflatores[r.deflator_mnemonico] ?? 1;
     return { ...r, pf_bruto: bruto, pf_local: +(bruto * def).toFixed(2) };
   });
   const totalBruto = +detalhes.reduce((s, d) => s + d.pf_bruto, 0).toFixed(2);
@@ -104,6 +104,47 @@ function calcSFP(rows: RowSFP[], melhoria: boolean, asfpb: number) {
 const APFNovaContagem = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const preSolicitacaoId = searchParams.get("solicitacao_id");
+
+  // Carrega config ativa para obter deflatores calibrados
+  const { data: configAtiva } = useQuery({
+    queryKey: ["apf-config"],
+    queryFn: () => api.get<ConfiguracaoAPFOut>("/apf-config/atual"),
+    retry: false,
+  });
+
+  // Deflatores efetivos: usa os da config se existirem, senão fallback hardcoded
+  const deflatoresEfetivos = useMemo<Record<string, number>>(() => {
+    if (!configAtiva?.usar_deflatores) return DEFLATORES;
+    const ativos = configAtiva.deflatores_json.filter(d => d.ativo);
+    return ativos.length > 0
+      ? Object.fromEntries(ativos.map(d => [d.mne, d.valor]))
+      : DEFLATORES;
+  }, [configAtiva]);
+
+  // Solicitação vinculada
+  const [solicitacaoId, setSolicitacaoId] = useState<string | null>(preSolicitacaoId);
+
+  const { data: solicitacaoVinculada } = useQuery({
+    queryKey: ["solicitacao", preSolicitacaoId],
+    queryFn: () => api.get<SolicitacaoListItem>(`/solicitacoes/${preSolicitacaoId}`),
+    enabled: !!preSolicitacaoId,
+  });
+
+  const { data: solicitacoes } = useQuery({
+    queryKey: ["solicitacoes"],
+    queryFn: () => api.get<SolicitacaoListItem[]>("/solicitacoes"),
+    enabled: !preSolicitacaoId,
+  });
+
+  const deflatorLabelsEfetivos = useMemo<Record<string, string>>(() => {
+    if (!configAtiva?.usar_deflatores) return DEFLATOR_LABELS;
+    const ativos = configAtiva.deflatores_json.filter(d => d.ativo);
+    return ativos.length > 0
+      ? Object.fromEntries(ativos.map(d => [d.mne, `${d.mne} — ${d.descricao} (${d.valor.toFixed(2)})`]))
+      : DEFLATOR_LABELS;
+  }, [configAtiva]);
 
   const [titulo, setTitulo] = useState("");
   const [metodologia, setMetodologia] = useState<"ifpug" | "sfp">("ifpug");
@@ -114,7 +155,7 @@ const APFNovaContagem = () => {
   const [error, setError] = useState<string | null>(null);
   const [expandPreview, setExpandPreview] = useState(true);
 
-  const previewIFPUG = useMemo(() => calcIFPUG(rowsIFPUG), [rowsIFPUG]);
+  const previewIFPUG = useMemo(() => calcIFPUG(rowsIFPUG, deflatoresEfetivos), [rowsIFPUG, deflatoresEfetivos]);
   const previewSFP = useMemo(() => calcSFP(rowsSFP, tipoProj === "melhoria", asfpb), [rowsSFP, tipoProj, asfpb]);
 
   const totalPF = metodologia === "ifpug" ? previewIFPUG.totalLocal : previewSFP.total;
@@ -129,7 +170,7 @@ const APFNovaContagem = () => {
         funcoes_ifpug: metodologia === "ifpug" ? rowsIFPUG.map(({ _key, ...r }) => r) : [],
         funcoes_sfp: metodologia === "sfp" ? rowsSFP.map(({ _key, ...r }) => r) : [],
         asfpb: metodologia === "sfp" ? asfpb : 0,
-        solicitacao_id: null,
+        solicitacao_id: solicitacaoId,
       };
       return api.post<{ id: string }>("/pf/contagens", payload);
     },
@@ -189,6 +230,31 @@ const APFNovaContagem = () => {
             <Input type="number" min={0} value={asfpb} onChange={e => setAsfpb(Number(e.target.value))} className="mt-1" />
           </div>
         )}
+        {/* Vínculo com solicitação */}
+        <div className="md:col-span-4 border-t border-border pt-4">
+          <Label>Vincular à solicitação <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+          {preSolicitacaoId && solicitacaoVinculada ? (
+            <div className="mt-1 flex items-center gap-2 h-10 px-3 rounded-md border border-ctrl/40 bg-ctrl/5 text-sm">
+              <span className="text-xs font-mono text-ctrl">{solicitacaoVinculada.numero}</span>
+              <span className="text-foreground font-medium">{solicitacaoVinculada.titulo}</span>
+              <button onClick={() => { setSolicitacaoId(null); navigate("/controle/apf/nova"); }}
+                className="ml-auto text-xs text-muted-foreground hover:text-destructive transition-colors">
+                Desvincular
+              </button>
+            </div>
+          ) : (
+            <select value={solicitacaoId ?? ""} onChange={e => setSolicitacaoId(e.target.value || null)}
+              className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+              <option value="">Sem vínculo</option>
+              {(solicitacoes ?? []).map(s => (
+                <option key={s.id} value={s.id}>{s.numero} — {s.titulo}</option>
+              ))}
+            </select>
+          )}
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Vinculando, esta contagem aparece diretamente na tela da solicitação.
+          </p>
+        </div>
       </div>
 
       {/* Tabela de funções IFPUG */}
@@ -218,7 +284,7 @@ const APFNovaContagem = () => {
               <tbody>
                 {rowsIFPUG.map((row, i) => {
                   const bruto = TABELA_IFPUG[row.tipo]?.[row.complexidade] ?? 0;
-                  const def = DEFLATORES[row.deflator_mnemonico] ?? 1;
+                  const def = deflatoresEfetivos[row.deflator_mnemonico] ?? 1;
                   const local = +(bruto * def).toFixed(2);
                   return (
                     <tr key={row._key} className="border-b border-border last:border-0 hover:bg-muted/20">
@@ -244,7 +310,7 @@ const APFNovaContagem = () => {
                       <td className="px-3 py-2">
                         <select value={row.deflator_mnemonico} onChange={e => updateIFPUG(row._key, "deflator_mnemonico", e.target.value)}
                           className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs">
-                          {Object.entries(DEFLATOR_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          {Object.entries(deflatorLabelsEfetivos).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                         </select>
                       </td>
                       <td className="px-3 py-2 text-right font-mono text-xs text-muted-foreground">{bruto}</td>

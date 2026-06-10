@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Users, Building2 } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import {
   Dialog,
   DialogContent,
@@ -33,17 +34,9 @@ interface User {
   role: "solicitante" | "fornecedor";
 }
 
-const initialTeams: Team[] = [
-  { id: "t1", name: "Equipe Digital" },
-  { id: "t2", name: "Equipe Infraestrutura" },
-  { id: "t3", name: "Equipe Dados" },
-];
+const initialTeams: Team[] = [];
 
-const initialUsers: User[] = [
-  { id: "u1", name: "Carlos Mendes", email: "carlos@vmo.com", teamId: "t1", role: "solicitante" },
-  { id: "u2", name: "Ana Silva", email: "ana@vmo.com", teamId: "t1", role: "solicitante" },
-  { id: "u3", name: "Pedro Santos", email: "pedro@vmo.com", teamId: "t2", role: "solicitante" },
-];
+const initialUsers: User[] = [];
 
 const Configuracoes = () => {
   const [teams, setTeams] = useState<Team[]>(initialTeams);
@@ -184,6 +177,16 @@ const Configuracoes = () => {
                     </td>
                   </tr>
                 ))}
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan={5}>
+                      <EmptyState
+                        title="Nenhum usuário cadastrado"
+                        description="Adicione usuários para vinculá-los às equipes."
+                      />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -236,6 +239,16 @@ const Configuracoes = () => {
                     </tr>
                   );
                 })}
+                {teams.length === 0 && (
+                  <tr>
+                    <td colSpan={3}>
+                      <EmptyState
+                        title="Nenhuma equipe cadastrada"
+                        description="Crie uma equipe para organizar os usuários solicitantes."
+                      />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

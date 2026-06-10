@@ -168,6 +168,61 @@ export interface ContagemPFCreate {
   solicitacao_id: string | null;
 }
 
+// ─── Configuração APF ─────────────────────────────────────────────────────────
+
+export interface DeflatoreConfigItem {
+  id?: string;
+  mne: string;
+  descricao: string;
+  regra?: string;
+  valor: number;
+  tipo: string;
+  destaque?: boolean;
+  ativo: boolean;
+  personalizado?: boolean;
+}
+
+export interface AlcadaConfig {
+  id: string;
+  cargo: string;
+  ativa: boolean;
+}
+
+export interface FaixaDesvioConfig {
+  id: string;
+  desvioMin: number;
+  desvioMax: number | null;
+  acao: string;
+  alcadaId: string;
+  ativa: boolean;
+}
+
+export interface ConfiguracaoAPFCreate {
+  metodologia: string;
+  tipo_contagem: string;
+  usar_vaf: boolean;
+  vigencia: string;
+  versao: string;
+  usar_deflatores: boolean;
+  deflatores_json: DeflatoreConfigItem[];
+  valor_pf: number;
+  tolerancia: number;
+  valor_max_ce: number;
+  saving_minimo: number;
+  prazo_fornecedor: number;
+  modalidade: string;
+  alcadas_json: AlcadaConfig[];
+  faixas_json: Record<string, FaixaDesvioConfig[]>;
+  notificar_ce: string;
+  enviar_copia: string;
+}
+
+export interface ConfiguracaoAPFOut extends ConfiguracaoAPFCreate {
+  id: string;
+  ativa: boolean;
+  created_at: string;
+}
+
 export const STATUS_COLORS: Record<SolicitacaoStatus, string> = {
   aguardando_controle: "bg-warning/15 text-warning border-warning/30",
   rejeitada_controle: "bg-destructive/15 text-destructive border-destructive/30",

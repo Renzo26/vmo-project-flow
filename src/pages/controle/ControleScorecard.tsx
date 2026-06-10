@@ -1,12 +1,7 @@
 import { Award, Star, TrendingUp } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
-const suppliers = [
-  { name: "TechSoft", projects: 12, score: 4.8, onTime: 95, quality: 4.9 },
-  { name: "DevBrasil", projects: 9, score: 4.5, onTime: 88, quality: 4.6 },
-  { name: "InfoSystems", projects: 7, score: 4.3, onTime: 82, quality: 4.2 },
-  { name: "CodeWorks", projects: 5, score: 4.0, onTime: 75, quality: 4.0 },
-  { name: "DataLab", projects: 3, score: 3.7, onTime: 70, quality: 3.8 },
-];
+const suppliers: { name: string; projects: number; score: number; onTime: number; quality: number }[] = [];
 
 const ControleScorecard = () => {
   return (
@@ -50,6 +45,16 @@ const ControleScorecard = () => {
                 </td>
               </tr>
             ))}
+            {suppliers.length === 0 && (
+              <tr>
+                <td colSpan={5}>
+                  <EmptyState
+                    title="Nenhum fornecedor avaliado"
+                    description="As avaliações de desempenho aparecerão aqui conforme os projetos forem concluídos."
+                  />
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

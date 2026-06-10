@@ -15,7 +15,7 @@ from app.services.ai_agent import analyze_document
 from app.services.document_parser import UnsupportedDocumentError, extract_text
 from app.services.template_reader import get_expected_fields
 from app.services.storage_service import StorageError, ensure_bucket
-from app.api import auth, fornecedores, solicitacoes, pf
+from app.api import auth, fornecedores, solicitacoes, pf, apf_config
 
 logger = logging.getLogger("entrada_pf")
 
@@ -47,6 +47,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(fornecedores.router, prefix="/api")
 app.include_router(solicitacoes.router, prefix="/api")
 app.include_router(pf.router, prefix="/api")
+app.include_router(apf_config.router, prefix="/api")
 
 
 @app.exception_handler(StorageError)

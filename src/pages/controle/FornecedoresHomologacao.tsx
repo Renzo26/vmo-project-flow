@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 type Etapa = 1 | 2 | 3 | 4 | 5;
 
@@ -31,30 +32,7 @@ const ETAPA_BAR_COLOR: Record<Etapa, string> = {
   5: "bg-green-500",
 };
 
-const FORNECEDORES: Fornecedor[] = [
-  {
-    id: "1",
-    nome: "InfoTech Brasil ME",
-    recebido: "11/04/2026",
-    etapa: 3,
-    etapaLabel: "3 — Análise documental",
-    progresso: 60,
-    responsavel: "Controle Econômico",
-    prazo: "Atrasado 2d",
-    prazoStatus: "atrasado",
-  },
-  {
-    id: "2",
-    nome: "CyberSec Ltda",
-    recebido: "18/04/2026",
-    etapa: 2,
-    etapaLabel: "2 — Capacidade técnica",
-    progresso: 40,
-    responsavel: "Área Técnica",
-    prazo: "5 dias",
-    prazoStatus: "ok",
-  },
-];
+const FORNECEDORES: Fornecedor[] = [];
 
 const etapas = [
   { num: 1 as Etapa, label: "Pré-cadastro", color: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -150,6 +128,16 @@ const FornecedoresHomologacao = () => {
                 </td>
               </tr>
             ))}
+            {FORNECEDORES.length === 0 && (
+              <tr>
+                <td colSpan={6}>
+                  <EmptyState
+                    title="Nenhum fornecedor em qualificação"
+                    description="Os fornecedores em processo de homologação aparecerão aqui."
+                  />
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

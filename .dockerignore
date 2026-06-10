@@ -1,0 +1,28 @@
+# Dependências locais
+node_modules/
+backend/.venv/
+
+# Compilados Python
+backend/__pycache__/
+backend/**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Build do frontend
+dist/
+
+# Git
+.git/
+.gitignore
+
+# Env local
+.env
+backend/.env
+
+# Arquivos de desenvolvimento
+*.local
+.DS_Store
+Thumbs.db
+
+# Arquivos gerados localmente (não necessários na imagem)
+backend/proposta_techsoft_*.xlsx

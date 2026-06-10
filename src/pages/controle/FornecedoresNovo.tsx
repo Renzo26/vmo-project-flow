@@ -8,7 +8,7 @@ import {
   Check, ChevronRight, Search, Upload, X, Paperclip,
   Building2, FileText, Shield, Briefcase, Scale, Cpu,
   ArrowLeft, Plus, CheckCircle2, Clock, AlertCircle,
-  Lock, Mail, User, KeyRound,
+  Lock, Mail, User, KeyRound, Eye,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -39,11 +39,7 @@ interface DocItem {
 
 // ─── Mock CNPJ lookup ─────────────────────────────────────────────────────────
 
-const CNPJ_MOCK: Record<string, { razaoSocial: string; nomeFantasia: string }> = {
-  "12.345.678/0001-99": { razaoSocial: "TechSoft Serviços de TI Ltda", nomeFantasia: "TechSoft" },
-  "98.765.432/0001-10": { razaoSocial: "DevBrasil Soluções S.A.", nomeFantasia: "DevBrasil" },
-  "11.222.333/0001-44": { razaoSocial: "InfoSystems Microempresa", nomeFantasia: "InfoSystems ME" },
-};
+const CNPJ_MOCK: Record<string, { razaoSocial: string; nomeFantasia: string }> = {};
 
 const DOCS_INICIAIS: DocItem[] = [
   { id: "d1",  nome: "CND Federal (Receita Federal)",         categoria: "Fiscal",       obrigatorio: true,  status: "pendente", arquivo: null, numero: "", emissao: "", validade: "", observacoes: "" },

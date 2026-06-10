@@ -6,45 +6,26 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import EmptyState from "@/components/EmptyState";
 
 const kpis = [
-  { label: "Projetos ativos", value: "3", hint: "de 5 projetos no total", accent: "bg-primary" },
-  { label: "Aguardando minha ação", value: "2", hint: "▼ requer atenção imediata", accent: "bg-warning", hintClass: "text-destructive" },
-  { label: "Custo contratado", value: "R$ 284k", hint: "67% do orçamento anual", accent: "bg-success" },
-  { label: "Horas contratadas", value: "1.420h", hint: "▲ +12% vs mês anterior", accent: "bg-success", hintClass: "text-success" },
-  { label: "Propostas para corrigir", value: "1", hint: "Portal Clientes v2 · há 3d", accent: "bg-destructive", hintClass: "text-destructive" },
-  { label: "Contratos próx. vencimento", value: "1", hint: "Fornecedor C · em 15 dias", accent: "bg-warning", hintClass: "text-warning" },
-  { label: "SLA médio de resposta", value: "4,2d", hint: "▲ meta: 5 dias — OK", accent: "bg-success", hintClass: "text-success" },
-  { label: "Taxa de aprovação", value: "80%", hint: "▲ 4 de 5 projetos aprovados", accent: "bg-success", hintClass: "text-success" },
+  { label: "Projetos ativos", value: "—", hint: "", accent: "bg-primary" },
+  { label: "Aguardando minha ação", value: "—", hint: "", accent: "bg-warning" },
+  { label: "Custo contratado", value: "—", hint: "", accent: "bg-success" },
+  { label: "Horas contratadas", value: "—", hint: "", accent: "bg-success" },
+  { label: "Propostas para corrigir", value: "—", hint: "", accent: "bg-destructive" },
+  { label: "Contratos próx. vencimento", value: "—", hint: "", accent: "bg-warning" },
+  { label: "SLA médio de resposta", value: "—", hint: "", accent: "bg-success" },
+  { label: "Taxa de aprovação", value: "—", hint: "", accent: "bg-success" },
 ];
 
-const statusChart = [
-  { name: "Em andamento", value: 2, color: "hsl(var(--primary))" },
-  { name: "Concluído", value: 1, color: "hsl(var(--success))" },
-  { name: "Não iniciado", value: 1, color: "hsl(var(--warning))" },
-  { name: "Pendente ação", value: 1, color: "hsl(var(--destructive))" },
-];
+const statusChart: { name: string; value: number; color: string }[] = [];
 
-const serviceCostChart = [
-  { name: "Desenvolvimento", value: 58, color: "hsl(var(--primary))" },
-  { name: "Ciclo Completo", value: 22, color: "hsl(262 70% 60%)" },
-  { name: "Testes", value: 12, color: "hsl(var(--success))" },
-  { name: "Gestão", value: 8, color: "hsl(var(--muted-foreground))" },
-];
+const serviceCostChart: { name: string; value: number; color: string }[] = [];
 
-const costEvolution = [
-  { month: "Nov", value: 40 },
-  { month: "Dez", value: 75 },
-  { month: "Jan", value: 130 },
-  { month: "Fev", value: 175 },
-  { month: "Mar", value: 230 },
-  { month: "Abr", value: 284 },
-];
+const costEvolution: { month: string; value: number }[] = [];
 
-const alerts = [
-  { type: "destructive", title: "Ação necessária:", text: 'Proposta "Portal Clientes v2" aguardando sua correção há 3 dias.' },
-  { type: "warning", title: "Atenção:", text: "Contrato do Fornecedor C vence em 15 dias — providencie renovação." },
-];
+const alerts: { type: string; title: string; text: string }[] = [];
 
 const SolicitanteDashboard = () => {
   const navigate = useNavigate();
@@ -75,7 +56,7 @@ const SolicitanteDashboard = () => {
               <div className="p-4">
                 <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
                 <p className="text-2xl font-bold text-foreground mb-1">{kpi.value}</p>
-                <p className={`text-[11px] ${kpi.hintClass || "text-muted-foreground"}`}>{kpi.hint}</p>
+                <p className="text-[11px] text-muted-foreground">{kpi.hint}</p>
               </div>
             </div>
           ))}
@@ -103,43 +84,55 @@ const SolicitanteDashboard = () => {
         <div className="bg-card rounded-xl border border-border p-6">
           <h3 className="font-semibold text-foreground">Status dos projetos</h3>
           <p className="text-xs text-muted-foreground mb-3">Distribuição por situação atual</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
-            {statusChart.map(d => (
-              <div key={d.name} className="flex items-center gap-1.5 text-xs">
-                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
-                <span className="text-muted-foreground">{d.name} {d.value}</span>
+          {statusChart.length === 0 ? (
+            <EmptyState minHeight={240} description="Sem projetos para exibir." />
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+                {statusChart.map(d => (
+                  <div key={d.name} className="flex items-center gap-1.5 text-xs">
+                    <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
+                    <span className="text-muted-foreground">{d.name} {d.value}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie data={statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
-                {statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Pie>
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
+                    {statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </>
+          )}
         </div>
 
         <div className="bg-card rounded-xl border border-border p-6">
           <h3 className="font-semibold text-foreground">Custo por tipo de serviço</h3>
           <p className="text-xs text-muted-foreground mb-3">Distribuição do orçamento contratado</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
-            {serviceCostChart.map(d => (
-              <div key={d.name} className="flex items-center gap-1.5 text-xs">
-                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
-                <span className="text-muted-foreground">{d.name} {d.value}%</span>
+          {serviceCostChart.length === 0 ? (
+            <EmptyState minHeight={240} description="Sem custos contratados para exibir." />
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+                {serviceCostChart.map(d => (
+                  <div key={d.name} className="flex items-center gap-1.5 text-xs">
+                    <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
+                    <span className="text-muted-foreground">{d.name} {d.value}%</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie data={serviceCostChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
-                {serviceCostChart.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Pie>
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={serviceCostChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
+                    {serviceCostChart.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </>
+          )}
         </div>
       </div>
 
@@ -147,18 +140,22 @@ const SolicitanteDashboard = () => {
       <div className="bg-card rounded-xl border border-border p-6">
         <h3 className="font-semibold text-foreground">Evolução do custo contratado</h3>
         <p className="text-xs text-muted-foreground mb-4">Acumulado mensal em R$ mil — últimos 6 meses</p>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={costEvolution} margin={{ top: 10, right: 20, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v}k`} />
-            <Tooltip
-              contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-              formatter={(v: number) => [`R$ ${v}k`, "Custo"]}
-            />
-            <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--primary))" }} activeDot={{ r: 6 }} />
-          </LineChart>
-        </ResponsiveContainer>
+        {costEvolution.length === 0 ? (
+          <EmptyState minHeight={260} description="Sem histórico de custo para exibir." />
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={costEvolution} margin={{ top: 10, right: 20, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v}k`} />
+              <Tooltip
+                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                formatter={(v: number) => [`R$ ${v}k`, "Custo"]}
+              />
+              <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--primary))" }} activeDot={{ r: 6 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

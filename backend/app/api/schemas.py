@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -203,3 +203,50 @@ class ContagemPFDetail(ContagemPFOut):
     funcoes: list[FuncaoPFOut] = []
     distribuicao: dict = {}
     asfpb: float | None = None
+
+
+# ─── Configuração APF ─────────────────────────────────────────────────────────
+
+class ConfiguracaoAPFCreate(BaseModel):
+    metodologia: str
+    tipo_contagem: str
+    usar_vaf: bool = False
+    vigencia: date
+    versao: str
+    usar_deflatores: bool = True
+    deflatores_json: list[dict] = []
+    valor_pf: float = 820.0
+    tolerancia: float = 10.0
+    valor_max_ce: float = 50000.0
+    saving_minimo: float = 5.0
+    prazo_fornecedor: int = 5
+    modalidade: str = "Ponto de Função (PF)"
+    alcadas_json: list[dict] = []
+    faixas_json: dict = {}
+    notificar_ce: str = "Qualquer recusa automática"
+    enviar_copia: str = ""
+
+
+class ConfiguracaoAPFOut(BaseModel):
+    id: UUID
+    metodologia: str
+    tipo_contagem: str
+    usar_vaf: bool
+    vigencia: date
+    versao: str
+    usar_deflatores: bool
+    deflatores_json: list[dict]
+    valor_pf: float
+    tolerancia: float
+    valor_max_ce: float
+    saving_minimo: float
+    prazo_fornecedor: int
+    modalidade: str
+    alcadas_json: list[dict]
+    faixas_json: dict
+    notificar_ce: str
+    enviar_copia: str
+    ativa: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
