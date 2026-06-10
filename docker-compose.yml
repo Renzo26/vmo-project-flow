@@ -14,10 +14,6 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS}
       TEMPLATE_PATH: /app/Documentos_regras/Padrão de Entrada PF.xlsx
     restart: unless-stopped
-    networks:
-      easypanel:
-        aliases:
-          - vmo-backend
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/health')"]
       interval: 30s
@@ -33,11 +29,3 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      easypanel:
-        aliases:
-          - vmo-frontend
-
-networks:
-  easypanel:
-    external: true
