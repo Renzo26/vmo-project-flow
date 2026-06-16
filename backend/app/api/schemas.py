@@ -133,10 +133,11 @@ class SolicitacaoDetail(SolicitacaoListItem):
     documentos: list[DocumentoOut] = []
     analise_pf: AnalisePFOut | None = None
     proposta: PropostaOut | None = None
+    form_json: dict | None = None
 
 
 class AvalRequest(BaseModel):
-    fornecedor_id: UUID
+    fornecedor_id: UUID | None = None
     parecer_controle: str | None = None
     estimativa_aprovada: str | None = None
 

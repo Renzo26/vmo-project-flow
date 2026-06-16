@@ -20,20 +20,50 @@ SEED_USERS = [
     {"nome": "Juliana Costa",  "email": "controle@vmo.com",    "role": UserRole.controle,    "team": "Controle Econômico"},
 ]
 
-SEED_FORNECEDOR = {
-    "nome": "TechSoft Soluções",
-    "cnpj": "00.000.000/0001-00",
-    "email": "fornecedor@vmo.com",
-    "telefone": "(11) 90000-0000",
-    "categorias": "Desenvolvimento de Software",
-}
-
-SEED_FORNECEDOR_USER = {
-    "nome": "Contato TechSoft",
-    "email": "fornecedor@vmo.com",
-    "role": UserRole.fornecedor,
-    "team": "TechSoft Soluções",
-}
+SEED_FORNECEDORES = [
+    {
+        "fornecedor": {
+            "nome": "TechSoft Soluções",
+            "cnpj": "00.000.000/0001-00",
+            "email": "fornecedor@vmo.com",
+            "telefone": "(11) 90000-0000",
+            "categorias": "Desenvolvimento de Software",
+        },
+        "usuario": {
+            "nome": "Contato TechSoft",
+            "email": "fornecedor@vmo.com",
+            "team": "TechSoft Soluções",
+        },
+    },
+    {
+        "fornecedor": {
+            "nome": "InfoSystems Ltda",
+            "cnpj": "11.111.111/0001-11",
+            "email": "fornecedor2@vmo.com",
+            "telefone": "(21) 91111-1111",
+            "categorias": "QA e Testes, Desenvolvimento de Software",
+        },
+        "usuario": {
+            "nome": "Contato InfoSystems",
+            "email": "fornecedor2@vmo.com",
+            "team": "InfoSystems Ltda",
+        },
+    },
+    {
+        "fornecedor": {
+            "nome": "DataBridge Corp",
+            "cnpj": "22.222.222/0001-22",
+            "email": "fornecedor3@vmo.com",
+            "telefone": "(31) 92222-2222",
+            "categorias": "Dados e Analytics, Infraestrutura e Cloud",
+        },
+        "usuario": {
+            "nome": "Contato DataBridge",
+            "email": "fornecedor3@vmo.com",
+            "team": "DataBridge Corp",
+        },
+    },
+]
 
 SENHA_PADRAO = "123456"
 
@@ -58,37 +88,37 @@ async def main() -> None:
             )
             print(f"+ criado: {u['email']} (senha: {SENHA_PADRAO})")
 
-        # --- Fornecedor + usuário vinculado ---
-        existing_user = await db.scalar(
-            select(Usuario).where(Usuario.email == SEED_FORNECEDOR_USER["email"])
-        )
-        if existing_user:
-            print(f"= já existe: {SEED_FORNECEDOR_USER['email']}")
-        else:
-            # Cria ou reutiliza o registro de fornecedor
-            fornecedor = await db.scalar(
-                select(Fornecedor).where(Fornecedor.email == SEED_FORNECEDOR["email"])
-            )
+        # --- Fornecedores + usuários vinculados ---
+        for seed in SEED_FORNECEDORES:
+            f_data = seed["fornecedor"]
+            u_data = seed["usuario"]
+
+            existing_user = await db.scalar(select(Usuario).where(Usuario.email == u_data["email"]))
+            if existing_user:
+                print(f"= já existe: {u_data['email']}")
+                continue
+
+            fornecedor = await db.scalar(select(Fornecedor).where(Fornecedor.email == f_data["email"]))
             if not fornecedor:
-                fornecedor = Fornecedor(**SEED_FORNECEDOR)
+                fornecedor = Fornecedor(**f_data)
                 db.add(fornecedor)
-                await db.flush()  # garante que fornecedor.id está disponível
+                await db.flush()
                 print(f"+ fornecedor criado: {fornecedor.nome}")
             else:
                 print(f"= fornecedor já existe: {fornecedor.nome}")
 
             db.add(
                 Usuario(
-                    nome=SEED_FORNECEDOR_USER["nome"],
-                    email=SEED_FORNECEDOR_USER["email"],
+                    nome=u_data["nome"],
+                    email=u_data["email"],
                     senha_hash=hash_password(SENHA_PADRAO),
-                    role=SEED_FORNECEDOR_USER["role"],
-                    team=SEED_FORNECEDOR_USER["team"],
+                    role=UserRole.fornecedor,
+                    team=u_data["team"],
                     fornecedor_id=fornecedor.id,
                     ativo=True,
                 )
             )
-            print(f"+ criado: {SEED_FORNECEDOR_USER['email']} (senha: {SENHA_PADRAO})")
+            print(f"+ criado: {u_data['email']} (senha: {SENHA_PADRAO})")
 
         await db.commit()
     print("Seed concluído.")

@@ -263,11 +263,13 @@ const NovaAnalise = () => {
   const [pfRepositoryUrl, setPfRepositoryUrl] = useState("");
   const [pfCutoffDate, setPfCutoffDate] = useState("");
   const [pfObservations, setPfObservations] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const [pfAnalyzing, setPfAnalyzing] = useState(false);
   const [pfAnalysis, setPfAnalysis] = useState<PfAnalysisResult | null>(null);
   const [pfError, setPfError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [fornecedorId, setFornecedorId] = useState<string | null>(null);
+  const [justificativaFornecedor, setJustificativaFornecedor] = useState("");
+  const [docAprovacao, setDocAprovacao] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [createdNumero, setCreatedNumero] = useState<string>("");
@@ -289,7 +291,9 @@ const NovaAnalise = () => {
   };
 
   const toggleSupplier = (id: string) => {
-    setSelectedSuppliers(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+    setSelectedSuppliers(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
   };
 
   const handleSubmit = async () => {
@@ -297,6 +301,16 @@ const NovaAnalise = () => {
       setSubmitError("Anexe o modelo Excel preenchido na etapa Padrão de Entrada PF antes de enviar.");
       setStep(4);
       return;
+    }
+    if (selectedSuppliers.length < 3) {
+      if (!justificativaFornecedor.trim()) {
+        setSubmitError("Com menos de 3 fornecedores selecionados, a justificativa é obrigatória.");
+        return;
+      }
+      if (!docAprovacao) {
+        setSubmitError("Com menos de 3 fornecedores selecionados, anexe o documento de aprovação do superior.");
+        return;
+      }
     }
     setSubmitting(true);
     setSubmitError(null);
@@ -330,10 +344,12 @@ const NovaAnalise = () => {
           repositorio_url: pfRepositoryUrl,
           data_corte: pfCutoffDate,
           observacoes_pf: pfObservations,
+          fornecedores_indicados: selectedSuppliers,
+          ...(justificativaFornecedor.trim() && { justificativa_fornecedores: justificativaFornecedor }),
         }),
       );
       fd.append("arquivo", pfAttachments[0]);
-      if (fornecedorId) fd.append("fornecedor_id", fornecedorId);
+      if (docAprovacao) fd.append("doc_aprovacao", docAprovacao);
 
       const res = await api.upload<SolicitacaoDetail>("/solicitacoes", fd);
       setCreatedNumero(res.numero);
@@ -346,7 +362,7 @@ const NovaAnalise = () => {
   };
 
   const canAdvance = () => {
-    if (step === 0) return projectTitle.trim() && requestArea.trim() && requestResponsible.trim() && projectCategory;
+    if (step === 0) return !!(projectTitle.trim() && requestArea.trim() && requestResponsible.trim());
     if (step === 1) {
       if (!serviceType || methodology.length === 0) return false;
       if (currentSubtypePanel && !subtype) return false;
@@ -451,30 +467,6 @@ const NovaAnalise = () => {
                   <Label>Data da solicitação</Label>
                   <Input value={requestDate} disabled className="mt-1 bg-muted/50" />
                   <p className="text-[11px] text-muted-foreground mt-1">Preenchida automaticamente</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Prioridade *</Label>
-                  <select
-                    value={priority}
-                    onChange={e => setPriority(e.target.value)}
-                    className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    {priorityOptions.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <Label>Categoria do projeto *</Label>
-                  <select
-                    value={projectCategory}
-                    onChange={e => setProjectCategory(e.target.value)}
-                    className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    <option value="">Selecione...</option>
-                    {projectCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <p className="text-[11px] text-muted-foreground mt-1">Alimenta o scorecard de fornecedores e os gráficos do Controle Econômico</p>
                 </div>
               </div>
             </section>
@@ -602,19 +594,11 @@ const NovaAnalise = () => {
                   <Input value={expectedDeliverables} onChange={e => setExpectedDeliverables(e.target.value)} placeholder="Ex: Código-fonte, documentação técnica, treinamento" className="mt-1" />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Nível de complexidade</Label>
-                  <select value={complexity} onChange={e => setComplexity(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    {complexityLevels.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <Label>Ambiente</Label>
-                  <select value={environment} onChange={e => setEnvironment(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    {environmentOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
+              <div>
+                <Label>Nível de complexidade</Label>
+                <select value={complexity} onChange={e => setComplexity(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                  {complexityLevels.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -638,8 +622,8 @@ const NovaAnalise = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label>Prazo desejado de entrega *</Label>
-                  <Input type="date" value={deliveryDeadline} onChange={e => setDeliveryDeadline(e.target.value)} className="mt-1" />
+                  <Label>Prazo desejado de entrega * <span className="font-normal text-muted-foreground text-[11px]">(data prevista de entrega do projeto)</span></Label>
+                  <Input type="date" value={deliveryDeadline} onChange={e => setDeliveryDeadline(e.target.value)} className="mt-1" min={new Date().toISOString().split("T")[0]} />
                 </div>
                 <div>
                   <Label>Prazo para resposta dos fornecedores</Label>
@@ -653,18 +637,9 @@ const NovaAnalise = () => {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Fornecedores habilitados</Label>
-                  <select value={enabledSupplier} onChange={e => setEnabledSupplier(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    {enabledSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <p className="text-[11px] text-muted-foreground mt-1">O sistema filtra automaticamente os fornecedores cadastrados para a categoria selecionada</p>
-                </div>
-                <div>
-                  <Label>Outros documentos</Label>
-                  <Input type="file" className="mt-1" />
-                </div>
+              <div>
+                <Label>Outros documentos</Label>
+                <Input type="file" className="mt-1" />
               </div>
               <div>
                 <Label>Observações para o fornecedor</Label>
@@ -683,6 +658,30 @@ const NovaAnalise = () => {
         {step === 3 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Classificação da iniciativa</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Prioridade *</Label>
+                <select
+                  value={priority}
+                  onChange={e => setPriority(e.target.value)}
+                  className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  {priorityOptions.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label>Categoria do projeto *</Label>
+                <select
+                  value={projectCategory}
+                  onChange={e => setProjectCategory(e.target.value)}
+                  className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">Selecione...</option>
+                  {projectCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <p className="text-[11px] text-muted-foreground mt-1">Alimenta o scorecard de fornecedores e os gráficos do Controle Econômico</p>
+              </div>
+            </div>
             <div>
               <Label className="mb-2 block">Tipo financeiro</Label>
               <div className="flex gap-2">
@@ -703,22 +702,6 @@ const NovaAnalise = () => {
                 ))}
               </div>
             </div>
-            <div>
-              <Label className="mb-2 block">Urgência</Label>
-              <div className="flex gap-2">
-                {([["normal", "Prazo Normal"], ["emergencial", "Emergencial"]] as const).map(([k, l]) => (
-                  <button key={k} onClick={() => setUrgency(k)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    urgency === k ? (k === "emergencial" ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground") : "bg-muted text-muted-foreground"
-                  }`}>{l}</button>
-                ))}
-              </div>
-              {urgency === "emergencial" && (
-                <div className="flex items-start gap-2 mt-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
-                  <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                  <p className="text-xs text-foreground">Requer justificativa e aprovação do gestor</p>
-                </div>
-              )}
-            </div>
           </div>
         )}
 
@@ -736,7 +719,7 @@ const NovaAnalise = () => {
             </div>
 
             <div>
-              <Label className="mb-2 block">Metodologia de contagem *</Label>
+              <Label className="mb-2 block">Métrica de contagem *</Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {pfMethodologies.map(m => (
                   <button
@@ -795,16 +778,23 @@ const NovaAnalise = () => {
                 <Label>Anexar modelo Excel preenchido (.xlsx) *</Label>
                 <Badge variant="outline" className="text-[10px] bg-destructive/15 text-destructive border-destructive/30">Obrigatório</Badge>
               </div>
-              <label className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer flex flex-col items-center">
+              <label
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer flex flex-col items-center ${
+                  isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                }`}
+                onDrop={e => { e.preventDefault(); setIsDragging(false); handlePfFiles(e.dataTransfer.files); }}
+                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+              >
                 <input
                   type="file"
                   accept=".xlsx"
                   className="hidden"
                   onChange={e => handlePfFiles(e.target.files)}
                 />
-                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Arraste o modelo preenchido ou clique para enviar</p>
-                <p className="text-[11px] text-muted-foreground mt-1">Apenas o modelo Excel (.xlsx) — use o arquivo em "Baixar modelo"</p>
+                <Upload className={`h-8 w-8 mb-2 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
+                <p className="text-sm text-muted-foreground">Arraste o modelo preenchido aqui</p>
+                <p className="text-[11px] text-muted-foreground mt-1">ou clique para selecionar · apenas .xlsx</p>
               </label>
               {pfAttachments.length > 0 && (
                 <ul className="mt-3 space-y-1.5">
@@ -915,36 +905,7 @@ const NovaAnalise = () => {
               </div>
             )}
 
-            <div className="rounded-xl border border-border p-4 space-y-4">
-              <div>
-                <h3 className="text-sm font-bold text-foreground">Repositório de requisitos (alternativa)</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Se os requisitos/histórias estão em uma ferramenta (Jira, Azure DevOps etc.), informe a URL e a data corte para garantir a foto do escopo medido.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>URL do repositório de requisitos</Label>
-                  <Input
-                    value={pfRepositoryUrl}
-                    onChange={e => setPfRepositoryUrl(e.target.value)}
-                    placeholder="Ex: https://empresa.atlassian.net/jira/projects/ABC"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Data corte *</Label>
-                  <Input
-                    type="date"
-                    value={pfCutoffDate}
-                    onChange={e => setPfCutoffDate(e.target.value)}
-                    className="mt-1"
-                    disabled={!pfRepositoryUrl.trim()}
-                  />
-                  <p className="text-[11px] text-muted-foreground mt-1">Foto do escopo na data informada</p>
-                </div>
-              </div>
-            </div>
+{/* Repositório de requisitos oculto intencionalmente */}
 
             <div>
               <Label>Observações para a medição</Label>
@@ -973,7 +934,7 @@ const NovaAnalise = () => {
             <div>
               <h2 className="text-lg font-bold text-foreground">Revisão e envio</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Sua solicitação será enviada ao <span className="font-medium text-foreground">Controle Econômico</span>. Você pode indicar um fornecedor preferencial abaixo — o Controle poderá confirmar ou alterar a indicação.
+                Confira os dados e selecione os fornecedores que participarão do processo.
               </p>
             </div>
             <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-1">
@@ -986,50 +947,28 @@ const NovaAnalise = () => {
               {subtype && <p><span className="text-muted-foreground">Subtipo:</span> {subtype}{seniority ? ` · ${seniority}` : ""}</p>}
               <p><span className="text-muted-foreground">Metodologia (serviço):</span> {methodology.length > 0 ? methodology.join(", ") : "—"}</p>
               <p><span className="text-muted-foreground">Classificação:</span> {finType} · {initiative}</p>
-              <p><span className="text-muted-foreground">Urgência:</span> {urgency === "emergencial" ? "Emergencial" : "Normal"}</p>
-              <p><span className="text-muted-foreground">Metodologia PF:</span> {pfMethodologies.find(m => m.id === pfMethodology)?.code} · <span className="text-muted-foreground">Documento:</span> {pfAttachments[0]?.name ?? "—"}</p>
+              <p><span className="text-muted-foreground">Métrica PF:</span> {pfMethodologies.find(m => m.id === pfMethodology)?.code} · <span className="text-muted-foreground">Documento:</span> {pfAttachments[0]?.name ?? "—"}</p>
               {pfAnalysis && (
                 <p><span className="text-muted-foreground">Análise IA:</span> {pfAnalysis.total_preenchidos}/{pfAnalysis.total_campos} campos · {pfAnalysis.total_pendentes} pendente(s)</p>
               )}
             </div>
 
-            {/* Seleção de fornecedor */}
+            {/* Seleção de fornecedores — mínimo 3 */}
             <div className="rounded-xl border border-border p-4 space-y-3">
               <div>
-                <h4 className="text-sm font-semibold text-foreground">Fornecedor desejado</h4>
+                <h4 className="text-sm font-semibold text-foreground">Fornecedores habilitados</h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Opcional — o Controle Econômico pode alterar a indicação antes de enviar ao fornecedor.
+                  Selecione no mínimo 3 fornecedores para garantir concorrência. Caso não seja possível, justificativa e aprovação de superior serão obrigatórias.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {/* Opção automático */}
-                <button
-                  type="button"
-                  onClick={() => setFornecedorId(null)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
-                    fornecedorId === null
-                      ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                      : "border-border hover:border-primary/30"
-                  }`}
-                >
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Decisão do Controle</p>
-                    <p className="text-xs text-muted-foreground">Controle Econômico define o fornecedor</p>
-                  </div>
-                  {fornecedorId === null && <Check className="h-4 w-4 text-primary ml-auto shrink-0" />}
-                </button>
-
-                {/* Fornecedores do banco */}
                 {(fornecedoresList ?? []).map(f => (
                   <button
                     key={f.id}
                     type="button"
-                    onClick={() => setFornecedorId(f.id)}
+                    onClick={() => toggleSupplier(f.id)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
-                      fornecedorId === f.id
+                      selectedSuppliers.includes(f.id)
                         ? "border-success bg-success/5 ring-2 ring-success/20"
                         : "border-border hover:border-success/30"
                     }`}
@@ -1037,8 +976,8 @@ const NovaAnalise = () => {
                     <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center shrink-0">
                       <Building2 className="h-4 w-4 text-success" />
                     </div>
-                    <p className="text-sm font-medium text-foreground truncate">{f.nome}</p>
-                    {fornecedorId === f.id && <Check className="h-4 w-4 text-success ml-auto shrink-0" />}
+                    <p className="text-sm font-medium text-foreground truncate flex-1">{f.nome}</p>
+                    {selectedSuppliers.includes(f.id) && <Check className="h-4 w-4 text-success ml-auto shrink-0" />}
                   </button>
                 ))}
 
@@ -1049,11 +988,57 @@ const NovaAnalise = () => {
                 )}
                 {fornError && (
                   <p className="text-xs text-muted-foreground col-span-2 italic">
-                    Não foi possível carregar a lista de fornecedores. Selecione "Decisão do Controle" ou faça login com credenciais reais.
+                    Não foi possível carregar a lista de fornecedores. Faça login com credenciais reais.
                   </p>
                 )}
               </div>
+              <p className={`text-xs font-medium ${selectedSuppliers.length >= 3 ? "text-success" : "text-amber-600 dark:text-amber-400"}`}>
+                {selectedSuppliers.length === 0
+                  ? "Nenhum fornecedor selecionado · mínimo 3"
+                  : `${selectedSuppliers.length} fornecedor(es) selecionado(s)${selectedSuppliers.length >= 3 ? " · mínimo atingido ✓" : ` · faltam ${3 - selectedSuppliers.length} para o mínimo`}`}
+              </p>
             </div>
+
+            {/* Justificativa obrigatória quando < 3 fornecedores */}
+            {selectedSuppliers.length < 3 && (
+              <div className="space-y-3 border border-amber-400/40 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl p-4">
+                <p className="text-xs font-medium flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {selectedSuppliers.length === 0
+                    ? "Nenhum fornecedor selecionado — justificativa e aprovação de superior são obrigatórias."
+                    : selectedSuppliers.length === 1
+                    ? "Apenas 1 fornecedor selecionado — justificativa e aprovação de superior são obrigatórias."
+                    : "Apenas 2 fornecedores selecionados — justificativa e aprovação de superior são obrigatórias."}
+                </p>
+                <div>
+                  <Label htmlFor="just-forn" className="text-sm">Justificativa *</Label>
+                  <Textarea
+                    id="just-forn"
+                    value={justificativaFornecedor}
+                    onChange={e => setJustificativaFornecedor(e.target.value)}
+                    placeholder="Explique o motivo de indicar menos de 3 fornecedores..."
+                    className="mt-1 text-sm"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Documento / e-mail de aprovação do superior *</Label>
+                  <label className="mt-1 flex items-center gap-3 border-2 border-dashed rounded-lg p-4 cursor-pointer hover:border-primary/40 transition-colors">
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={e => setDocAprovacao(e.target.files?.[0] ?? null)}
+                    />
+                    <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
+                    {docAprovacao ? (
+                      <p className="text-sm text-foreground font-medium truncate">{docAprovacao.name}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Clique para selecionar o arquivo de aprovação</p>
+                    )}
+                  </label>
+                </div>
+              </div>
+            )}
 
             {submitError && (
               <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">

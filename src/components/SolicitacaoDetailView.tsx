@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ChevronLeft, Loader2, FileSpreadsheet, CheckCircle2, AlertTriangle,
   XCircle, ThumbsUp, ThumbsDown, Paperclip, MessageCircleQuestion,
-  Check, X, Clock, Send, CircleCheck, Ban, RefreshCcw, Calculator, Plus, Eye,
+  Check, X, Clock, Send, CircleCheck, Ban, RefreshCcw, Calculator, Plus, Eye, Building2,
 } from "lucide-react";
 
 const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
@@ -142,7 +142,7 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
 
       {/* Ações por perfil */}
       {role === "controle" && s.status === "aguardando_controle" && (
-        <ControleAval onDone={invalidate} />
+        <ControleAval onDone={invalidate} s={s} />
       )}
       {role === "controle" && s.status !== "aguardando_controle" && (
         <ControleLinha s={s} />
@@ -328,17 +328,31 @@ const ResultadoFinal = ({ s }: { s: SolicitacaoDetail }) => (
 );
 
 // ─── Ação: Controle dá aval + escolhe fornecedor ────────────────────────────
-const ControleAval = ({ onDone }: { onDone: () => void }) => {
+const ControleAval = ({ onDone, s }: { onDone: () => void; s: SolicitacaoDetail }) => {
   const { id } = useParams<{ id: string }>();
   const [fornecedorId, setFornecedorId] = useState("");
   const [parecer, setParecer] = useState("");
   const [estimativa, setEstimativa] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const formJson = (s.form_json ?? {}) as Record<string, unknown>;
+  const fornecedoresIndicados: string[] = Array.isArray(formJson.fornecedores_indicados)
+    ? (formJson.fornecedores_indicados as string[])
+    : [];
+  const justificativaForn = typeof formJson.justificativa_fornecedores === "string"
+    ? formJson.justificativa_fornecedores
+    : null;
+  const docAprovacao = s.documentos.find(d => d.kind === "aprovacao_fornecedor") ?? null;
+  const temJustificativa = !!(justificativaForn || docAprovacao);
+
   const { data: fornecedores } = useQuery({
     queryKey: ["fornecedores"],
     queryFn: () => api.get<FornecedorOut[]>("/fornecedores"),
   });
+
+  const fornecedoresParaEnvio = fornecedoresIndicados.length > 0
+    ? (fornecedores ?? []).filter(f => fornecedoresIndicados.includes(f.id))
+    : (fornecedores ?? []);
 
   const aval = useMutation({
     mutationFn: () => api.patch(`/solicitacoes/${id}/aval`, {
@@ -359,17 +373,71 @@ const ControleAval = ({ onDone }: { onDone: () => void }) => {
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4">
       <h3 className="text-sm font-bold text-foreground">Parecer do Controle Econômico</h3>
-      <div>
-        <Label>Fornecedor para envio *</Label>
-        <select value={fornecedorId} onChange={e => setFornecedorId(e.target.value)}
-          className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-          <option value="">Selecione o fornecedor...</option>
-          {(fornecedores ?? []).map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
-        </select>
-        {(fornecedores ?? []).length === 0 && (
-          <p className="text-[11px] text-amber-600 mt-1">Nenhum fornecedor cadastrado. Cadastre em Fornecedores → Novo.</p>
-        )}
-      </div>
+
+      {/* Fornecedores indicados pelo solicitante */}
+      {fornecedoresIndicados.length > 0 && (
+        <div className="bg-muted/40 rounded-lg p-4 space-y-2">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Fornecedores indicados pelo solicitante ({fornecedoresIndicados.length})
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {fornecedoresParaEnvio.length > 0
+              ? fornecedoresParaEnvio.map(f => (
+                  <span key={f.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
+                    <Building2 className="h-3 w-3" /> {f.nome}
+                  </span>
+                ))
+              : <span className="text-xs text-muted-foreground italic">Carregando fornecedores...</span>
+            }
+          </div>
+        </div>
+      )}
+
+      {/* Justificativa de menos de 3 fornecedores — validar antes de dar aval */}
+      {temJustificativa && (
+        <div className="border border-amber-400/40 bg-amber-50/50 dark:bg-amber-950/20 rounded-lg p-4 space-y-3">
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+            Solicitante indicou menos de 3 fornecedores — valide a justificativa antes de dar o aval
+          </p>
+          {justificativaForn && (
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Justificativa</p>
+              <p className="text-sm text-foreground bg-background rounded-lg p-3">{justificativaForn}</p>
+            </div>
+          )}
+          {docAprovacao && (
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Documento de aprovação do superior</p>
+              {docAprovacao.url ? (
+                <a href={docAprovacao.url} target="_blank" rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                  <Paperclip className="h-3.5 w-3.5" /> {docAprovacao.nome}
+                </a>
+              ) : (
+                <span className="text-sm text-foreground flex items-center gap-1.5">
+                  <Paperclip className="h-3.5 w-3.5 text-muted-foreground" /> {docAprovacao.nome}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Seleção de fornecedor — apenas quando < 3 indicados (justificativa presente) */}
+      {temJustificativa && (
+        <div>
+          <Label>Fornecedor para envio *</Label>
+          <select value={fornecedorId} onChange={e => setFornecedorId(e.target.value)}
+            className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+            <option value="">Selecione o fornecedor...</option>
+            {fornecedoresParaEnvio.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+          </select>
+          {fornecedoresParaEnvio.length === 0 && (fornecedores ?? []).length === 0 && (
+            <p className="text-[11px] text-amber-600 mt-1">Nenhum fornecedor cadastrado. Cadastre em Fornecedores → Novo.</p>
+          )}
+        </div>
+      )}
       <div>
         <Label>Estimativa aprovada (opcional)</Label>
         <Input value={estimativa} onChange={e => setEstimativa(e.target.value)} placeholder="Ex: 120 PF / R$ 98.400" className="mt-1" />
@@ -380,7 +448,7 @@ const ControleAval = ({ onDone }: { onDone: () => void }) => {
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2">
-        <Button onClick={() => { setError(null); aval.mutate(); }} disabled={!fornecedorId || aval.isPending}
+        <Button onClick={() => { setError(null); aval.mutate(); }} disabled={(temJustificativa && !fornecedorId) || aval.isPending}
           className="bg-success hover:bg-success/90 text-success-foreground gap-1.5">
           {aval.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />} Dar aval e enviar ao fornecedor
         </Button>

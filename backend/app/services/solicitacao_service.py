@@ -116,4 +116,5 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
         documentos=documentos,
         analise_pf=analise,
         proposta=proposta,
+        form_json=s.form_json,
     )

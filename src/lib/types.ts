@@ -101,6 +101,7 @@ export interface SolicitacaoDetail extends SolicitacaoListItem {
   documentos: DocumentoOut[];
   analise_pf: AnalisePFOut | null;
   proposta: PropostaOut | null;
+  form_json: Record<string, unknown> | null;
 }
 
 export const STATUS_LABELS: Record<SolicitacaoStatus, string> = {

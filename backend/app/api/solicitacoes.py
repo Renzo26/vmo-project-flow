@@ -109,6 +109,7 @@ async def criar(
     metodologia_pf: Annotated[str, Form()] = "sfp",
     form_json: Annotated[str | None, Form()] = None,
     fornecedor_id: Annotated[str | None, Form()] = None,
+    doc_aprovacao: Annotated[UploadFile | None, File()] = None,
 ) -> SolicitacaoDetail:
     if user.role != UserRole.solicitante:
         raise HTTPException(status_code=403, detail="Apenas solicitantes podem criar solicitações.")
@@ -165,6 +166,27 @@ async def criar(
         )
     )
 
+    # Upload do documento de aprovação de superior (quando < 2 fornecedores indicados)
+    if doc_aprovacao is not None:
+        aprov_data = await doc_aprovacao.read()
+        if aprov_data:
+            aprov_name = doc_aprovacao.filename or "aprovacao"
+            aprov_path = f"solicitacoes/{solic.id}/{safe_filename(aprov_name)}"
+            try:
+                await storage_service.upload(aprov_path, aprov_data, doc_aprovacao.content_type)
+            except StorageError as exc:
+                raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+            db.add(
+                SolicitacaoDocumento(
+                    solicitacao_id=solic.id,
+                    nome=aprov_name,
+                    storage_path=aprov_path,
+                    content_type=doc_aprovacao.content_type,
+                    tamanho=len(aprov_data),
+                    kind="aprovacao_fornecedor",
+                )
+            )
+
     # Análise de IA (Padrão de Entrada PF) — persiste o resultado
     try:
         metodologia = Methodology(metodologia_pf)
@@ -207,7 +229,8 @@ async def dar_aval(
         raise HTTPException(status_code=404, detail="Solicitação não encontrada.")
     if s.status != SolicitacaoStatus.aguardando_controle:
         raise HTTPException(status_code=409, detail="Solicitação não está aguardando aval.")
-    s.fornecedor_id = body.fornecedor_id
+    if body.fornecedor_id is not None:
+        s.fornecedor_id = body.fornecedor_id
     s.parecer_controle = body.parecer_controle
     s.estimativa_aprovada = body.estimativa_aprovada
     s.status = SolicitacaoStatus.aguardando_proposta
