@@ -26,13 +26,20 @@ _MET_MAP = {
 
 _SYSTEM_PROMPT = (
     "Você é especialista em medição de software por Pontos de Função (APF/IFPUG e SFP). "
-    "Sua tarefa é extrair a lista de funções de contagem de uma planilha 'Padrão de Entrada PF'.\n\n"
-    "Para SFP identifique: descrição da função, tipo CFB (AL = Arquivo Lógico / PE = Processamento Elementar) "
-    "e operação (ADD = inclusão, CHG = alteração, DEL = exclusão, CFP = contagem por ponto de função).\n"
-    "Para IFPUG identifique: descrição da função, tipo (EE/SE/CE/ALI/AIE), "
-    "complexidade (L = baixa, A = média, H = alta) e deflator SISP (ex: Inc-4.1).\n\n"
+    "Sua tarefa é extrair TODAS as funções de contagem de uma planilha 'Padrão de Entrada PF'.\n\n"
+    "=== REGRAS PARA SFP ===\n"
+    "Cada linha da planilha representa uma funcionalidade (use case). Para cada linha você deve gerar:\n"
+    "1. Um PE (Processamento Elementar) com o nome da funcionalidade/serviço.\n"
+    "2. Para cada entidade de dados MANTIDA NESTA APLICAÇÃO (interna), um AL (Arquivo Lógico) separado.\n"
+    "   - Se a entidade é '(nova)' ou '(incluída)': operação = ADD\n"
+    "   - Se a entidade é '(alterada)' ou '(modificada)': operação = ADD (nova contagem) ou CHG (melhoria)\n"
+    "   - Se a entidade é EXTERNA ou serviço externo: NÃO contar como AL\n"
+    "Operações: ADD = inclusão nova, CHG = alteração, DEL = exclusão, CFP = contagem por ponto.\n\n"
+    "=== REGRAS PARA IFPUG ===\n"
+    "Identifique: descrição, tipo (EE/SE/CE/ALI/AIE), complexidade (L/A/H), deflator SISP (ex: Inc-4.1).\n"
+    "ALI = Arquivo Lógico Interno (mantido pela aplicação), AIE = Arquivo Interface Externa.\n\n"
     "Determine o tipo de projeto: 'desenvolvimento' (novo sistema) ou 'melhoria' (alterações em sistema existente).\n"
-    "Se não encontrar funções claramente identificadas, retorne lista vazia.\n"
+    "Se não encontrar funções, retorne lista vazia.\n"
     "Responda SEMPRE em português do Brasil."
 )
 
@@ -110,14 +117,20 @@ async def gerar_contagem_auto(
     contagem_met = _MET_MAP.get(metodologia, "sfp")
     schema = _schema_sfp() if contagem_met == "sfp" else _schema_ifpug()
 
+    _met_label = "SFP" if contagem_met == "sfp" else "IFPUG/APF"
+    _sfp_extra = (
+        "\nLembre-se: para SFP gere um PE por funcionalidade E um AL por cada entidade de dados "
+        "INTERNA (mantida nesta aplicação) mencionada nas colunas de entidades. "
+        "Entidades externas (serviços externos, APIs de terceiros) NÃO geram AL."
+    ) if contagem_met == "sfp" else ""
+
     user_prompt = (
-        f"Metodologia: {'SFP' if contagem_met == 'sfp' else 'IFPUG/APF'}.\n\n"
-        "Extraia as funções de contagem de pontos de função do documento abaixo:\n\n"
+        f"Metodologia: {_met_label}.\n\n"
+        "Extraia TODAS as funções de contagem de pontos de função do documento abaixo:\n\n"
         "--- CONTEÚDO DA PLANILHA ---\n"
         + document_text[:40_000]
         + "\n--- FIM ---\n\n"
-        "Retorne apenas as funções claramente identificadas no documento. "
-        "Se não houver funções identificáveis, retorne uma lista vazia."
+        + _sfp_extra
     )
 
     completion = _client.chat.completions.create(
