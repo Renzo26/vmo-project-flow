@@ -356,7 +356,7 @@ const ControleAval = ({ onDone, s }: { onDone: () => void; s: SolicitacaoDetail 
 
   const aval = useMutation({
     mutationFn: () => api.patch(`/solicitacoes/${id}/aval`, {
-      fornecedor_id: fornecedorId,
+      fornecedor_id: fornecedorId || null,
       parecer_controle: parecer || null,
       estimativa_aprovada: estimativa || null,
     }),

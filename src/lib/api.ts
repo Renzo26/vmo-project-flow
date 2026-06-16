@@ -21,7 +21,13 @@ async function handle<T>(res: Response): Promise<T> {
     let detail = `Erro ${res.status}`;
     try {
       const body = await res.json();
-      detail = body?.detail ?? detail;
+      if (Array.isArray(body?.detail)) {
+        detail = body.detail
+          .map((e: Record<string, unknown>) => String(e.msg ?? e))
+          .join("; ");
+      } else if (typeof body?.detail === "string") {
+        detail = body.detail;
+      }
     } catch {
       /* ignore */
     }
