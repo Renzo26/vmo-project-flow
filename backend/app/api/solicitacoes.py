@@ -28,6 +28,7 @@ from app.models import (
 from app.services import solicitacao_service, storage_service
 from app.services.storage_service import StorageError, safe_filename
 from app.services.ai_agent import analyze_document
+from app.services.contagem_auto import gerar_contagem_auto
 from app.services.document_parser import UnsupportedDocumentError, extract_text
 from app.services.template_reader import get_expected_fields
 from app.schemas import Methodology
@@ -187,29 +188,48 @@ async def criar(
                 )
             )
 
-    # Análise de IA (Padrão de Entrada PF) — persiste o resultado
+    # Extrai texto da planilha (reutilizado pela análise de campos e pela contagem automática)
+    _doc_text: str | None = None
     try:
-        metodologia = Methodology(metodologia_pf)
-        texto = extract_text(arquivo.filename or "documento.xlsx", data)
-        expected = get_expected_fields(metodologia)
-        resultado = analyze_document(metodologia, arquivo.filename or "documento.xlsx", texto, expected)
-        db.add(
-            AnalisePF(
-                solicitacao_id=solic.id,
-                metodologia=resultado.metodologia.value,
-                aba=resultado.aba,
-                total_campos=resultado.total_campos,
-                total_preenchidos=resultado.total_preenchidos,
-                total_pendentes=resultado.total_pendentes,
-                completo=resultado.completo,
-                campos=[c.model_dump() for c in resultado.campos],
-                pendentes=resultado.pendentes,
-                resumo=resultado.resumo,
-            )
-        )
-    except (UnsupportedDocumentError, ValueError, Exception):
-        # Não bloqueia a criação caso a análise falhe; segue sem análise persistida.
+        _doc_text = extract_text(arquivo.filename or "documento.xlsx", data)
+    except (UnsupportedDocumentError, Exception):
         pass
+
+    # Análise de IA (Padrão de Entrada PF) — valida campos preenchidos
+    if _doc_text is not None:
+        try:
+            metodologia = Methodology(metodologia_pf)
+            expected = get_expected_fields(metodologia)
+            resultado = analyze_document(metodologia, arquivo.filename or "documento.xlsx", _doc_text, expected)
+            db.add(
+                AnalisePF(
+                    solicitacao_id=solic.id,
+                    metodologia=resultado.metodologia.value,
+                    aba=resultado.aba,
+                    total_campos=resultado.total_campos,
+                    total_preenchidos=resultado.total_preenchidos,
+                    total_pendentes=resultado.total_pendentes,
+                    completo=resultado.completo,
+                    campos=[c.model_dump() for c in resultado.campos],
+                    pendentes=resultado.pendentes,
+                    resumo=resultado.resumo,
+                )
+            )
+        except (ValueError, Exception):
+            pass
+
+        # Contagem APF automática — extrai funções e cria ContagemPF vinculada
+        try:
+            await gerar_contagem_auto(
+                db=db,
+                solicitacao_id=solic.id,
+                metodologia=Methodology(metodologia_pf),
+                titulo_base=titulo,
+                document_text=_doc_text,
+                usuario_id=user.id,
+            )
+        except Exception:
+            pass
 
     await db.flush()
     return await solicitacao_service.to_detail(db, solic)
