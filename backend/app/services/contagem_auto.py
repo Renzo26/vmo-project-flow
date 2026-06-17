@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.models.contagem_pf import ContagemPF, FuncaoPF
 from app.schemas import Methodology
+from app.services import apf_config_service
 from app.services import pf_calculator as calc
 
 _client = OpenAI(api_key=settings.openai_api_key)
@@ -191,7 +192,9 @@ async def gerar_contagem_auto(
             )
             for f in funcoes_raw
         ]
-        r = calc.calcular_ifpug(funcoes_ifpug)
+        config = await apf_config_service.get_config_ativa(db)
+        deflatores_map = apf_config_service.get_deflatores_map(config)
+        r = calc.calcular_ifpug(funcoes_ifpug, deflatores=deflatores_map)
         total_bruto = r.total_pf_bruto
         total_local = r.total_pf_local
         detalhes = [

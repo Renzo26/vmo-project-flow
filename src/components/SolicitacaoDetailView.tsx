@@ -20,6 +20,7 @@ import {
   ChevronLeft, Loader2, FileSpreadsheet, CheckCircle2, AlertTriangle,
   XCircle, ThumbsUp, ThumbsDown, Paperclip, MessageCircleQuestion,
   Check, X, Clock, Send, CircleCheck, Ban, RefreshCcw, Calculator, Plus, Eye, Building2,
+  ShieldCheck, DollarSign,
 } from "lucide-react";
 
 const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
@@ -150,6 +151,11 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
       {/* Proposta do fornecedor */}
       {s.proposta && (
         <PropostaCard proposta={s.proposta} />
+      )}
+
+      {/* Valor estimado (PF × R$/PF) — controle e solicitante */}
+      {role !== "fornecedor" && (
+        <ValorEstimadoBloco s={s} />
       )}
 
       {/* De-Para APF — controle e solicitante veem inline; fornecedor vê via modal */}
@@ -527,6 +533,9 @@ const AnalisePropostaBloco = ({ analise }: { analise: AnalisePropostaOut }) => {
             {analise.pf_contagem != null ? `${analise.pf_contagem.toFixed(2)}` : "—"}
           </p>
           <p className="text-xs text-muted-foreground">PF (contagem automática)</p>
+          {analise.valor_estimado != null && (
+            <p className="text-xs font-semibold text-foreground mt-1">{fmtMoeda(analise.valor_estimado)}</p>
+          )}
         </div>
 
         <div className="text-center">
@@ -535,6 +544,9 @@ const AnalisePropostaBloco = ({ analise }: { analise: AnalisePropostaOut }) => {
             {analise.pf_proposta != null ? `${analise.pf_proposta.toFixed(2)}` : "—"}
           </p>
           <p className="text-xs text-muted-foreground">PF (extraído do arquivo)</p>
+          {analise.valor_proposta != null && (
+            <p className="text-xs font-semibold text-foreground mt-1">{fmtMoeda(analise.valor_proposta)}</p>
+          )}
         </div>
 
         <div className="text-center">
@@ -554,10 +566,68 @@ const AnalisePropostaBloco = ({ analise }: { analise: AnalisePropostaOut }) => {
         </div>
       </div>
 
+      {/* Parecer derivado das faixas de desvio configuradas */}
+      {(analise.acao_recomendada || analise.alcada_requerida) && (
+        <div className="px-5 pb-3 flex flex-wrap items-center gap-2">
+          {analise.acao_recomendada && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+              <ShieldCheck className="h-3.5 w-3.5" /> Parecer: {analise.acao_recomendada}
+            </span>
+          )}
+          {analise.alcada_requerida && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border">
+              Aprovação: {analise.alcada_requerida}
+            </span>
+          )}
+        </div>
+      )}
+
       {analise.resumo && (
         <div className="px-5 pb-4">
           <p className="text-xs text-muted-foreground bg-muted/40 rounded-lg px-4 py-2">{analise.resumo}</p>
         </div>
+      )}
+    </div>
+  );
+};
+
+const fmtMoeda = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+// ─── Valor estimado da solicitação (PF × R$/PF) + teto do Controle Econômico ──
+const ValorEstimadoBloco = ({ s }: { s: SolicitacaoDetail }) => {
+  if (s.valor_estimado == null) return null;
+  return (
+    <div className={`rounded-xl border p-5 ${s.excede_teto_ce ? "bg-destructive/5 border-destructive/30" : "bg-card border-border"}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <DollarSign className="h-4 w-4 text-success" />
+        <h3 className="text-sm font-semibold text-foreground">Valor estimado (Controle Econômico)</h3>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Valor estimado</p>
+          <p className="text-xl font-bold text-foreground font-mono">{fmtMoeda(s.valor_estimado)}</p>
+        </div>
+        {s.valor_pf_config != null && (
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">R$/PF configurado</p>
+            <p className="text-xl font-bold text-foreground font-mono">{fmtMoeda(s.valor_pf_config)}</p>
+          </div>
+        )}
+        {s.valor_max_ce != null && (
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Teto da alçada CE</p>
+            <p className={`text-xl font-bold font-mono ${s.excede_teto_ce ? "text-destructive" : "text-foreground"}`}>
+              {fmtMoeda(s.valor_max_ce)}
+            </p>
+          </div>
+        )}
+      </div>
+      {s.excede_teto_ce && (
+        <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+          Valor estimado ultrapassa o teto do Controle Econômico — requer aprovação de alçada superior.
+        </p>
       )}
     </div>
   );

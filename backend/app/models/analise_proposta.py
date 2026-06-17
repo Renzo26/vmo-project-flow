@@ -25,6 +25,14 @@ class AnaliseProposta(Base):
     pf_proposta: Mapped[float | None] = mapped_column(Float, nullable=True)
     variacao_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
 
+    # Valores econômicos (PF × R$/PF da config ativa)
+    valor_estimado: Mapped[float | None] = mapped_column(Float, nullable=True)
+    valor_proposta: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Parecer derivado das faixas de desvio configuradas
+    acao_recomendada: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    alcada_requerida: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
     # ok | atencao | divergente | sem_contagem | sem_pf_proposta
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="processando")
     resumo: Mapped[str | None] = mapped_column(Text, nullable=True)

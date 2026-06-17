@@ -15,6 +15,7 @@ from app.api.schemas import (
 from app.database import get_db
 from app.models import Usuario, UserRole
 from app.models.contagem_pf import ContagemPF, FuncaoPF
+from app.services import apf_config_service
 from app.services import pf_calculator as calc
 
 router = APIRouter(prefix="/pf", tags=["pf"])
@@ -29,9 +30,16 @@ async def deflatores(_: CurrentUser) -> dict:
 
 
 @router.post("/calcular", response_model=dict)
-async def calcular_preview(body: ContagemPFCreate, _: CurrentUser) -> dict:
+async def calcular_preview(
+    body: ContagemPFCreate,
+    _: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
     """Cálculo sem persistência — retorna o resultado imediatamente."""
-    return _executar_calculo(body)
+    deflatores = apf_config_service.get_deflatores_map(
+        await apf_config_service.get_config_ativa(db)
+    )
+    return _executar_calculo(body, deflatores)
 
 
 @router.post("/contagens", response_model=ContagemPFDetail, status_code=status.HTTP_201_CREATED)
@@ -40,7 +48,10 @@ async def criar_contagem(
     user: ControleUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ContagemPFDetail:
-    resultado = _executar_calculo(body)
+    deflatores = apf_config_service.get_deflatores_map(
+        await apf_config_service.get_config_ativa(db)
+    )
+    resultado = _executar_calculo(body, deflatores)
 
     contagem = ContagemPF(
         titulo=body.titulo,
@@ -128,7 +139,7 @@ async def deletar_contagem(
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
-def _executar_calculo(body: ContagemPFCreate) -> dict:
+def _executar_calculo(body: ContagemPFCreate, deflatores: dict[str, float] | None = None) -> dict:
     """Executa o cálculo e retorna dict serializado com detalhes."""
     if body.metodologia == "ifpug":
         funcoes = [
@@ -140,7 +151,7 @@ def _executar_calculo(body: ContagemPFCreate) -> dict:
             )
             for f in body.funcoes_ifpug
         ]
-        r = calc.calcular_ifpug(funcoes)
+        r = calc.calcular_ifpug(funcoes, deflatores=deflatores)
         detalhes = [
             {
                 "descricao": d.descricao,

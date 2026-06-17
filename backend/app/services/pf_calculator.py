@@ -165,12 +165,20 @@ class ResultadoSFPMelhoria:
 
 # ─── Funções de cálculo ──────────────────────────────────────────────────────
 
-def calcular_ifpug(funcoes: list[FuncaoIFPUG]) -> ResultadoIFPUG:
-    """PF bruto, PF local (deflacionado) e esforço — método IFPUG/APF."""
+def calcular_ifpug(
+    funcoes: list[FuncaoIFPUG],
+    deflatores: dict[str, float] | None = None,
+) -> ResultadoIFPUG:
+    """PF bruto, PF local (deflacionado) e esforço — método IFPUG/APF.
+
+    `deflatores` permite sobrepor a tabela padrão SISP pelos fatores configurados
+    no módulo Configurar APF. Quando None, usa DEFLATORES_FUNC.
+    """
+    tabela_deflatores = deflatores if deflatores is not None else DEFLATORES_FUNC
     detalhes: list[DetalheIFPUG] = []
     for f in funcoes:
         pf_bruto = TABELA_IFPUG[f.tipo][f.complexidade]
-        deflator_val = DEFLATORES_FUNC.get(f.deflator_mnemonico, 1.0)
+        deflator_val = tabela_deflatores.get(f.deflator_mnemonico, 1.0)
         pf_local = round(pf_bruto * deflator_val, 2)
         detalhes.append(DetalheIFPUG(
             descricao=f.descricao,

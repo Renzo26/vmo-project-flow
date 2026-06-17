@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.analise_proposta import AnaliseProposta
 from app.models.contagem_pf import ContagemPF
-from app.models.configuracao_apf import ConfiguracaoAPF
+from app.services import apf_config_service
 
 
 def _extrair_pf(nome: str, data: bytes) -> float | None:
@@ -35,13 +35,6 @@ def _extrair_pf(nome: str, data: bytes) -> float | None:
     return None
 
 
-async def _tolerancia(db: AsyncSession) -> float:
-    cfg = await db.scalar(
-        select(ConfiguracaoAPF).where(ConfiguracaoAPF.ativa == True).order_by(ConfiguracaoAPF.created_at.desc())
-    )
-    return cfg.tolerancia if cfg else 10.0
-
-
 async def analisar(
     db: AsyncSession,
     solicitacao_id: uuid.UUID,
@@ -56,6 +49,9 @@ async def analisar(
     if old:
         await db.delete(old)
 
+    config = await apf_config_service.get_config_ativa(db)
+    vpf = apf_config_service.valor_pf(config)
+
     # Contagem APF inicial (a mais antiga vinculada à solicitação)
     contagem = await db.scalar(
         select(ContagemPF)
@@ -63,33 +59,53 @@ async def analisar(
         .order_by(ContagemPF.created_at)
     )
     pf_contagem = contagem.total_pf_local if contagem else None
+    metodologia = contagem.metodologia if contagem else "ifpug"
 
     pf_proposta = _extrair_pf(arquivo_nome, arquivo_data)
 
+    variacao_pct: float | None = None
+    acao_recomendada: str | None = None
+    alcada_requerida: str | None = None
+    valor_estimado = round(pf_contagem * vpf, 2) if pf_contagem is not None else None
+    valor_proposta = round(pf_proposta * vpf, 2) if pf_proposta is not None else None
+
     if pf_contagem is None:
         status = "sem_contagem"
-        variacao_pct = None
         resumo = "Não há contagem APF inicial vinculada a esta solicitação."
     elif pf_proposta is None:
         status = "sem_pf_proposta"
-        variacao_pct = None
         resumo = "Não foi possível extrair o total de PF do arquivo de proposta."
     else:
         variacao_pct = (pf_proposta - pf_contagem) / pf_contagem * 100 if pf_contagem else 0.0
-        tol = await _tolerancia(db)
         abs_var = abs(variacao_pct)
-        if abs_var <= tol:
-            status = "ok"
-        elif abs_var <= 25.0:
-            status = "atencao"
+
+        # 1ª opção: classificação pelas faixas de desvio configuradas
+        faixa = apf_config_service.classificar_por_faixa(config, metodologia, variacao_pct)
+        if faixa is not None:
+            status = faixa.status
+            acao_recomendada = faixa.acao
+            alcada_requerida = faixa.alcada
         else:
-            status = "divergente"
+            # Fallback: tolerância simples quando não há faixas configuradas
+            tol = apf_config_service.tolerancia(config)
+            if abs_var <= tol:
+                status = "ok"
+            elif abs_var <= 25.0:
+                status = "atencao"
+            else:
+                status = "divergente"
+
         sinal = "+" if variacao_pct >= 0 else ""
-        resumo = (
-            f"Proposta: {pf_proposta:.2f} PF · "
-            f"Estimativa inicial: {pf_contagem:.2f} PF · "
-            f"Variação: {sinal}{variacao_pct:.1f}%"
-        )
+        partes = [
+            f"Proposta: {pf_proposta:.2f} PF",
+            f"Estimativa inicial: {pf_contagem:.2f} PF",
+            f"Variação: {sinal}{variacao_pct:.1f}%",
+        ]
+        if acao_recomendada:
+            partes.append(f"Parecer: {acao_recomendada}")
+        if alcada_requerida:
+            partes.append(f"Alçada: {alcada_requerida}")
+        resumo = " · ".join(partes)
 
     analise = AnaliseProposta(
         solicitacao_id=solicitacao_id,
@@ -97,6 +113,10 @@ async def analisar(
         pf_contagem=pf_contagem,
         pf_proposta=pf_proposta,
         variacao_pct=variacao_pct,
+        valor_estimado=valor_estimado,
+        valor_proposta=valor_proposta,
+        acao_recomendada=acao_recomendada,
+        alcada_requerida=alcada_requerida,
         status=status,
         resumo=resumo,
     )

@@ -20,7 +20,8 @@ from app.models import (
     SolicitacaoDocumento,
     Usuario,
 )
-from app.services import storage_service
+from app.models.contagem_pf import ContagemPF
+from app.services import apf_config_service, storage_service
 
 
 async def gerar_numero(db: AsyncSession) -> str:
@@ -98,6 +99,18 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
     )
     analise_proposta = AnalisePropostaOut.model_validate(analise_proposta_row) if analise_proposta_row else None
 
+    # Valor estimado = PF da contagem vinculada × R$/PF da Configuração APF ativa
+    config = await apf_config_service.get_config_ativa(db)
+    vpf = apf_config_service.valor_pf(config)
+    teto_ce = apf_config_service.valor_max_ce(config)
+    contagem_base = await db.scalar(
+        select(ContagemPF)
+        .where(ContagemPF.solicitacao_id == s.id)
+        .order_by(ContagemPF.created_at)
+    )
+    valor_estimado = round(contagem_base.total_pf_local * vpf, 2) if contagem_base else None
+    excede_teto = valor_estimado is not None and valor_estimado > teto_ce
+
     return SolicitacaoDetail(
         **base.model_dump(),
         area=s.area,
@@ -124,5 +137,9 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
         analise_pf=analise,
         proposta=proposta,
         analise_proposta=analise_proposta,
+        valor_pf_config=vpf,
+        valor_estimado=valor_estimado,
+        valor_max_ce=teto_ce,
+        excede_teto_ce=excede_teto,
         form_json=s.form_json,
     )

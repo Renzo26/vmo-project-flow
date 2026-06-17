@@ -114,6 +114,10 @@ class AnalisePropostaOut(BaseModel):
     pf_contagem: float | None = None
     pf_proposta: float | None = None
     variacao_pct: float | None = None
+    valor_estimado: float | None = None
+    valor_proposta: float | None = None
+    acao_recomendada: str | None = None
+    alcada_requerida: str | None = None
     status: str
     resumo: str | None = None
     created_at: datetime
@@ -146,6 +150,11 @@ class SolicitacaoDetail(SolicitacaoListItem):
     analise_pf: AnalisePFOut | None = None
     proposta: PropostaOut | None = None
     analise_proposta: AnalisePropostaOut | None = None
+    # Valores econômicos derivados da Configuração APF + contagem vinculada
+    valor_pf_config: float | None = None
+    valor_estimado: float | None = None
+    valor_max_ce: float | None = None
+    excede_teto_ce: bool = False
     form_json: dict | None = None
 
 
