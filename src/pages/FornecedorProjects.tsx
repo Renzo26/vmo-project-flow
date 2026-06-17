@@ -10,6 +10,11 @@ import EmptyState from "@/components/EmptyState";
 
 type FornFilter = "todos" | "aguardando" | "andamento" | "concluidos";
 
+const FORN_STATUS_LABELS: Partial<Record<SolicitacaoStatus, string>> = {
+  proposta_enviada: "Proposta Enviada",
+  aguardando_proposta: "Aguardando Proposta",
+};
+
 const filterMap: Record<FornFilter, SolicitacaoStatus[]> = {
   todos: ["aguardando_proposta", "proposta_enviada", "aceita", "recusada"],
   aguardando: ["aguardando_proposta"],
@@ -83,7 +88,7 @@ const FornecedorProjects = () => {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{p.tipo_servico ?? "—"}</td>
                 <td className="px-4 py-3">
-                  <Badge variant="outline" className={`text-xs ${STATUS_COLORS[p.status]}`}>{STATUS_LABELS[p.status]}</Badge>
+                  <Badge variant="outline" className={`text-xs ${STATUS_COLORS[p.status]}`}>{FORN_STATUS_LABELS[p.status] ?? STATUS_LABELS[p.status]}</Badge>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Button size="sm" variant={p.status === "aguardando_proposta" ? "default" : "outline"} className="text-xs h-7"
