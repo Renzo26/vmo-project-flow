@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
@@ -27,6 +27,7 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const qc = useQueryClient();
+  const [showDivModal, setShowDivModal] = useState(false);
 
   const { data: s, isLoading } = useQuery({
     queryKey: ["solicitacao", id],
@@ -38,6 +39,16 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
     qc.invalidateQueries({ queryKey: ["solicitacao", id] });
     qc.invalidateQueries({ queryKey: ["solicitacoes"] });
   };
+
+  useEffect(() => {
+    if (
+      role === "fornecedor" &&
+      s?.analise_proposta &&
+      (s.analise_proposta.status === "divergente" || s.analise_proposta.status === "atencao")
+    ) {
+      setShowDivModal(true);
+    }
+  }, [s?.analise_proposta?.status, role]);
 
   if (isLoading || !s) {
     return <div className="py-20 text-center text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin inline" /></div>;
@@ -141,9 +152,19 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
         <PropostaCard proposta={s.proposta} />
       )}
 
-      {/* De-Para APF — visível para todos quando a proposta foi analisada */}
-      {s.analise_proposta && (
+      {/* De-Para APF — controle e solicitante veem inline; fornecedor vê via modal */}
+      {s.analise_proposta && role !== "fornecedor" && (
         <AnalisePropostaBloco analise={s.analise_proposta} />
+      )}
+
+      {/* Modal de divergência APF para o fornecedor */}
+      {showDivModal && s.analise_proposta && (
+        <DivergenciaModal
+          analise={s.analise_proposta}
+          solicitacaoId={s.id}
+          onClose={() => setShowDivModal(false)}
+          onDone={() => { setShowDivModal(false); invalidate(); }}
+        />
       )}
 
       {/* Contagens APF vinculadas — visível apenas para controle */}
@@ -281,6 +302,134 @@ const ContagemAPFBloco = ({ solicitacaoId, readOnly = false }: { solicitacaoId: 
           </tfoot>
         </table>
       )}
+    </div>
+  );
+};
+
+// ─── Modal de divergência APF (fornecedor) ───────────────────────────────────
+const DivergenciaModal = ({
+  analise,
+  solicitacaoId,
+  onClose,
+  onDone,
+}: {
+  analise: AnalisePropostaOut;
+  solicitacaoId: string;
+  onClose: () => void;
+  onDone: () => void;
+}) => {
+  const { id } = useParams<{ id: string }>();
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const substituir = useMutation({
+    mutationFn: () => {
+      const fd = new FormData();
+      if (file) fd.append("arquivo", file);
+      return api.upload(`/solicitacoes/${id}/proposta`, fd);
+    },
+    onSuccess: onDone,
+    onError: (e) => setError(e instanceof ApiError ? e.message : "Falha ao enviar arquivo."),
+  });
+
+  const isAtencao   = analise.status === "atencao";
+  const sinal       = analise.variacao_pct != null && analise.variacao_pct >= 0 ? "+" : "";
+  const varStr      = analise.variacao_pct != null ? `${sinal}${analise.variacao_pct.toFixed(1)}%` : "—";
+  const borderColor = isAtencao ? "border-amber-400" : "border-destructive";
+  const iconColor   = isAtencao ? "text-amber-600"   : "text-destructive";
+  const bgColor     = isAtencao ? "bg-amber-50"       : "bg-destructive/5";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+
+      {/* Card */}
+      <div className={`relative w-full max-w-lg rounded-2xl border-2 ${borderColor} ${bgColor} shadow-2xl p-6 space-y-5`}>
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className={`h-5 w-5 shrink-0 ${iconColor}`} />
+            <h3 className="text-base font-bold text-foreground">
+              {isAtencao ? "Atenção — Variação moderada na proposta" : "Proposta com divergência APF"}
+            </h3>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Comparação */}
+        <div className="grid grid-cols-3 gap-3 text-center bg-background/70 rounded-xl p-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Estimativa Inicial</p>
+            <p className="text-xl font-bold font-mono text-foreground mt-1">
+              {analise.pf_contagem != null ? analise.pf_contagem.toFixed(2) : "—"}
+            </p>
+            <p className="text-[10px] text-muted-foreground">PF</p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Sua Proposta</p>
+            <p className="text-xl font-bold font-mono text-foreground mt-1">
+              {analise.pf_proposta != null ? analise.pf_proposta.toFixed(2) : "—"}
+            </p>
+            <p className="text-[10px] text-muted-foreground">PF</p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Variação</p>
+            <p className={`text-xl font-bold font-mono mt-1 ${iconColor}`}>{varStr}</p>
+            <p className="text-[10px] text-muted-foreground">em relação à estimativa</p>
+          </div>
+        </div>
+
+        {/* Explicação */}
+        <p className="text-sm text-foreground/80">
+          {isAtencao
+            ? "A contagem de Pontos de Função da sua proposta apresenta variação moderada em relação à estimativa inicial. Recomendamos revisar e reenviar um arquivo corrigido."
+            : "A contagem de Pontos de Função da sua proposta diverge significativamente da estimativa inicial. Por favor, revise sua proposta e envie um novo arquivo com a contagem correta."}
+        </p>
+
+        {/* Upload de substituição */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold">Substituir arquivo da proposta</Label>
+          {file ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-success/40 bg-success/5 px-4 py-2.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <Paperclip className="h-4 w-4 text-success shrink-0" />
+                <span className="text-sm truncate">{file.name}</span>
+              </div>
+              <button onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <Input
+              type="file"
+              accept=".pdf,.xlsx,.docx"
+              onChange={e => { setFile(e.target.files?.[0] ?? null); setError(null); }}
+            />
+          )}
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {/* Ações */}
+        <div className="flex gap-3 pt-1">
+          <Button
+            onClick={() => substituir.mutate()}
+            disabled={!file || substituir.isPending}
+            className="flex-1 gap-2"
+          >
+            {substituir.isPending
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <RefreshCcw className="h-4 w-4" />}
+            Reenviar proposta corrigida
+          </Button>
+          <Button variant="outline" onClick={onClose} disabled={substituir.isPending}>
+            Fechar
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
