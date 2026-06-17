@@ -754,10 +754,58 @@ const FornecedorProposta = ({ s, onDone }: { s: SolicitacaoDetail; onDone: () =>
 
       {/* Formulário contextual */}
       {acao === "aceitar" && (
-        <div>
-          <Label>Arquivo da proposta (PDF/Excel) <span className="text-destructive">*</span></Label>
-          <Input type="file" accept=".pdf,.xlsx,.docx" onChange={e => setFile(e.target.files?.[0] ?? null)} className="mt-1" />
-          {!file && <p className="text-[11px] text-muted-foreground mt-1">Anexe o documento com sua proposta comercial.</p>}
+        <div className="space-y-3">
+          {jaRespondeu && s.proposta?.arquivo_nome && !file && (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-2.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-sm text-foreground truncate">{s.proposta.arquivo_nome}</span>
+                <span className="text-[11px] text-muted-foreground shrink-0">arquivo atual</span>
+              </div>
+              <label className="cursor-pointer shrink-0">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+                  <RefreshCcw className="h-3.5 w-3.5" /> Substituir
+                </span>
+                <input
+                  type="file"
+                  accept=".pdf,.xlsx,.docx"
+                  className="sr-only"
+                  onChange={e => setFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
+          )}
+
+          {(!jaRespondeu || !s.proposta?.arquivo_nome || file) && (
+            <div>
+              <Label>
+                {jaRespondeu ? "Novo arquivo da proposta" : "Arquivo da proposta (PDF/Excel)"}
+                {!jaRespondeu && <span className="text-destructive"> *</span>}
+              </Label>
+              {file ? (
+                <div className="flex items-center justify-between gap-3 mt-1 rounded-lg border border-success/40 bg-success/5 px-4 py-2.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="h-4 w-4 text-success shrink-0" />
+                    <span className="text-sm text-foreground truncate">{file.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFile(null)}
+                    className="text-xs text-muted-foreground hover:text-destructive shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <Input
+                  type="file"
+                  accept=".pdf,.xlsx,.docx"
+                  onChange={e => setFile(e.target.files?.[0] ?? null)}
+                  className="mt-1"
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
 
