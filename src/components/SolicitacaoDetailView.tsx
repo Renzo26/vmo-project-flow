@@ -135,9 +135,9 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
         <PropostaCard proposta={s.proposta} />
       )}
 
-      {/* Contagens APF vinculadas — visível apenas para controle */}
-      {role === "controle" && (
-        <ContagemAPFBloco solicitacaoId={s.id} />
+      {/* Contagens APF vinculadas — controle vê completo, solicitante vê só leitura */}
+      {(role === "controle" || role === "solicitante") && (
+        <ContagemAPFBloco solicitacaoId={s.id} readOnly={role === "solicitante"} />
       )}
 
       {/* Ações por perfil */}
@@ -164,7 +164,7 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
 };
 
 // ─── Bloco APF vinculado à solicitação ───────────────────────────────────────
-const ContagemAPFBloco = ({ solicitacaoId }: { solicitacaoId: string }) => {
+const ContagemAPFBloco = ({ solicitacaoId, readOnly = false }: { solicitacaoId: string; readOnly?: boolean }) => {
   const navigate = useNavigate();
 
   const { data: contagens, isLoading } = useQuery({
@@ -176,6 +176,8 @@ const ContagemAPFBloco = ({ solicitacaoId }: { solicitacaoId: string }) => {
     m === "ifpug"
       ? "bg-blue-100 text-blue-700"
       : "bg-purple-100 text-purple-700";
+
+  if (readOnly && (!contagens || contagens.length === 0)) return null;
 
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -189,10 +191,12 @@ const ContagemAPFBloco = ({ solicitacaoId }: { solicitacaoId: string }) => {
             </span>
           )}
         </div>
-        <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs"
-          onClick={() => navigate(`/controle/apf/nova?solicitacao_id=${solicitacaoId}`)}>
-          <Plus className="h-3.5 w-3.5" /> Nova contagem
-        </Button>
+        {!readOnly && (
+          <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs"
+            onClick={() => navigate(`/controle/apf/nova?solicitacao_id=${solicitacaoId}`)}>
+            <Plus className="h-3.5 w-3.5" /> Nova contagem
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -216,7 +220,7 @@ const ContagemAPFBloco = ({ solicitacaoId }: { solicitacaoId: string }) => {
               <th className="text-right px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-24">PF Local</th>
               <th className="text-right px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-24">Esforço</th>
               <th className="text-right px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-28">Data</th>
-              <th className="w-10" />
+              {!readOnly && <th className="w-10" />}
             </tr>
           </thead>
           <tbody>
@@ -236,12 +240,14 @@ const ContagemAPFBloco = ({ solicitacaoId }: { solicitacaoId: string }) => {
                 <td className="px-3 py-2.5 text-right text-muted-foreground text-xs">
                   {new Date(c.created_at).toLocaleDateString("pt-BR")}
                 </td>
-                <td className="px-2 py-2.5">
-                  <button onClick={() => navigate(`/controle/apf/contagem/${c.id}`)}
-                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                    <Eye className="h-4 w-4" />
-                  </button>
-                </td>
+                {!readOnly && (
+                  <td className="px-2 py-2.5">
+                    <button onClick={() => navigate(`/controle/apf/contagem/${c.id}`)}
+                      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -256,7 +262,7 @@ const ContagemAPFBloco = ({ solicitacaoId }: { solicitacaoId: string }) => {
               <td className="px-3 py-2 text-right text-sm font-semibold text-foreground">
                 {contagens.reduce((s, c) => s + c.esforco_horas, 0).toFixed(0)} h
               </td>
-              <td colSpan={2} />
+              <td colSpan={readOnly ? 1 : 2} />
             </tr>
           </tfoot>
         </table>
