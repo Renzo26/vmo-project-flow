@@ -73,6 +73,11 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
         <Info label="Metodologia PF" value={s.metodologia_pf?.toUpperCase()} />
       </div>
 
+      {/* Contagens APF — fornecedor vê em modo leitura antes dos documentos */}
+      {role === "fornecedor" && (
+        <ContagemAPFBloco solicitacaoId={s.id} readOnly />
+      )}
+
       {/* Documentos */}
       {s.documentos.length > 0 && (
         <div className="bg-card rounded-xl border border-border p-5">
@@ -135,14 +140,17 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
         <PropostaCard proposta={s.proposta} />
       )}
 
-      {/* Contagens APF vinculadas — controle vê completo, solicitante vê só leitura */}
-      {(role === "controle" || role === "solicitante") && (
-        <ContagemAPFBloco solicitacaoId={s.id} readOnly={role === "solicitante"} />
+      {/* Contagens APF vinculadas — visível apenas para controle */}
+      {role === "controle" && (
+        <ContagemAPFBloco solicitacaoId={s.id} />
       )}
 
       {/* Ações por perfil */}
       {role === "controle" && s.status === "aguardando_controle" && (
         <ControleAval onDone={invalidate} s={s} />
+      )}
+      {role === "controle" && s.status === "aguardando_proposta" && !s.fornecedor_id && (
+        <AtribuirFornecedor s={s} onDone={invalidate} />
       )}
       {role === "controle" && s.status !== "aguardando_controle" && (
         <ControleLinha s={s} />
@@ -463,6 +471,47 @@ const ControleAval = ({ onDone, s }: { onDone: () => void; s: SolicitacaoDetail 
           <ThumbsDown className="h-4 w-4" /> Rejeitar
         </Button>
       </div>
+    </div>
+  );
+};
+
+// ─── Controle: atribuir fornecedor quando nenhum foi definido no aval ────────
+const AtribuirFornecedor = ({ s, onDone }: { s: SolicitacaoDetail; onDone: () => void }) => {
+  const { id } = useParams<{ id: string }>();
+  const [fornecedorId, setFornecedorId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: fornecedores } = useQuery({
+    queryKey: ["fornecedores"],
+    queryFn: () => api.get<FornecedorOut[]>("/fornecedores"),
+  });
+
+  const atribuir = useMutation({
+    mutationFn: () => api.patch(`/solicitacoes/${id}/atribuir-fornecedor`, { fornecedor_id: fornecedorId }),
+    onSuccess: onDone,
+    onError: (e) => setError(e instanceof ApiError ? e.message : "Falha ao atribuir fornecedor."),
+  });
+
+  return (
+    <div className="bg-amber-50 border border-amber-300 rounded-xl p-5 space-y-3">
+      <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+        <AlertTriangle className="h-4 w-4" /> Nenhum fornecedor atribuído — selecione para enviar a solicitação
+      </p>
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <select value={fornecedorId} onChange={e => setFornecedorId(e.target.value)}
+            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+            <option value="">Selecione o fornecedor...</option>
+            {(fornecedores ?? []).map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+          </select>
+        </div>
+        <Button onClick={() => { setError(null); atribuir.mutate(); }} disabled={!fornecedorId || atribuir.isPending}
+          className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5">
+          {atribuir.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Atribuir e enviar
+        </Button>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 };

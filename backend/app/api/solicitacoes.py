@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -255,6 +256,29 @@ async def dar_aval(
     s.estimativa_aprovada = body.estimativa_aprovada
     s.status = SolicitacaoStatus.aguardando_proposta
     s.aval_em = datetime.now(timezone.utc)
+    await db.flush()
+    return await solicitacao_service.to_detail(db, s)
+
+
+class AtribuirFornecedorRequest(BaseModel):
+    fornecedor_id: uuid.UUID
+
+
+@router.patch("/{solicitacao_id}/atribuir-fornecedor", response_model=SolicitacaoDetail)
+async def atribuir_fornecedor(
+    solicitacao_id: uuid.UUID,
+    body: AtribuirFornecedorRequest,
+    user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> SolicitacaoDetail:
+    if user.role != UserRole.controle:
+        raise HTTPException(status_code=403, detail="Apenas o Controle Econômico pode atribuir fornecedor.")
+    s = await db.get(Solicitacao, solicitacao_id)
+    if s is None:
+        raise HTTPException(status_code=404, detail="Solicitação não encontrada.")
+    if s.status != SolicitacaoStatus.aguardando_proposta:
+        raise HTTPException(status_code=409, detail="Apenas solicitações aguardando proposta podem ter fornecedor atribuído.")
+    s.fornecedor_id = body.fornecedor_id
     await db.flush()
     return await solicitacao_service.to_detail(db, s)
 
