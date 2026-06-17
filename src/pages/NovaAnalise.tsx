@@ -350,6 +350,8 @@ const NovaAnalise = () => {
       );
       fd.append("arquivo", pfAttachments[0]);
       if (docAprovacao) fd.append("doc_aprovacao", docAprovacao);
+      // Reaproveita a pré-análise da IA para o controle ver o MESMO resultado.
+      if (pfAnalysis) fd.append("analise_json", JSON.stringify(pfAnalysis));
 
       const res = await api.upload<SolicitacaoDetail>("/solicitacoes", fd);
       setCreatedNumero(res.numero);

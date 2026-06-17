@@ -33,7 +33,7 @@ from app.services.ai_agent import analyze_document
 from app.services.contagem_auto import gerar_contagem_auto
 from app.services.document_parser import UnsupportedDocumentError, extract_text
 from app.services.template_reader import get_expected_fields
-from app.schemas import Methodology
+from app.schemas import AnaliseResponse, Methodology
 
 router = APIRouter(prefix="/solicitacoes", tags=["solicitacoes"])
 
@@ -112,6 +112,7 @@ async def criar(
     metodologia_pf: Annotated[str, Form()] = "sfp",
     form_json: Annotated[str | None, Form()] = None,
     fornecedor_id: Annotated[str | None, Form()] = None,
+    analise_json: Annotated[str | None, Form()] = None,
     doc_aprovacao: Annotated[UploadFile | None, File()] = None,
 ) -> SolicitacaoDetail:
     if user.role != UserRole.solicitante:
@@ -197,12 +198,25 @@ async def criar(
     except (UnsupportedDocumentError, Exception):
         pass
 
-    # Análise de IA (Padrão de Entrada PF) — valida campos preenchidos
-    if _doc_text is not None:
+    # Análise de IA (Padrão de Entrada PF) — valida campos preenchidos.
+    # Reaproveita a pré-análise que o solicitante já viu (analise_json) para que o
+    # resultado salvo seja IDÊNTICO ao exibido. Só re-executa a IA se não houver
+    # pré-análise (ex.: solicitante criou sem clicar em "Analisar com IA").
+    resultado = None
+    if analise_json:
+        try:
+            resultado = AnaliseResponse.model_validate_json(analise_json)
+        except Exception:
+            resultado = None
+    if resultado is None and _doc_text is not None:
         try:
             metodologia = Methodology(metodologia_pf)
             expected = get_expected_fields(metodologia)
             resultado = analyze_document(metodologia, arquivo.filename or "documento.xlsx", _doc_text, expected)
+        except (ValueError, Exception):
+            resultado = None
+    if resultado is not None:
+        try:
             db.add(
                 AnalisePF(
                     solicitacao_id=solic.id,
@@ -217,9 +231,10 @@ async def criar(
                     resumo=resultado.resumo,
                 )
             )
-        except (ValueError, Exception):
+        except Exception:
             pass
 
+    if _doc_text is not None:
         # Contagem APF automática — extrai funções e cria ContagemPF vinculada
         try:
             await gerar_contagem_auto(
