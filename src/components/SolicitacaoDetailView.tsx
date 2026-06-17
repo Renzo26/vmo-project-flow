@@ -182,8 +182,13 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
       {role === "controle" && s.status !== "aguardando_controle" && (
         <ControleLinha s={s} />
       )}
-      {role === "fornecedor" && (s.status === "aguardando_proposta" || s.status === "proposta_enviada") && (
+      {role === "fornecedor" && s.status === "aguardando_proposta" && (
         <FornecedorProposta s={s} onDone={invalidate} />
+      )}
+      {role === "fornecedor" && s.status === "proposta_enviada" && (
+        (!s.analise_proposta || s.analise_proposta.status === "ok" || s.analise_proposta.status === "sem_contagem" || s.analise_proposta.status === "sem_pf_proposta")
+          ? <PropostaEnviadaConfirmacao s={s} onCorrigir={() => setShowDivModal(true)} />
+          : <FornecedorProposta s={s} onDone={invalidate} />
       )}
       {role === "fornecedor" && (s.status === "aceita" || s.status === "recusada") && (
         <ResultadoFinal s={s} />
@@ -305,6 +310,40 @@ const ContagemAPFBloco = ({ solicitacaoId, readOnly = false }: { solicitacaoId: 
     </div>
   );
 };
+
+// ─── Confirmação de proposta enviada (fornecedor, sem divergência) ───────────
+const PropostaEnviadaConfirmacao = ({
+  s,
+  onCorrigir,
+}: {
+  s: SolicitacaoDetail;
+  onCorrigir: () => void;
+}) => (
+  <div className="bg-success/10 border border-success/30 rounded-xl p-5 space-y-2">
+    <div className="flex items-center gap-2">
+      <CircleCheck className="h-5 w-5 text-success shrink-0" />
+      <p className="text-sm font-semibold text-foreground">Proposta enviada com sucesso</p>
+    </div>
+    <p className="text-xs text-muted-foreground pl-7">
+      Sua proposta foi recebida e está em análise pelo solicitante e pelo Controle Econômico.
+      Você será notificado quando houver uma decisão.
+    </p>
+    {s.proposta?.arquivo_nome && (
+      <div className="flex items-center gap-1.5 pl-7 text-xs text-muted-foreground">
+        <Paperclip className="h-3.5 w-3.5 shrink-0" />
+        <span>{s.proposta.arquivo_nome}</span>
+      </div>
+    )}
+    <div className="pl-7 pt-1">
+      <button
+        onClick={onCorrigir}
+        className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+      >
+        Substituir arquivo da proposta
+      </button>
+    </div>
+  </div>
+);
 
 // ─── Modal de divergência APF (fornecedor) ───────────────────────────────────
 const DivergenciaModal = ({
