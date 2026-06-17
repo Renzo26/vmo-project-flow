@@ -9,6 +9,7 @@ import {
   type FornecedorOut,
   type SolicitacaoDetail,
   type ContagemPFOut,
+  type AnalisePropostaOut,
 } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,6 +139,11 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
       {/* Proposta do fornecedor */}
       {s.proposta && (
         <PropostaCard proposta={s.proposta} />
+      )}
+
+      {/* De-Para APF — visível para todos quando a proposta foi analisada */}
+      {s.analise_proposta && (
+        <AnalisePropostaBloco analise={s.analise_proposta} />
       )}
 
       {/* Contagens APF vinculadas — visível apenas para controle */}
@@ -274,6 +280,96 @@ const ContagemAPFBloco = ({ solicitacaoId, readOnly = false }: { solicitacaoId: 
             </tr>
           </tfoot>
         </table>
+      )}
+    </div>
+  );
+};
+
+// ─── De-Para APF: proposta vs estimativa inicial ─────────────────────────────
+const STATUS_APF_LABEL: Record<string, string> = {
+  ok: "Dentro do esperado",
+  atencao: "Atenção — variação moderada",
+  divergente: "Divergente",
+  sem_contagem: "Sem estimativa inicial",
+  sem_pf_proposta: "PF não identificado na proposta",
+};
+
+const STATUS_APF_STYLE: Record<string, string> = {
+  ok:              "bg-success/10 border-success/30 text-success",
+  atencao:         "bg-amber-500/10 border-amber-400/40 text-amber-700",
+  divergente:      "bg-destructive/10 border-destructive/30 text-destructive",
+  sem_contagem:    "bg-muted border-border text-muted-foreground",
+  sem_pf_proposta: "bg-muted border-border text-muted-foreground",
+};
+
+const STATUS_APF_ICON: Record<string, React.ReactNode> = {
+  ok:              <CheckCircle2 className="h-4 w-4 shrink-0" />,
+  atencao:         <AlertTriangle className="h-4 w-4 shrink-0" />,
+  divergente:      <XCircle className="h-4 w-4 shrink-0" />,
+  sem_contagem:    <Clock className="h-4 w-4 shrink-0" />,
+  sem_pf_proposta: <Clock className="h-4 w-4 shrink-0" />,
+};
+
+const AnalisePropostaBloco = ({ analise }: { analise: AnalisePropostaOut }) => {
+  const style = STATUS_APF_STYLE[analise.status] ?? STATUS_APF_STYLE.sem_contagem;
+  const label = STATUS_APF_LABEL[analise.status] ?? analise.status;
+  const icon  = STATUS_APF_ICON[analise.status]  ?? STATUS_APF_ICON.sem_contagem;
+
+  const sinal = analise.variacao_pct != null && analise.variacao_pct >= 0 ? "+" : "";
+  const varStr = analise.variacao_pct != null
+    ? `${sinal}${analise.variacao_pct.toFixed(1)}%`
+    : "—";
+
+  return (
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+        <div className="flex items-center gap-2">
+          <RefreshCcw className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">De-Para APF — Proposta vs. Estimativa</h3>
+        </div>
+        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${style}`}>
+          {icon} {label}
+        </span>
+      </div>
+
+      <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="text-center">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Estimativa Inicial</p>
+          <p className="text-2xl font-bold text-foreground font-mono">
+            {analise.pf_contagem != null ? `${analise.pf_contagem.toFixed(2)}` : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">PF (contagem automática)</p>
+        </div>
+
+        <div className="text-center">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Proposta Fornecedor</p>
+          <p className="text-2xl font-bold text-foreground font-mono">
+            {analise.pf_proposta != null ? `${analise.pf_proposta.toFixed(2)}` : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">PF (extraído do arquivo)</p>
+        </div>
+
+        <div className="text-center">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Variação</p>
+          <p className={`text-2xl font-bold font-mono ${
+            analise.status === "ok"
+              ? "text-success"
+              : analise.status === "atencao"
+              ? "text-amber-600"
+              : analise.status === "divergente"
+              ? "text-destructive"
+              : "text-muted-foreground"
+          }`}>
+            {varStr}
+          </p>
+          <p className="text-xs text-muted-foreground">em relação à estimativa</p>
+        </div>
+      </div>
+
+      {analise.resumo && (
+        <div className="px-5 pb-4">
+          <p className="text-xs text-muted-foreground bg-muted/40 rounded-lg px-4 py-2">{analise.resumo}</p>
+        </div>
       )}
     </div>
   );

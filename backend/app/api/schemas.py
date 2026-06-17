@@ -109,6 +109,18 @@ class SolicitacaoListItem(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AnalisePropostaOut(BaseModel):
+    id: UUID
+    pf_contagem: float | None = None
+    pf_proposta: float | None = None
+    variacao_pct: float | None = None
+    status: str
+    resumo: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class SolicitacaoDetail(SolicitacaoListItem):
     area: str | None = None
     prioridade: str | None = None
@@ -133,6 +145,7 @@ class SolicitacaoDetail(SolicitacaoListItem):
     documentos: list[DocumentoOut] = []
     analise_pf: AnalisePFOut | None = None
     proposta: PropostaOut | None = None
+    analise_proposta: AnalisePropostaOut | None = None
     form_json: dict | None = None
 
 

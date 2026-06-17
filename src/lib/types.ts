@@ -77,6 +77,16 @@ export interface PropostaOut {
   created_at: string;
 }
 
+export interface AnalisePropostaOut {
+  id: string;
+  pf_contagem: number | null;
+  pf_proposta: number | null;
+  variacao_pct: number | null;
+  status: "ok" | "atencao" | "divergente" | "sem_contagem" | "sem_pf_proposta";
+  resumo: string | null;
+  created_at: string;
+}
+
 export interface SolicitacaoDetail extends SolicitacaoListItem {
   area: string | null;
   prioridade: string | null;
@@ -101,6 +111,7 @@ export interface SolicitacaoDetail extends SolicitacaoListItem {
   documentos: DocumentoOut[];
   analise_pf: AnalisePFOut | null;
   proposta: PropostaOut | null;
+  analise_proposta: AnalisePropostaOut | null;
   form_json: Record<string, unknown> | null;
 }
 

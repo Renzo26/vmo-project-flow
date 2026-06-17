@@ -27,6 +27,7 @@ from app.models import (
     UserRole,
 )
 from app.services import solicitacao_service, storage_service
+from app.services import analise_proposta_service
 from app.services.storage_service import StorageError, safe_filename
 from app.services.ai_agent import analyze_document
 from app.services.contagem_auto import gerar_contagem_auto
@@ -338,21 +339,44 @@ async def enviar_proposta(
         if storage_path:
             existing.storage_path = storage_path
             existing.arquivo_nome = arquivo_nome
+        proposta_obj = existing
     else:
-        db.add(
-            Proposta(
-                solicitacao_id=s.id,
-                fornecedor_id=user.fornecedor_id,
-                valor=valor,
-                prazo=prazo,
-                observacoes=observacoes,
-                storage_path=storage_path,
-                arquivo_nome=arquivo_nome,
-                status=PropostaStatus.enviada,
-            )
+        proposta_obj = Proposta(
+            solicitacao_id=s.id,
+            fornecedor_id=user.fornecedor_id,
+            valor=valor,
+            prazo=prazo,
+            observacoes=observacoes,
+            storage_path=storage_path,
+            arquivo_nome=arquivo_nome,
+            status=PropostaStatus.enviada,
         )
+        db.add(proposta_obj)
     s.status = SolicitacaoStatus.proposta_enviada
     await db.flush()
+
+    # Motor de comparação APF — executa quando há arquivo de proposta
+    if arquivo is not None:
+        _arquivo_data: bytes | None = None
+        _arquivo_nome: str | None = arquivo_nome
+        try:
+            await arquivo.seek(0)
+            _arquivo_data = await arquivo.read()
+        except Exception:
+            pass
+        if _arquivo_data and _arquivo_nome:
+            try:
+                await analise_proposta_service.analisar(
+                    db=db,
+                    solicitacao_id=s.id,
+                    proposta_id=proposta_obj.id,
+                    arquivo_nome=_arquivo_nome,
+                    arquivo_data=_arquivo_data,
+                )
+            except Exception:
+                pass
+            await db.flush()
+
     return await solicitacao_service.to_detail(db, s)
 
 

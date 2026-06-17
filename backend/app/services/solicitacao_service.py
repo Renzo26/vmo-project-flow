@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
     AnalisePFOut,
+    AnalisePropostaOut,
     DocumentoOut,
     PropostaOut,
     SolicitacaoDetail,
@@ -12,6 +13,7 @@ from app.api.schemas import (
 )
 from app.models import (
     AnalisePF,
+    AnaliseProposta,
     Fornecedor,
     Proposta,
     Solicitacao,
@@ -91,6 +93,11 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
             created_at=proposta_row.created_at,
         )
 
+    analise_proposta_row = await db.scalar(
+        select(AnaliseProposta).where(AnaliseProposta.solicitacao_id == s.id)
+    )
+    analise_proposta = AnalisePropostaOut.model_validate(analise_proposta_row) if analise_proposta_row else None
+
     return SolicitacaoDetail(
         **base.model_dump(),
         area=s.area,
@@ -116,5 +123,6 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
         documentos=documentos,
         analise_pf=analise,
         proposta=proposta,
+        analise_proposta=analise_proposta,
         form_json=s.form_json,
     )
