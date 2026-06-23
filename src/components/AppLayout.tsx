@@ -38,6 +38,12 @@ const controleMenu: MenuGroup[] = [
     ],
   },
   {
+    section: "Solicitações de contratação",
+    items: [
+      { label: "Solicitações recebidas", path: "/controle/solicitacoes/recebidas", icon: Inbox },
+    ],
+  },
+  {
     section: "Fornecedores",
     items: [
       { label: "Base de fornecedores", path: "/controle/fornecedores/base", icon: Building2 },
@@ -45,12 +51,6 @@ const controleMenu: MenuGroup[] = [
       { label: "Homologação", path: "/controle/fornecedores/homologacao", icon: ShieldCheck },
       { label: "Documentos e certidões", path: "/controle/fornecedores/documentos", icon: FileCheck2 },
       { label: "Scorecard", path: "/controle/scorecard", icon: Award },
-    ],
-  },
-  {
-    section: "Solicitações de contratação",
-    items: [
-      { label: "Solicitações recebidas", path: "/controle/solicitacoes/recebidas", icon: Inbox },
     ],
   },
   {

@@ -73,26 +73,31 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
     analise_row = await db.scalar(select(AnalisePF).where(AnalisePF.solicitacao_id == s.id))
     analise = AnalisePFOut.model_validate(analise_row) if analise_row else None
 
-    proposta_row = await db.scalar(select(Proposta).where(Proposta.solicitacao_id == s.id))
-    proposta = None
-    if proposta_row:
+    proposta_rows = list(await db.scalars(
+        select(Proposta).where(Proposta.solicitacao_id == s.id).order_by(Proposta.created_at)
+    ))
+    propostas: list[PropostaOut] = []
+    for pr in proposta_rows:
         purl = None
-        if with_urls and proposta_row.storage_path:
+        if with_urls and pr.storage_path:
             try:
-                purl = await storage_service.create_signed_url(proposta_row.storage_path)
+                purl = await storage_service.create_signed_url(pr.storage_path)
             except storage_service.StorageError:
                 purl = None
-        proposta = PropostaOut(
-            id=proposta_row.id,
-            fornecedor_id=proposta_row.fornecedor_id,
-            valor=float(proposta_row.valor) if proposta_row.valor is not None else None,
-            prazo=proposta_row.prazo,
-            observacoes=proposta_row.observacoes,
-            arquivo_nome=proposta_row.arquivo_nome,
+        forn = await db.get(Fornecedor, pr.fornecedor_id)
+        propostas.append(PropostaOut(
+            id=pr.id,
+            fornecedor_id=pr.fornecedor_id,
+            fornecedor_nome=forn.nome if forn else None,
+            valor=float(pr.valor) if pr.valor is not None else None,
+            prazo=pr.prazo,
+            observacoes=pr.observacoes,
+            arquivo_nome=pr.arquivo_nome,
             url=purl,
-            status=proposta_row.status.value,
-            created_at=proposta_row.created_at,
-        )
+            status=pr.status.value,
+            created_at=pr.created_at,
+        ))
+    proposta = propostas[0] if propostas else None
 
     analise_proposta_row = await db.scalar(
         select(AnaliseProposta).where(AnaliseProposta.solicitacao_id == s.id)
@@ -136,6 +141,7 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
         documentos=documentos,
         analise_pf=analise,
         proposta=proposta,
+        propostas=propostas,
         analise_proposta=analise_proposta,
         valor_pf_config=vpf,
         valor_estimado=valor_estimado,

@@ -68,6 +68,7 @@ export interface DocumentoOut {
 export interface PropostaOut {
   id: string;
   fornecedor_id: string;
+  fornecedor_nome: string | null;
   valor: number | null;
   prazo: string | null;
   observacoes: string | null;
@@ -115,6 +116,7 @@ export interface SolicitacaoDetail extends SolicitacaoListItem {
   documentos: DocumentoOut[];
   analise_pf: AnalisePFOut | null;
   proposta: PropostaOut | null;
+  propostas: PropostaOut[];
   analise_proposta: AnalisePropostaOut | null;
   valor_pf_config: number | null;
   valor_estimado: number | null;

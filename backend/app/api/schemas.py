@@ -84,6 +84,7 @@ class DocumentoOut(BaseModel):
 class PropostaOut(BaseModel):
     id: UUID
     fornecedor_id: UUID
+    fornecedor_nome: str | None = None
     valor: float | None = None
     prazo: str | None = None
     observacoes: str | None = None
@@ -149,6 +150,7 @@ class SolicitacaoDetail(SolicitacaoListItem):
     documentos: list[DocumentoOut] = []
     analise_pf: AnalisePFOut | None = None
     proposta: PropostaOut | None = None
+    propostas: list[PropostaOut] = []
     analise_proposta: AnalisePropostaOut | None = None
     # Valores econômicos derivados da Configuração APF + contagem vinculada
     valor_pf_config: float | None = None
@@ -166,6 +168,8 @@ class AvalRequest(BaseModel):
 
 class DecisaoRequest(BaseModel):
     decisao: str  # "aceita" | "recusada"
+    justificativa: str | None = None
+    proposta_id: UUID | None = None
 
 
 # ─── Contagem PF ─────────────────────────────────────────────────────────────

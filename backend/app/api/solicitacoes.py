@@ -412,8 +412,18 @@ async def decisao(
     s.status = SolicitacaoStatus.aceita if body.decisao == "aceita" else SolicitacaoStatus.recusada
     s.decisao_solicitante = body.decisao
     s.decidido_em = datetime.now(timezone.utc)
-    proposta = await db.scalar(select(Proposta).where(Proposta.solicitacao_id == s.id))
-    if proposta:
-        proposta.status = PropostaStatus.aceita if body.decisao == "aceita" else PropostaStatus.recusada
+    if body.justificativa:
+        existing = dict(s.form_json or {})
+        existing["justificativa_recusa"] = body.justificativa
+        s.form_json = existing
+    propostas = list(await db.scalars(select(Proposta).where(Proposta.solicitacao_id == s.id)))
+    for proposta in propostas:
+        if body.decisao == "recusada":
+            proposta.status = PropostaStatus.recusada
+        else:
+            if body.proposta_id:
+                proposta.status = PropostaStatus.aceita if proposta.id == body.proposta_id else PropostaStatus.recusada
+            else:
+                proposta.status = PropostaStatus.aceita
     await db.flush()
     return await solicitacao_service.to_detail(db, s)

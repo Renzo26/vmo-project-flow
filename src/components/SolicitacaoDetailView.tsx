@@ -20,7 +20,7 @@ import {
   ChevronLeft, Loader2, FileSpreadsheet, CheckCircle2, AlertTriangle,
   XCircle, ThumbsUp, ThumbsDown, Paperclip, MessageCircleQuestion,
   Check, X, Clock, Send, CircleCheck, Ban, RefreshCcw, Calculator, Plus, Eye, Building2,
-  ShieldCheck, DollarSign,
+  ShieldCheck, DollarSign, Upload,
 } from "lucide-react";
 
 const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
@@ -29,6 +29,7 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
   const { role } = useAuth();
   const qc = useQueryClient();
   const [showDivModal, setShowDivModal] = useState(false);
+  const [ignoreDivergencia, setIgnoreDivergencia] = useState(false);
 
   const { data: s, isLoading } = useQuery({
     queryKey: ["solicitacao", id],
@@ -170,6 +171,7 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
           solicitacaoId={s.id}
           onClose={() => setShowDivModal(false)}
           onDone={() => { setShowDivModal(false); invalidate(); }}
+          onConfirmAnyway={() => { setShowDivModal(false); setIgnoreDivergencia(true); }}
         />
       )}
 
@@ -192,8 +194,8 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
         <FornecedorProposta s={s} onDone={invalidate} />
       )}
       {role === "fornecedor" && s.status === "proposta_enviada" && (
-        (!s.analise_proposta || s.analise_proposta.status === "ok" || s.analise_proposta.status === "sem_contagem" || s.analise_proposta.status === "sem_pf_proposta")
-          ? <PropostaEnviadaConfirmacao s={s} onCorrigir={() => setShowDivModal(true)} />
+        (!s.analise_proposta || s.analise_proposta.status === "ok" || s.analise_proposta.status === "sem_contagem" || s.analise_proposta.status === "sem_pf_proposta" || ignoreDivergencia)
+          ? <PropostaEnviadaConfirmacao s={s} onCorrigir={() => { setIgnoreDivergencia(false); setShowDivModal(true); }} />
           : <FornecedorProposta s={s} onDone={invalidate} />
       )}
       {role === "fornecedor" && (s.status === "aceita" || s.status === "recusada") && (
@@ -357,10 +359,12 @@ const DivergenciaModal = ({
   solicitacaoId,
   onClose,
   onDone,
+  onConfirmAnyway,
 }: {
   analise: AnalisePropostaOut;
   solicitacaoId: string;
   onClose: () => void;
+  onConfirmAnyway?: () => void;
   onDone: () => void;
 }) => {
   const { id } = useParams<{ id: string }>();
@@ -442,37 +446,57 @@ const DivergenciaModal = ({
               <div className="flex items-center gap-2 min-w-0">
                 <Paperclip className="h-4 w-4 text-success shrink-0" />
                 <span className="text-sm truncate">{file.name}</span>
+                <span className="text-xs text-muted-foreground shrink-0">({(file.size / 1024).toFixed(0)} KB)</span>
               </div>
-              <button onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
+              <button onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive shrink-0">
                 <X className="h-4 w-4" />
               </button>
             </div>
           ) : (
-            <Input
-              type="file"
-              accept=".pdf,.xlsx,.docx"
-              onChange={e => { setFile(e.target.files?.[0] ?? null); setError(null); }}
-            />
+            <label className="flex flex-col items-center gap-2 border-2 border-dashed border-border rounded-xl px-4 py-6 cursor-pointer hover:border-primary/40 transition-colors bg-background/50">
+              <input
+                type="file"
+                accept=".pdf,.xlsx,.docx"
+                className="hidden"
+                onChange={e => { setFile(e.target.files?.[0] ?? null); setError(null); }}
+              />
+              <Upload className="h-7 w-7 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground text-center">
+                Clique para selecionar o arquivo corrigido
+              </span>
+              <span className="text-xs text-muted-foreground">.pdf · .xlsx · .docx</span>
+            </label>
           )}
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {/* Ações */}
-        <div className="flex gap-3 pt-1">
-          <Button
-            onClick={() => substituir.mutate()}
-            disabled={!file || substituir.isPending}
-            className="flex-1 gap-2"
-          >
-            {substituir.isPending
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <RefreshCcw className="h-4 w-4" />}
-            Reenviar proposta corrigida
-          </Button>
-          <Button variant="outline" onClick={onClose} disabled={substituir.isPending}>
-            Fechar
-          </Button>
+        <div className="flex flex-col gap-2 pt-1">
+          <div className="flex gap-3">
+            <Button
+              onClick={() => substituir.mutate()}
+              disabled={!file || substituir.isPending}
+              className="flex-1 gap-2"
+            >
+              {substituir.isPending
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <RefreshCcw className="h-4 w-4" />}
+              Reenviar proposta corrigida
+            </Button>
+            <Button variant="outline" onClick={onClose} disabled={substituir.isPending}>
+              Fechar
+            </Button>
+          </div>
+          {onConfirmAnyway && (
+            <button
+              onClick={onConfirmAnyway}
+              disabled={substituir.isPending}
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 text-center disabled:opacity-50"
+            >
+              Enviar mesmo assim (sem substituir o arquivo)
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -616,7 +640,7 @@ const ValorEstimadoBloco = ({ s }: { s: SolicitacaoDetail }) => {
         )}
         {s.valor_max_ce != null && (
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Teto da alçada CE</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Teto do orçamento</p>
             <p className={`text-xl font-bold font-mono ${s.excede_teto_ce ? "text-destructive" : "text-foreground"}`}>
               {fmtMoeda(s.valor_max_ce)}
             </p>
@@ -806,10 +830,6 @@ const ControleAval = ({ onDone, s }: { onDone: () => void; s: SolicitacaoDetail 
           )}
         </div>
       )}
-      <div>
-        <Label>Estimativa aprovada (opcional)</Label>
-        <Input value={estimativa} onChange={e => setEstimativa(e.target.value)} placeholder="Ex: 120 PF / R$ 98.400" className="mt-1" />
-      </div>
       <div>
         <Label>Parecer / observações</Label>
         <Textarea value={parecer} onChange={e => setParecer(e.target.value)} className="mt-1 min-h-[80px]" placeholder="Justificativa da análise..." />
@@ -1131,62 +1151,125 @@ const FornecedorProposta = ({ s, onDone }: { s: SolicitacaoDetail; onDone: () =>
 const SolicitanteDecisao = ({ s, onDone }: { s: SolicitacaoDetail; onDone: () => void }) => {
   const { id } = useParams<{ id: string }>();
   const [error, setError] = useState<string | null>(null);
+  const [recusando, setRecusando] = useState(false);
+  const [justificativa, setJustificativa] = useState("");
 
   const decidir = useMutation({
-    mutationFn: (decisao: "aceita" | "recusada") => api.patch(`/solicitacoes/${id}/decisao`, { decisao }),
+    mutationFn: (payload: { decisao: "aceita" | "recusada"; justificativa?: string; proposta_id?: string }) =>
+      api.patch(`/solicitacoes/${id}/decisao`, payload),
     onSuccess: onDone,
     onError: (e) => setError(e instanceof ApiError ? e.message : "Falha ao registrar decisão."),
   });
 
-  const obs = s.proposta?.observacoes ?? "";
-  const isPergunta = obs.startsWith("PERGUNTA:");
+  const propostas = s.propostas ?? (s.proposta ? [s.proposta] : []);
+  const multiplas = propostas.length > 1;
 
-  if (isPergunta) {
-    return (
-      <div className="bg-primary/5 border border-primary/30 rounded-xl p-5 space-y-3">
-        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <MessageCircleQuestion className="h-4 w-4 text-primary" /> O fornecedor tem uma pergunta
-        </h3>
-        <p className="text-sm text-foreground bg-background rounded-lg p-3">
-          {obs.replace("PERGUNTA: ", "").replace("PERGUNTA:", "")}
-        </p>
-        <p className="text-xs text-muted-foreground">Entre em contato com o fornecedor para responder à dúvida antes de tomar uma decisão.</p>
-      </div>
-    );
+  // Caso de pergunta do fornecedor (apenas quando há 1 proposta)
+  if (!multiplas) {
+    const obs = propostas[0]?.observacoes ?? "";
+    if (obs.startsWith("PERGUNTA:")) {
+      return (
+        <div className="bg-primary/5 border border-primary/30 rounded-xl p-5 space-y-3">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <MessageCircleQuestion className="h-4 w-4 text-primary" /> O fornecedor tem uma pergunta
+          </h3>
+          <p className="text-sm text-foreground bg-background rounded-lg p-3">
+            {obs.replace("PERGUNTA: ", "").replace("PERGUNTA:", "")}
+          </p>
+          <p className="text-xs text-muted-foreground">Entre em contato com o fornecedor para responder à dúvida antes de tomar uma decisão.</p>
+        </div>
+      );
+    }
   }
+
+  const PropostaCard = ({ p }: { p: typeof propostas[0] }) => (
+    <div className="bg-muted/40 rounded-lg p-4 space-y-3 text-sm border border-border">
+      <div className="flex items-center gap-2">
+        <Building2 className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground">{p.fornecedor_nome ?? "Fornecedor"}</span>
+        <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${
+          p.status === "aceita" ? "bg-success/15 text-success" :
+          p.status === "recusada" ? "bg-destructive/15 text-destructive" :
+          "bg-primary/10 text-primary"
+        }`}>{p.status === "pendente" ? "Aguardando decisão" : p.status === "aceita" ? "Aceita" : p.status === "recusada" ? "Recusada" : p.status}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Info label="Valor" value={p.valor != null ? `R$ ${p.valor.toLocaleString("pt-BR")}` : null} />
+        <Info label="Prazo" value={p.prazo} />
+      </div>
+      {p.observacoes && !p.observacoes.startsWith("PERGUNTA:") && <Info label="Observações" value={p.observacoes} />}
+      {p.url && (
+        <a href={p.url} target="_blank" rel="noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+          <Paperclip className="h-3.5 w-3.5" /> {p.arquivo_nome ?? "Arquivo da proposta"}
+        </a>
+      )}
+      {multiplas && !recusando && (
+        <Button
+          size="sm"
+          onClick={() => { setError(null); decidir.mutate({ decisao: "aceita", proposta_id: p.id }); }}
+          disabled={decidir.isPending}
+          className="bg-success hover:bg-success/90 text-success-foreground gap-1.5 mt-1"
+        >
+          {decidir.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ThumbsUp className="h-3.5 w-3.5" />} Aceitar esta proposta
+        </Button>
+      )}
+    </div>
+  );
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4">
-      <h3 className="text-sm font-bold text-foreground">Sua decisão sobre a proposta</h3>
+      <h3 className="text-sm font-bold text-foreground">
+        {multiplas ? `Propostas recebidas (${propostas.length})` : "Sua decisão sobre a proposta"}
+      </h3>
 
-      {s.proposta && (
-        <div className="bg-muted/40 rounded-lg p-4 space-y-2 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Resumo da proposta recebida</p>
-          <div className="grid grid-cols-2 gap-3">
-            <Info label="Valor" value={s.proposta.valor != null ? `R$ ${s.proposta.valor.toLocaleString("pt-BR")}` : null} />
-            <Info label="Prazo" value={s.proposta.prazo} />
-          </div>
-          {s.proposta.observacoes && <Info label="Observações" value={s.proposta.observacoes} />}
-          {s.proposta.url && (
-            <a href={s.proposta.url} target="_blank" rel="noreferrer"
-              className="mt-1 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-              <Paperclip className="h-3.5 w-3.5" /> {s.proposta.arquivo_nome ?? "Arquivo da proposta"}
-            </a>
-          )}
-        </div>
-      )}
+      <div className="space-y-3">
+        {propostas.map(p => <PropostaCard key={p.id} p={p} />)}
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <div className="flex gap-2">
-        <Button onClick={() => { setError(null); decidir.mutate("aceita"); }} disabled={decidir.isPending}
-          className="bg-success hover:bg-success/90 text-success-foreground gap-1.5">
-          {decidir.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />} Aceitar proposta
-        </Button>
-        <Button variant="outline" onClick={() => { setError(null); decidir.mutate("recusada"); }} disabled={decidir.isPending}
-          className="text-destructive border-destructive/40 gap-1.5">
-          <ThumbsDown className="h-4 w-4" /> Recusar proposta
-        </Button>
-      </div>
+
+      {recusando ? (
+        <div className="space-y-3 border border-destructive/30 bg-destructive/5 rounded-xl p-4">
+          <p className="text-sm font-medium text-destructive flex items-center gap-1.5">
+            <ThumbsDown className="h-4 w-4 shrink-0" />
+            {multiplas ? "Justificativa para recusar todas as propostas" : "Justificativa da recusa"}
+          </p>
+          <Textarea
+            value={justificativa}
+            onChange={e => setJustificativa(e.target.value)}
+            placeholder="Descreva o motivo da recusa..."
+            className="min-h-[80px] text-sm"
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <Button
+              onClick={() => { setError(null); decidir.mutate({ decisao: "recusada", justificativa: justificativa || undefined }); }}
+              disabled={decidir.isPending || !justificativa.trim()}
+              variant="destructive"
+              className="gap-1.5"
+            >
+              {decidir.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />} Confirmar recusa
+            </Button>
+            <Button variant="outline" onClick={() => { setRecusando(false); setJustificativa(""); setError(null); }} disabled={decidir.isPending}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-2 flex-wrap">
+          {!multiplas && (
+            <Button onClick={() => { setError(null); decidir.mutate({ decisao: "aceita" }); }} disabled={decidir.isPending}
+              className="bg-success hover:bg-success/90 text-success-foreground gap-1.5">
+              {decidir.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />} Aceitar proposta
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => { setError(null); setRecusando(true); }} disabled={decidir.isPending}
+            className="text-destructive border-destructive/40 gap-1.5">
+            <ThumbsDown className="h-4 w-4" /> {multiplas ? "Recusar todas" : "Recusar proposta"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

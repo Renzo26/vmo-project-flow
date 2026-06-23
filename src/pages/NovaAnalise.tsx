@@ -602,19 +602,6 @@ const NovaAnalise = () => {
                   {complexityLevels.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
               </div>
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Label>Planilhas (anexar) *</Label>
-                  <Badge variant="outline" className="text-[10px] bg-destructive/15 text-destructive border-destructive/30">
-                    Obrigatório
-                  </Badge>
-                </div>
-                <label className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer flex flex-col items-center">
-                  <input type="file" multiple className="hidden" />
-                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Arraste arquivos ou clique para enviar</p>
-                </label>
-              </div>
             </section>
 
             {/* Bloco 3 — Fornecedor e prazo */}
@@ -660,28 +647,14 @@ const NovaAnalise = () => {
         {step === 3 && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-foreground">Classificação da iniciativa</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Prioridade *</Label>
-                <select
-                  value={priority}
-                  onChange={e => setPriority(e.target.value)}
-                  className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  {priorityOptions.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-              <div>
-                <Label>Categoria do projeto *</Label>
-                <select
-                  value={projectCategory}
-                  onChange={e => setProjectCategory(e.target.value)}
-                  className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">Selecione...</option>
-                  {projectCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <p className="text-[11px] text-muted-foreground mt-1">Alimenta o scorecard de fornecedores e os gráficos do Controle Econômico</p>
+            <div>
+              <Label className="mb-2 block">Prioridade *</Label>
+              <div className="flex gap-2 flex-wrap">
+                {priorityOptions.map(p => (
+                  <button key={p} onClick={() => setPriority(p)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    priority === p ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>{p}</button>
+                ))}
               </div>
             </div>
             <div>
@@ -944,7 +917,7 @@ const NovaAnalise = () => {
               <p><span className="text-muted-foreground">Título do projeto:</span> {projectTitle || "—"}</p>
               <p><span className="text-muted-foreground">Área solicitante:</span> {requestArea || "—"}</p>
               <p><span className="text-muted-foreground">Solicitante:</span> {requestResponsible || "—"}</p>
-              <p><span className="text-muted-foreground">Prioridade:</span> {priority} · <span className="text-muted-foreground">Categoria:</span> {projectCategory || "—"}</p>
+              <p><span className="text-muted-foreground">Prioridade:</span> {priority}</p>
               <p><span className="text-muted-foreground">Serviço:</span> {selectedService ? `${selectedService.code} · ${selectedService.label}` : "—"}</p>
               {subtype && <p><span className="text-muted-foreground">Subtipo:</span> {subtype}{seniority ? ` · ${seniority}` : ""}</p>}
               <p><span className="text-muted-foreground">Metodologia (serviço):</span> {methodology.length > 0 ? methodology.join(", ") : "—"}</p>
