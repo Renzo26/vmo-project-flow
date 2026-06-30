@@ -7,15 +7,41 @@ solicitante → controle econômico → fornecedor → motor De-Para APF.
 
 | Arquivo | Quem usa | Para quê |
 |---|---|---|
-| `01_ENTRADA_PF_(SFP).xlsx` | **Solicitante** | Anexar ao criar a solicitação. O motor de IA lê e gera a contagem inicial (estimativa ≈ **77 PF**). |
-| `02_PROPOSTA_OK.xlsx` | **Fornecedor** | Proposta com 77 PF → variação **~0%** → **verde (dentro do esperado)**, sem popup. |
-| `03_PROPOSTA_ATENCAO.xlsx` | **Fornecedor** | Proposta com 95 PF → variação **~+23%** → **amarelo (atenção)** + popup. |
-| `04_PROPOSTA_DIVERGENTE.xlsx` | **Fornecedor** | Proposta com 146 PF → variação **~+90%** → **vermelho (divergente)** + popup. |
+| `01_ENTRADA_PF_(SFP).xlsx` | **Solicitante** | Anexar ao criar a solicitação. O motor de IA lê e gera a contagem inicial (estimativa ≈ **58 PF** com o modelo `gpt-4o`). |
+| `02_PROPOSTA_OK.xlsx` | **Fornecedor** | Proposta com 58 PF → variação **~0%** → **verde (dentro do esperado)**, sem popup. |
+| `03_PROPOSTA_ATENCAO.xlsx` | **Fornecedor** | Proposta com 71 PF → variação **~+23%** → **amarelo (atenção)** + popup. |
+| `04_PROPOSTA_DIVERGENTE.xlsx` | **Fornecedor** | Proposta com 110 PF → variação **~+90%** → **vermelho (divergente)** + popup. |
 
-> ⚠️ A estimativa (77 PF) × R$/PF (820) = **R$ 63.140**, que ultrapassa o teto padrão de
-> **R$ 50.000** — por isso o alerta vermelho de teto aparece. Isso é **esperado e correto**
-> (demonstra o recurso de teto da alçada). Se quiser o cenário OK **totalmente verde**,
-> aumente o **Teto da alçada CE** para `100000` em Configurar APF.
+### Caminho APF IFPUG (detalhada) — estimativa ≈ **51 PF**
+
+| Arquivo | Quem usa | Para quê |
+|---|---|---|
+| `05_ENTRADA_PF_(APF).xlsx` | **Solicitante** | Criar solicitação com metodologia **APF**. A IA classifica cada linha (1=EE…5=AIE) e calcula a complexidade por **DER/ALR** (padrão 20/1). Estimativa ≈ **51 PF**. |
+| `06_PROPOSTA_APF_OK.xlsx` | **Fornecedor** | 51 PF → **~0%** → verde, sem popup. |
+| `07_PROPOSTA_APF_ATENCAO.xlsx` | **Fornecedor** | 63 PF → **~+23%** → amarelo + popup. |
+| `08_PROPOSTA_APF_DIVERGENTE.xlsx` | **Fornecedor** | 97 PF → **~+90%** → vermelho + popup. |
+
+### Caminho NESMA Estimada — estimativa ≈ **48 PF**
+
+| Arquivo | Quem usa | Para quê |
+|---|---|---|
+| `09_ENTRADA_PF_(NESMA).xlsx` | **Solicitante** | Criar solicitação com metodologia **NESMA**. A IA classifica cada linha (1=EE…5=AIE) com **complexidade fixa** (transação=Média, dados=Baixa). Estimativa ≈ **48 PF**. |
+| `10_PROPOSTA_NESMA_OK.xlsx` | **Fornecedor** | 48 PF → **~0%** → verde, sem popup. |
+| `11_PROPOSTA_NESMA_ATENCAO.xlsx` | **Fornecedor** | 59 PF → **~+23%** → amarelo + popup. |
+| `12_PROPOSTA_NESMA_DIVERGENTE.xlsx` | **Fornecedor** | 91 PF → **~+90%** → vermelho + popup. |
+
+> Para baixar o **modelo em branco** de cada metodologia, use o botão **Baixar modelo** na etapa
+> "Padrão de Entrada PF" (SFP baixa o modelo original; APF/NESMA baixam a planilha 01_ENTRADA_PF_(APF)).
+> APF (51 PF) e NESMA (48 PF) × R$820/PF ficam **abaixo** do teto padrão de R$50.000, então o cenário
+> OK fica totalmente verde nesses dois caminhos.
+
+> A estimativa (58 PF) × R$/PF (820) = **R$ 47.560**, que fica **abaixo** do teto padrão de
+> **R$ 50.000** — então o cenário OK fica **totalmente verde**, sem alerta de teto.
+>
+> ⚠️ **A estimativa é gerada por IA e depende do modelo configurado.** O valor 58 PF é estável
+> com `gpt-4o` (`temperature=0`). Se a variável de ambiente `OPENAI_MODEL` for trocada, o número
+> muda e as propostas saem do alvo — nesse caso, recalibre as propostas ou fixe a contagem
+> manualmente (ver final deste arquivo).
 
 ## Logins
 
@@ -43,7 +69,7 @@ solicitante → controle econômico → fornecedor → motor De-Para APF.
 2. Crie uma nova solicitação. Em **metodologia PF** escolha **SFP**.
 3. Anexe o arquivo **`01_ENTRADA_PF_(SFP).xlsx`**.
 4. Envie. O motor de IA vai gerar a **contagem inicial** automaticamente
-   (estimativa ≈ **77 PF** — a IA conta como AL todas as entidades internas da planilha).
+   (estimativa ≈ **58 PF** com `gpt-4o` — a IA conta um PE por funcionalidade e um AL por entidade interna).
 
 ### 3. Controle Econômico — dar o aval / atribuir fornecedor
 1. Login como **controle@vmo.com**.
@@ -75,13 +101,15 @@ solicitante → controle econômico → fornecedor → motor De-Para APF.
 ## Observação importante sobre os números
 
 A **estimativa inicial é gerada por inteligência artificial** a partir da entrada,
-então o valor exato pode variar. Para esta entrada, a IA gera **≈ 77 PF** de forma
-estável (roda com `temperature=0`). As três propostas foram calibradas para 77 PF.
+então o valor exato pode variar conforme o **modelo** (`OPENAI_MODEL`). Para esta entrada, a IA
+gera **≈ 58 PF** de forma estável com `gpt-4o` (`temperature=0`). As propostas SFP foram
+calibradas para 58 PF. *(As entradas/propostas de APF e NESMA também foram geradas com o mesmo
+modelo — ver seções acima.)*
 
-**Se a sua estimativa sair diferente de 77** (ex.: você editou a entrada) e quiser que os
-rótulos OK / ATENÇÃO / DIVERGENTE batam com exatidão, fixe a estimativa manualmente:
+**Se a sua estimativa sair diferente de 58** (ex.: trocou o modelo ou editou a entrada) e quiser
+que os rótulos OK / ATENÇÃO / DIVERGENTE batam com exatidão, fixe a estimativa manualmente:
 1. Como **controle@vmo.com**, abra a solicitação.
 2. No bloco **Contagens APF**, exclua a contagem `[Auto]` gerada pela IA (ícone de lixeira).
-3. Clique em **Nova contagem** e crie uma contagem de exatamente **77 PF** vinculada à solicitação.
+3. Clique em **Nova contagem** e crie uma contagem de exatamente **58 PF** vinculada à solicitação.
 
 A partir daí, as três propostas produzem variações de **0% / +23% / +90%** garantidas.

@@ -11,7 +11,7 @@ class Methodology(str, Enum):
 
 
 SHEET_BY_METHODOLOGY: dict[Methodology, str] = {
-    Methodology.apf: "APF IFPUG",
+    Methodology.apf: "APF",
     Methodology.nesma: "NESMA Estimada",
     Methodology.sfp: "SFP",
 }

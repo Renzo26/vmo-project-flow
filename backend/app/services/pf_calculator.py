@@ -92,6 +92,58 @@ DEFLATORES_INM: dict[str, str] = {
 
 HORAS_POR_PF: float = 6.0
 
+# Padrões de DER/ALR para APF quando o documento não informa (Regras de Entrada PF):
+# "esses campos devem vir preenchidos com 1 ALR/RLR e 20 DERs".
+APF_DER_PADRAO: int = 20
+APF_ALR_PADRAO: int = 1
+
+
+# ─── Determinação de complexidade IFPUG (CPM 4.3.1) ──────────────────────────
+
+# Matrizes [linha = faixa de ALR/RET][coluna = faixa de DER] → L (Baixa) / A (Média) / H (Alta)
+_MATRIZ_DADOS = [        # ALI/AIE — RET × DER (faixas DER: 1-19 / 20-50 / 51+)
+    ["L", "L", "A"],     # 1 RET
+    ["L", "A", "H"],     # 2-5 RET
+    ["A", "H", "H"],     # 6+ RET
+]
+_MATRIZ_EE = [           # EE — FTR × DER (faixas DER: 1-4 / 5-15 / 16+)
+    ["L", "L", "A"],     # 0-1 FTR
+    ["L", "A", "H"],     # 2 FTR
+    ["A", "H", "H"],     # 3+ FTR
+]
+_MATRIZ_SE_CE = [        # SE/CE — FTR × DER (faixas DER: 1-5 / 6-19 / 20+)
+    ["L", "L", "A"],     # 0-1 FTR
+    ["L", "A", "H"],     # 2-3 FTR
+    ["A", "H", "H"],     # 4+ FTR
+]
+
+
+def _faixa(valor: int, baixo: int, medio: int) -> int:
+    """Índice da faixa de DER: 0 (≤baixo), 1 (≤medio), 2 (>medio)."""
+    if valor <= baixo:
+        return 0
+    if valor <= medio:
+        return 1
+    return 2
+
+
+def complexidade_ifpug(tipo: str, der: int, alr: int) -> str:
+    """Complexidade L/A/H a partir de DER e ALR/RET, conforme as matrizes IFPUG (APF detalhada)."""
+    if tipo in ("ALI", "AIE"):
+        linha = 0 if alr <= 1 else (1 if alr <= 5 else 2)
+        return _MATRIZ_DADOS[linha][_faixa(der, 19, 50)]
+    if tipo == "EE":
+        linha = 0 if alr <= 1 else (1 if alr == 2 else 2)
+        return _MATRIZ_EE[linha][_faixa(der, 4, 15)]
+    # SE / CE
+    linha = 0 if alr <= 1 else (1 if alr <= 3 else 2)
+    return _MATRIZ_SE_CE[linha][_faixa(der, 5, 19)]
+
+
+def complexidade_nesma(tipo: str) -> str:
+    """NESMA Estimada — complexidade fixa: transações (EE/SE/CE) = Média; dados (ALI/AIE) = Baixa."""
+    return "L" if tipo in ("ALI", "AIE") else "A"
+
 
 # ─── Structs de entrada ──────────────────────────────────────────────────────
 

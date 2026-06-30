@@ -31,12 +31,19 @@ def _read_headers(template_path: str, sheet_name: str) -> tuple[str, ...]:
     return tuple(headers)
 
 
+def _template_for(methodology: Methodology) -> tuple[Path, str]:
+    """SFP usa o modelo original; APF/NESMA usam a planilha 01_ENTRADA_PF_(APF)."""
+    if methodology == Methodology.sfp:
+        return settings.template_file, "TEMPLATE_PATH"
+    return settings.template_apf_file, "TEMPLATE_APF_PATH"
+
+
 def get_expected_fields(methodology: Methodology) -> list[str]:
-    template = settings.template_file
+    template, env_var = _template_for(methodology)
     if not Path(template).exists():
         raise FileNotFoundError(
             f"Planilha modelo não encontrada em '{template}'. "
-            "Ajuste TEMPLATE_PATH no arquivo .env."
+            f"Ajuste {env_var} no arquivo .env."
         )
     sheet_name = SHEET_BY_METHODOLOGY[methodology]
     return list(_read_headers(str(template), sheet_name))

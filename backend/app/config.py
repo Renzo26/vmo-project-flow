@@ -19,7 +19,9 @@ class Settings(BaseSettings):
     # OpenAI (módulo de análise de documentos)
     openai_api_key: str
     openai_model: str = "gpt-4o-mini"
+    # SFP usa o modelo original; APF/NESMA usam a planilha 01_ENTRADA_PF_(APF).
     template_path: str = "../Documentos_regras/Padrão de Entrada PF.xlsx"
+    template_apf_path: str = "../Documentos_regras/01_ENTRADA_PF_(APF).xlsx"
 
     # Banco de dados — Supabase Postgres (Session Pooler IPv4)
     database_url: str
@@ -39,7 +41,15 @@ class Settings(BaseSettings):
 
     @property
     def template_file(self) -> Path:
-        path = Path(self.template_path)
+        return self._resolve(self.template_path)
+
+    @property
+    def template_apf_file(self) -> Path:
+        return self._resolve(self.template_apf_path)
+
+    @staticmethod
+    def _resolve(path_str: str) -> Path:
+        path = Path(path_str)
         if not path.is_absolute():
             path = (BASE_DIR / path).resolve()
         return path

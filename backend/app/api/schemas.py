@@ -205,6 +205,8 @@ class FuncaoPFOut(BaseModel):
     complexidade: str | None = None
     deflator_mnemonico: str | None = None
     operacao: str | None = None
+    der: int | None = None
+    alr: int | None = None
     pf_bruto: float
     pf_local: float
 

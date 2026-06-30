@@ -101,6 +101,8 @@ const APFContagemDetalhe = () => {
                 <th className="text-left px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground w-16">Tipo</th>
                 {c.metodologia === "ifpug" && <>
                   <th className="text-left px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground w-20">Compl.</th>
+                  <th className="text-right px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground w-16">DER</th>
+                  <th className="text-right px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground w-16">ALR</th>
                   <th className="text-left px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Deflator</th>
                 </>}
                 {c.metodologia === "sfp" && (
@@ -120,6 +122,8 @@ const APFContagemDetalhe = () => {
                     <td className="px-4 py-2 text-xs text-muted-foreground">
                       {f.complexidade === "L" ? "Baixa" : f.complexidade === "A" ? "Média" : "Alta"}
                     </td>
+                    <td className="px-4 py-2 text-right font-mono text-xs text-muted-foreground">{f.der ?? "—"}</td>
+                    <td className="px-4 py-2 text-right font-mono text-xs text-muted-foreground">{f.alr ?? "—"}</td>
                     <td className="px-4 py-2 text-xs text-muted-foreground">{f.deflator_mnemonico ?? "—"}</td>
                   </>}
                   {c.metodologia === "sfp" && (
@@ -132,7 +136,7 @@ const APFContagemDetalhe = () => {
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-border bg-muted/30">
-                <td colSpan={c.metodologia === "ifpug" ? 5 : 4} className="px-4 py-2 text-xs font-semibold text-foreground">
+                <td colSpan={c.metodologia === "ifpug" ? 7 : 4} className="px-4 py-2 text-xs font-semibold text-foreground">
                   Total
                 </td>
                 <td className="px-4 py-2 text-right font-mono text-xs font-bold text-muted-foreground">{fmt(c.total_pf_bruto)}</td>

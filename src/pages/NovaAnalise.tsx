@@ -47,23 +47,49 @@ interface PfAnalysisResult {
   resumo: string | null;
 }
 
-const pfRequiredFields = [
-  "Código Projeto/Iniciativa",
-  "Nome do Projeto/Iniciativa",
-  "Aplicação/Sistema",
-  "Código da funcionalidade/serviço",
-  "Nome da funcionalidade/serviço",
-  "Comportamento atual",
-  "Melhoria proposta",
-  "Comportamento esperado após a melhoria",
-  "Medição para contratação? (Sim/Não)",
-  "Entidades de dados acionadas antes da melhoria",
-  "Entidades de dados acionadas após a melhoria",
-  "Layout de campos da funcionalidade/serviço (antes e após)",
-  "Possui entidade de dados nova ou alterada em razão da funcionalidade?",
-  "Entidade de dados alterada é mantida nesta aplicação ou é externa?",
-  "Nome e layout das entidades de dados criadas/alteradas pela funcionalidade",
-];
+const pfRequiredFieldsByMethodology: Record<PfMethodology, string[]> = {
+  sfp: [
+    "Código Projeto/Iniciativa",
+    "Nome do Projeto/Iniciativa",
+    "Aplicação/Sistema",
+    "Código da funcionalidade/serviço",
+    "Nome da funcionalidade/serviço",
+    "Comportamento atual",
+    "Melhoria proposta",
+    "Comportamento esperado após a melhoria",
+    "Medição para contratação? (Sim/Não)",
+    "Entidades de dados acionadas antes da melhoria",
+    "Entidades de dados acionadas após a melhoria",
+    "Layout de campos da funcionalidade/serviço (antes e após)",
+    "Possui entidade de dados nova ou alterada em razão da funcionalidade?",
+    "Entidade de dados alterada é mantida nesta aplicação ou é externa?",
+    "Nome e layout das entidades de dados criadas/alteradas pela funcionalidade",
+  ],
+  apf: [
+    "Código da funcionalidade/serviço",
+    "Nome da funcionalidade/serviço",
+    "Funcionalidade ou Entidade de Dados?",
+    "Funcionalidade ou Entidade de Dados é novo ou alterado",
+    "Melhoria proposta",
+    "Comportamento esperado após a melhoria",
+    "Entidades de dados acionadas/mantidas",
+    "Quantidade de Entidades acionadas/mantidas",
+    "Layout de campos da funcionalidade/serviço ou entidade de dados",
+    "Quantidade de Campos na funcionalidade/serviço ou entidade de dados",
+    "Objetivo principal se Funcionalidade (1=EE, 2=CE, 3=SE)",
+    "Objetivo principal se Entidade de Dados (4=ALI, 5=AIE)",
+  ],
+  nesma: [
+    "Código da funcionalidade/serviço",
+    "Nome da funcionalidade/serviço",
+    "Funcionalidade ou Entidade de Dados?",
+    "Funcionalidade ou Entidade de Dados é novo ou alterado",
+    "Melhoria proposta",
+    "Comportamento esperado após a melhoria",
+    "Objetivo principal se Funcionalidade (1=EE, 2=CE, 3=SE)",
+    "Objetivo principal se Entidade de Dados (4=ALI, 5=AIE)",
+  ],
+};
 
 const serviceTypes = [
   { id: "dev", label: "Desenvolvimento de Software", description: "Novos sistemas, manutenção, APIs, mobile, web e automação", code: "DEV", icon: Code, badge: null },
@@ -730,8 +756,12 @@ const NovaAnalise = () => {
                   </p>
                 </div>
                 <a
-                  href="/Documentos_regras/Padrão de Entrada PF.xlsx"
-                  download
+                  href={pfMethodology === "sfp"
+                    ? "/Documentos_regras/Padrão de Entrada PF.xlsx"
+                    : "/Documentos_regras/01_ENTRADA_PF_(APF).xlsx"}
+                  download={pfMethodology === "sfp"
+                    ? "Padrão de Entrada PF.xlsx"
+                    : "Padrão de Entrada PF (APF-NESMA).xlsx"}
                   className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background hover:border-primary/40 transition-colors"
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -739,7 +769,7 @@ const NovaAnalise = () => {
                 </a>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                {pfRequiredFields.map(f => (
+                {pfRequiredFieldsByMethodology[pfMethodology].map(f => (
                   <div key={f} className="flex items-start gap-2 text-xs text-foreground">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
                     <span className="leading-snug">{f}</span>

@@ -56,5 +56,9 @@ class FuncaoPF(Base):
     # SFP: operacao (ADD/CHG/DEL/CFP)
     operacao: Mapped[str | None] = mapped_column(String(10), nullable=True)
 
+    # APF detalhada: DER (campos) e ALR/RET (entidades referenciadas) usados na complexidade
+    der: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    alr: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     pf_bruto: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     pf_local: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)

@@ -144,6 +144,8 @@ export interface FuncaoPFOut {
   complexidade: string | null;
   deflator_mnemonico: string | null;
   operacao: string | null;
+  der: number | null;
+  alr: number | null;
   pf_bruto: number;
   pf_local: number;
 }
