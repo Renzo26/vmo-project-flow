@@ -127,7 +127,7 @@ const FornecedorLoginPage = () => {
         </button>
 
         <p className="text-xs text-center text-muted-foreground mt-3">
-          Acesso criado pelo Controle Econômico da BRAESP
+          Acesso criado pela Governança da BRAESP
         </p>
       </div>
     </div>

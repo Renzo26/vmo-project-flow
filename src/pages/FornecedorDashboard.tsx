@@ -1,53 +1,194 @@
+import { useMemo } from "react";
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  BarChart, Bar, ReferenceLine, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, ReferenceLine,
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import {
+  STATUS_LABELS,
+  type SolicitacaoDetail,
+  type SolicitacaoListItem,
+  type SolicitacaoStatus,
+} from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import EmptyState from "@/components/EmptyState";
 
-const kpis = [
-  { label: "Propostas pendentes de envio", value: "—", hint: "", accent: "bg-warning" },
-  { label: "Propostas para corrigir", value: "—", hint: "", accent: "bg-destructive" },
-  { label: "Projetos contratados", value: "—", hint: "", accent: "bg-primary" },
-  { label: "Taxa de aprovação", value: "—", hint: "", accent: "bg-success" },
-  { label: "Aderência contratual R$/PF", value: "—", hint: "", accent: "bg-muted-foreground" },
-  { label: "Tempo médio para proposta", value: "—", hint: "", accent: "bg-muted-foreground" },
-  { label: "Propostas rejeitadas p/ preço", value: "—", hint: "", accent: "bg-destructive" },
-  { label: "Projetos concluídos", value: "—", hint: "", accent: "bg-success" },
-];
+const brl = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 0,
+});
 
-const statusChart: { name: string; value: number; color: string }[] = [];
+const tooltipStyle = {
+  background: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: 8,
+  fontSize: 12,
+} as const;
 
-const proposalCeiling: { name: string; proposto: number; teto: number }[] = [];
+// Cores (CSS vars do tema) por status de solicitação — usadas no donut.
+const STATUS_HEX: Record<SolicitacaoStatus, string> = {
+  aguardando_controle: "hsl(var(--muted-foreground))",
+  rejeitada_controle: "hsl(var(--destructive))",
+  aguardando_proposta: "hsl(var(--warning))",
+  proposta_enviada: "hsl(var(--primary))",
+  aceita: "hsl(var(--success))",
+  recusada: "hsl(var(--destructive))",
+};
 
-const adherenceHistory: { month: string; value: number }[] = [];
+// Cor por status da análise da proposta (variação PF).
+const ANALISE_HEX: Record<string, string> = {
+  ok: "hsl(var(--success))",
+  atencao: "hsl(var(--warning))",
+  divergente: "hsl(var(--destructive))",
+};
 
-const alerts: { type: string; title: string; text: string }[] = [];
+const numeroCurto = (numero: string) => numero.replace(/^VMO-\d{4}-/, "#");
+
+async function fetchDashboard(): Promise<SolicitacaoDetail[]> {
+  const list = await api.get<SolicitacaoListItem[]>("/solicitacoes");
+  return Promise.all(list.map((s) => api.get<SolicitacaoDetail>(`/solicitacoes/${s.id}`)));
+}
 
 const FornecedorDashboard = () => {
-  const navigate = useNavigate();
   const { userName, userTeam } = useAuth();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["fornecedor-dashboard"],
+    queryFn: fetchDashboard,
+  });
+
+  const metrics = useMemo(() => {
+    const items = data ?? [];
+    const count = (st: SolicitacaoStatus) => items.filter((i) => i.status === st).length;
+
+    const aguardando = count("aguardando_proposta");
+    const enviadas = count("proposta_enviada");
+    const aceitas = count("aceita");
+    const recusadas = count("recusada");
+    const decididas = aceitas + recusadas;
+    const taxaAprovacao = decididas > 0 ? Math.round((aceitas / decididas) * 100) : null;
+
+    const divergentes = items.filter(
+      (i) => i.status === "proposta_enviada" && i.analise_proposta?.status === "divergente",
+    ).length;
+
+    // Variação média PF (proposta vs. estimativa) — só onde há análise com variação.
+    const comVariacao = items.filter(
+      (i) => i.analise_proposta && i.analise_proposta.variacao_pct != null,
+    );
+    const variacaoMedia = comVariacao.length
+      ? comVariacao.reduce((acc, i) => acc + Math.abs(i.analise_proposta!.variacao_pct!), 0) /
+        comVariacao.length
+      : null;
+
+    // Tempo médio (dias) da criação da solicitação até o envio da proposta.
+    const comProposta = items.filter((i) => i.proposta?.created_at);
+    const tempoMedio = comProposta.length
+      ? comProposta.reduce((acc, i) => {
+          const ini = new Date(i.created_at).getTime();
+          const fim = new Date(i.proposta!.created_at).getTime();
+          return acc + Math.max(0, (fim - ini) / 86_400_000);
+        }, 0) / comProposta.length
+      : null;
+
+    // Donut: distribuição por status (apenas os relevantes ao fornecedor).
+    const statusOrder: SolicitacaoStatus[] = [
+      "aguardando_proposta",
+      "proposta_enviada",
+      "aceita",
+      "recusada",
+    ];
+    const statusChart = statusOrder
+      .map((st) => ({ name: STATUS_LABELS[st], value: count(st), color: STATUS_HEX[st] }))
+      .filter((d) => d.value > 0);
+
+    // Barras: variação PF (proposta vs. estimativa) por projeto.
+    const variacaoChart = items
+      .filter((i) => i.analise_proposta && i.analise_proposta.variacao_pct != null)
+      .map((i) => ({
+        name: numeroCurto(i.numero),
+        variacao: Number(i.analise_proposta!.variacao_pct!.toFixed(1)),
+        color: ANALISE_HEX[i.analise_proposta!.status] ?? "hsl(var(--muted-foreground))",
+      }));
+
+    // Barras: valor estimado vs. valor proposto (R$) por projeto.
+    const valorChart = items
+      .filter((i) => i.analise_proposta?.valor_estimado != null && i.analise_proposta?.valor_proposta != null)
+      .map((i) => ({
+        name: numeroCurto(i.numero),
+        estimado: i.analise_proposta!.valor_estimado!,
+        proposta: i.analise_proposta!.valor_proposta!,
+      }));
+
+    return {
+      total: items.length,
+      aguardando,
+      enviadas,
+      aceitas,
+      recusadas,
+      taxaAprovacao,
+      divergentes,
+      variacaoMedia,
+      tempoMedio,
+      statusChart,
+      variacaoChart,
+      valorChart,
+    };
+  }, [data]);
+
+  const kpis = [
+    { label: "Aguardando envio", value: metrics.aguardando, hint: "propostas a enviar", accent: "bg-warning" },
+    { label: "Propostas em análise", value: metrics.enviadas, hint: "aguardando decisão", accent: "bg-primary" },
+    { label: "Projetos contratados", value: metrics.aceitas, hint: "propostas aceitas", accent: "bg-success" },
+    {
+      label: "Taxa de aprovação",
+      value: metrics.taxaAprovacao == null ? "—" : `${metrics.taxaAprovacao}%`,
+      hint: "aceitas vs. decididas",
+      accent: "bg-success",
+    },
+    { label: "Propostas divergentes", value: metrics.divergentes, hint: "acima da tolerância", accent: "bg-destructive" },
+    { label: "Propostas recusadas", value: metrics.recusadas, hint: "não contratadas", accent: "bg-destructive" },
+    {
+      label: "Variação média (PF)",
+      value: metrics.variacaoMedia == null ? "—" : `${metrics.variacaoMedia.toFixed(1)}%`,
+      hint: "proposta vs. estimativa",
+      accent: "bg-muted-foreground",
+    },
+    {
+      label: "Tempo médio p/ proposta",
+      value: metrics.tempoMedio == null ? "—" : `${metrics.tempoMedio.toFixed(1)}d`,
+      hint: "da atribuição ao envio",
+      accent: "bg-muted-foreground",
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">Dashboard — Fornecedor</h2>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            {userTeam || userName || "TechSoft Soluções"}
-          </span>
-        </div>
+        <span className="text-sm text-muted-foreground">
+          {userTeam || userName || "Fornecedor"}
+        </span>
       </div>
 
       {/* Visão geral */}
       <div>
         <p className="text-[11px] font-semibold tracking-widest text-muted-foreground mb-3">VISÃO GERAL</p>
         <div className="grid grid-cols-4 gap-4">
-          {kpis.map(kpi => (
+          {kpis.map((kpi) => (
             <div key={kpi.label} className="bg-card rounded-xl border border-border overflow-hidden">
               <div className={`h-1 w-full ${kpi.accent}`} />
               <div className="p-4">
@@ -60,34 +201,20 @@ const FornecedorDashboard = () => {
         </div>
       </div>
 
-      {/* Alertas */}
-      <div className="space-y-2">
-        {alerts.map((a, i) => (
-          <div
-            key={i}
-            className={`rounded-lg border-l-4 px-4 py-3 text-sm ${
-              a.type === "destructive"
-                ? "border-destructive bg-destructive/10 text-destructive"
-                : "border-primary bg-primary/10 text-primary"
-            }`}
-          >
-            <span className="font-semibold">{a.title}</span> <span className="text-foreground/80">{a.text}</span>
-          </div>
-        ))}
-      </div>
-
       {/* Charts row */}
       <div className="grid grid-cols-2 gap-6">
         {/* Status donut */}
         <div className="bg-card rounded-xl border border-border p-6">
           <h3 className="font-semibold text-foreground">Status dos projetos atribuídos</h3>
-          <p className="text-xs text-muted-foreground mb-3">5 projetos no ciclo atual</p>
-          {statusChart.length === 0 ? (
+          <p className="text-xs text-muted-foreground mb-3">
+            {metrics.total} {metrics.total === 1 ? "projeto atribuído" : "projetos atribuídos"}
+          </p>
+          {metrics.statusChart.length === 0 ? (
             <EmptyState minHeight={240} description="Sem projetos atribuídos para exibir." />
           ) : (
             <>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
-                {statusChart.map(d => (
+                {metrics.statusChart.map((d) => (
                   <div key={d.name} className="flex items-center gap-1.5 text-xs">
                     <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
                     <span className="text-muted-foreground">{d.name} {d.value}</span>
@@ -96,40 +223,38 @@ const FornecedorDashboard = () => {
               </div>
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
-                  <Pie data={statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
-                    {statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  <Pie data={metrics.statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
+                    {metrics.statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                  <Tooltip contentStyle={tooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
             </>
           )}
         </div>
 
-        {/* Bar chart proposto vs teto */}
+        {/* Variação PF proposta vs estimativa */}
         <div className="bg-card rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-foreground">Valor proposto vs. teto contratual</h3>
-          <p className="text-xs text-muted-foreground mb-3">R$/PF por projeto — linha vermelha = limite R$ 820</p>
-          {proposalCeiling.length === 0 ? (
-            <EmptyState minHeight={240} description="Sem propostas para exibir." />
+          <h3 className="font-semibold text-foreground">Variação da proposta vs. estimativa</h3>
+          <p className="text-xs text-muted-foreground mb-3">% de desvio dos PF propostos frente à contagem inicial</p>
+          {metrics.variacaoChart.length === 0 ? (
+            <EmptyState minHeight={240} description="Sem análise de proposta para exibir." />
           ) : (
             <>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-xs">
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-primary" /><span className="text-muted-foreground">Valor proposto</span></div>
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-destructive" /><span className="text-muted-foreground">Acima do teto</span></div>
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-success" /><span className="text-muted-foreground">Teto contratual</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-success" /><span className="text-muted-foreground">Dentro da tolerância</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-warning" /><span className="text-muted-foreground">Atenção</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-destructive" /><span className="text-muted-foreground">Divergente</span></div>
               </div>
               <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={proposalCeiling} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
+                <BarChart data={metrics.variacaoChart} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[760, 940]} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-                  <ReferenceLine y={820} stroke="hsl(var(--success))" strokeDasharray="4 4" />
-                  <Bar dataKey="proposto" radius={[4, 4, 0, 0]}>
-                    {proposalCeiling.map((e, i) => (
-                      <Cell key={i} fill={e.proposto > e.teto ? "hsl(var(--destructive))" : "hsl(var(--primary))"} />
-                    ))}
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}%`, "Variação"]} />
+                  <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" />
+                  <Bar dataKey="variacao" radius={[4, 4, 0, 0]}>
+                    {metrics.variacaoChart.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -138,25 +263,29 @@ const FornecedorDashboard = () => {
         </div>
       </div>
 
-      {/* Adherence history */}
+      {/* Valor estimado vs proposto (R$) */}
       <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="font-semibold text-foreground">Histórico de aderência mensal</h3>
-        <p className="text-xs text-muted-foreground mb-4">% de propostas dentro do valor contratado — últimos 6 meses</p>
-        {adherenceHistory.length === 0 ? (
-          <EmptyState minHeight={260} description="Sem histórico de aderência para exibir." />
+        <h3 className="font-semibold text-foreground">Valor estimado vs. proposto (R$)</h3>
+        <p className="text-xs text-muted-foreground mb-4">Comparação por projeto — base R$/PF da Configuração APF vigente</p>
+        {metrics.valorChart.length === 0 ? (
+          <EmptyState minHeight={260} description="Sem valores de proposta para exibir." />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={adherenceHistory} margin={{ top: 10, right: 20, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[78, 105]} tickFormatter={(v) => `${v}%`} />
-              <Tooltip
-                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                formatter={(v: number) => [`${v}%`, "Aderência"]}
-              />
-              <Line type="monotone" dataKey="value" stroke="hsl(var(--success))" strokeWidth={2.5} fill="hsl(var(--success) / 0.15)" dot={{ r: 4, fill: "hsl(var(--success))" }} activeDot={{ r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-xs">
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground" /><span className="text-muted-foreground">Estimado</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-primary" /><span className="text-muted-foreground">Proposto</span></div>
+            </div>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={metrics.valorChart} margin={{ top: 10, right: 20, bottom: 0, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => brl.format(v as number)} width={80} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number, n) => [brl.format(v), n === "estimado" ? "Estimado" : "Proposto"]} />
+                <Bar dataKey="estimado" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="proposta" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </>
         )}
       </div>
     </div>

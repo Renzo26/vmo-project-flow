@@ -1078,7 +1078,7 @@ const NovaAnalise = () => {
             <DialogDescription>
               Protocolo: <span className="font-bold text-foreground">{createdNumero}</span>
               <br />
-              Sua solicitação foi enviada ao Controle Econômico para análise.
+              Sua solicitação foi enviada à Governança para análise.
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => { setShowModal(false); navigate("/solicitante/projetos"); }} className="w-full">

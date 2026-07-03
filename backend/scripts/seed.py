@@ -1,4 +1,4 @@
-"""Seed inicial: cria usuários Solicitante, Controle Econômico e Fornecedor.
+"""Seed inicial: cria usuários Solicitante, Governança e Fornecedor.
 
 Uso:  python -m scripts.seed   (a partir da pasta backend, com o venv ativo)
 Idempotente — não duplica registros já existentes.
@@ -17,7 +17,7 @@ from app.security import hash_password
 
 SEED_USERS = [
     {"nome": "Carlos Mendes",  "email": "solicitante@vmo.com", "role": UserRole.solicitante, "team": "Equipe Digital"},
-    {"nome": "Juliana Costa",  "email": "controle@vmo.com",    "role": UserRole.controle,    "team": "Controle Econômico"},
+    {"nome": "Juliana Costa",  "email": "controle@vmo.com",    "role": UserRole.controle,    "team": "Governança"},
 ]
 
 SEED_FORNECEDORES = [

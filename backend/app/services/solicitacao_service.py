@@ -115,6 +115,8 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
     )
     valor_estimado = round(contagem_base.total_pf_local * vpf, 2) if contagem_base else None
     excede_teto = valor_estimado is not None and valor_estimado > teto_ce
+    pf_estimado = contagem_base.total_pf_local if contagem_base else None
+    esforco_horas = contagem_base.esforco_horas if contagem_base else None
 
     return SolicitacaoDetail(
         **base.model_dump(),
@@ -147,5 +149,7 @@ async def to_detail(db: AsyncSession, s: Solicitacao, *, with_urls: bool = True)
         valor_estimado=valor_estimado,
         valor_max_ce=teto_ce,
         excede_teto_ce=excede_teto,
+        pf_estimado=pf_estimado,
+        esforco_horas=esforco_horas,
         form_json=s.form_json,
     )

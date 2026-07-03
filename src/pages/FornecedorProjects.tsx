@@ -103,7 +103,7 @@ const FornecedorProjects = () => {
                 <td colSpan={4}>
                   <EmptyState
                     title="Nenhum projeto atribuído"
-                    description="Quando o Controle Econômico direcionar um pedido a você, ele aparecerá aqui."
+                    description="Quando a Governança direcionar um pedido a você, ele aparecerá aqui."
                   />
                 </td>
               </tr>

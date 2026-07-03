@@ -61,7 +61,7 @@ const FornecedoresHomologacao = () => {
           <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
           <span>
             <span className="font-semibold text-orange-800">{alerta.nome}</span>
-            <span className="text-orange-700"> — análise documental pendente há 12 dias. Etapa 3 aguarda Controle Econômico.</span>
+            <span className="text-orange-700"> — análise documental pendente há 12 dias. Etapa 3 aguarda a Governança.</span>
           </span>
         </div>
       )}

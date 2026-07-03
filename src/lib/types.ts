@@ -122,6 +122,8 @@ export interface SolicitacaoDetail extends SolicitacaoListItem {
   valor_estimado: number | null;
   valor_max_ce: number | null;
   excede_teto_ce: boolean;
+  pf_estimado: number | null;
+  esforco_horas: number | null;
   form_json: Record<string, unknown> | null;
 }
 

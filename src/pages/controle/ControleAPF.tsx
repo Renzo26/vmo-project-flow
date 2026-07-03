@@ -564,7 +564,7 @@ const ControleAPF = () => {
                 <div>
                   <Label>Valor máximo sem aprovação CE (R$)</Label>
                   <Input value={valorMaxCE} onChange={(e) => setValorMaxCE(e.target.value)} className="mt-1" />
-                  <p className="text-[11px] text-muted-foreground mt-1">Acima disso exige aprovação do Controle Econômico</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">Acima disso exige aprovação da Governança</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

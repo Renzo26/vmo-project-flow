@@ -32,7 +32,7 @@ async def criar_config(
     current_user: Usuario = Depends(get_current_user),
 ):
     if current_user.role.value != "controle":
-        raise HTTPException(status_code=403, detail="Apenas Controle Econômico pode salvar configurações APF.")
+        raise HTTPException(status_code=403, detail="Apenas a Governança pode salvar configurações APF.")
 
     # Desativa todas as configurações anteriores
     await db.execute(update(ConfiguracaoAPF).values(ativa=False))

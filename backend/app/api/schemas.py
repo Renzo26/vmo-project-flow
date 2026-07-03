@@ -157,6 +157,9 @@ class SolicitacaoDetail(SolicitacaoListItem):
     valor_estimado: float | None = None
     valor_max_ce: float | None = None
     excede_teto_ce: bool = False
+    # Contagem PF vinculada (mais antiga) — expõe tamanho e esforço estimados
+    pf_estimado: float | None = None
+    esforco_horas: float | None = None
     form_json: dict | None = None
 
 

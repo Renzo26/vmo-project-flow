@@ -50,7 +50,7 @@ const DevSelector = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-ctrl/10 text-ctrl mb-4 group-hover:bg-ctrl group-hover:text-ctrl-foreground transition-colors">
               <BarChart3 className="h-8 w-8" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground">Controle Econômico</h2>
+            <h2 className="text-lg font-semibold text-foreground">Governança</h2>
             <p className="text-sm text-muted-foreground mt-1">Gestão e análise</p>
           </button>
         </div>

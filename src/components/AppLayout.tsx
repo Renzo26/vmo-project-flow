@@ -1,10 +1,11 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply,
   Award, FileText, SlidersHorizontal, Inbox, Calculator, ClipboardList, Building2, UserPlus,
-  ShieldCheck, FileCheck2, FileSignature, Table, Calculator as CalcIcon, Briefcase
+  ShieldCheck, FileCheck2, FileSignature, Table, Calculator as CalcIcon, Briefcase,
+  PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 
 interface AppLayoutProps {
@@ -16,6 +17,8 @@ type MenuSection = { section: string; items: MenuItem[] };
 type MenuGroup = MenuItem | MenuSection;
 
 const isSection = (m: MenuGroup): m is MenuSection => "section" in m;
+
+const SIDEBAR_STORAGE_KEY = "sidebar-collapsed";
 
 const solicitanteMenu = [
   { label: "Dashboard", path: "/solicitante/dashboard", icon: LayoutDashboard },
@@ -81,12 +84,25 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [collapsed, setCollapsed] = useState<boolean>(
+    () => localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1",
+  );
+
+  const toggleSidebar = () => {
+    setCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? "1" : "0");
+      return next;
+    });
+  };
+
   const isSolicitante = role === "solicitante";
   const isControle = role === "controle";
   const menu: MenuGroup[] = isControle ? controleMenu : isSolicitante ? solicitanteMenu : fornecedorMenu;
   const sidebarBg = isControle ? "bg-sidebar-ctrl-bg" : isSolicitante ? "bg-sidebar-sol-bg" : "bg-sidebar-forn-bg";
   const sidebarText = isControle ? "text-sidebar-ctrl-fg" : isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
-  const sidebarWidth = isControle ? "w-[240px]" : "w-[200px]";
+  const expandedWidth = isControle ? "w-[240px]" : "w-[200px]";
+  const sidebarWidth = collapsed ? "w-[64px]" : expandedWidth;
 
   const flatItems: MenuItem[] = menu.flatMap(m => isSection(m) ? m.items : [m]);
   const currentTitle = flatItems.find(m => location.pathname === m.path)?.label
@@ -99,12 +115,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       <button
         key={item.label + item.path}
         onClick={() => navigate(item.path)}
-        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
-          active ? "bg-white/15 font-medium" : "hover:bg-white/10 opacity-80"
-        }`}
+        title={collapsed ? item.label : undefined}
+        className={`w-full flex items-center gap-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
+          collapsed ? "justify-center px-0" : "px-3"
+        } ${active ? "bg-white/15 font-medium" : "hover:bg-white/10 opacity-80"}`}
       >
         <item.icon className="h-4 w-4 shrink-0" />
-        <span className="leading-tight">{item.label}</span>
+        {!collapsed && <span className="leading-tight">{item.label}</span>}
       </button>
     );
   };
@@ -117,14 +134,16 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className={`${sidebarWidth} h-screen sticky top-0 flex flex-col ${sidebarBg} ${sidebarText} shrink-0`}>
+      <aside className={`${sidebarWidth} h-screen sticky top-0 flex flex-col ${sidebarBg} ${sidebarText} shrink-0 transition-[width] duration-200`}>
         <div className="p-4 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-[10px] font-bold leading-none">BR</div>
-            <div className="flex flex-col leading-tight">
-              <span className="font-semibold text-sm">BRAESP</span>
-              <span className="text-[10px] opacity-70">Suprimentos TI</span>
-            </div>
+          <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
+            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-[10px] font-bold leading-none shrink-0">BR</div>
+            {!collapsed && (
+              <div className="flex flex-col leading-tight">
+                <span className="font-semibold text-sm">BRAESP</span>
+                <span className="text-[10px] opacity-70">Suprimentos TI</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -133,9 +152,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             if (isSection(m)) {
               return (
                 <div key={m.section} className={idx === 0 ? "" : "pt-3"}>
-                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider opacity-50">
-                    {m.section}
-                  </p>
+                  {collapsed
+                    ? idx !== 0 && <div className="mx-2 mb-1 border-t border-white/10" />
+                    : (
+                      <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider opacity-50">
+                        {m.section}
+                      </p>
+                    )}
                   <div className="space-y-1">{m.items.map(renderItem)}</div>
                 </div>
               );
@@ -145,16 +168,21 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </nav>
 
         <div className="p-3 border-t border-white/10">
-          <div className="px-3 py-2">
-            <p className="text-xs font-medium truncate">{userName}</p>
-            <p className="text-xs opacity-60 truncate">{userTeam}</p>
-          </div>
+          {!collapsed && (
+            <div className="px-3 py-2">
+              <p className="text-xs font-medium truncate">{userName}</p>
+              <p className="text-xs opacity-60 truncate">{userTeam}</p>
+            </div>
+          )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-white/10 opacity-70 hover:opacity-100 transition-all"
+            title={collapsed ? "Sair" : undefined}
+            className={`w-full flex items-center gap-2 py-2 rounded-lg text-sm hover:bg-white/10 opacity-70 hover:opacity-100 transition-all ${
+              collapsed ? "justify-center px-0" : "px-3"
+            }`}
           >
-            <LogOut className="h-4 w-4" />
-            Sair
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed && "Sair"}
           </button>
         </div>
       </aside>
@@ -162,7 +190,17 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       {/* Main */}
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0">
-          <h1 className="text-lg font-semibold text-foreground">{currentTitle}</h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleSidebar}
+              title={collapsed ? "Expandir menu" : "Recolher menu"}
+              aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+              className="text-muted-foreground hover:text-foreground transition-colors -ml-1"
+            >
+              {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+            </button>
+            <h1 className="text-lg font-semibold text-foreground">{currentTitle}</h1>
+          </div>
           <span className="text-sm text-muted-foreground">{userName}</span>
         </header>
         <main className="flex-1 p-6 overflow-auto">

@@ -260,7 +260,7 @@ async def dar_aval(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> SolicitacaoDetail:
     if user.role != UserRole.controle:
-        raise HTTPException(status_code=403, detail="Apenas o Controle Econômico pode dar o aval.")
+        raise HTTPException(status_code=403, detail="Apenas a Governança pode dar o aval.")
     s = await db.get(Solicitacao, solicitacao_id)
     if s is None:
         raise HTTPException(status_code=404, detail="Solicitação não encontrada.")
@@ -288,7 +288,7 @@ async def atribuir_fornecedor(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> SolicitacaoDetail:
     if user.role != UserRole.controle:
-        raise HTTPException(status_code=403, detail="Apenas o Controle Econômico pode atribuir fornecedor.")
+        raise HTTPException(status_code=403, detail="Apenas a Governança pode atribuir fornecedor.")
     s = await db.get(Solicitacao, solicitacao_id)
     if s is None:
         raise HTTPException(status_code=404, detail="Solicitação não encontrada.")
@@ -307,7 +307,7 @@ async def rejeitar(
     parecer: Annotated[str | None, Form()] = None,
 ) -> SolicitacaoDetail:
     if user.role != UserRole.controle:
-        raise HTTPException(status_code=403, detail="Apenas o Controle Econômico pode rejeitar.")
+        raise HTTPException(status_code=403, detail="Apenas a Governança pode rejeitar.")
     s = await db.get(Solicitacao, solicitacao_id)
     if s is None:
         raise HTTPException(status_code=404, detail="Solicitação não encontrada.")

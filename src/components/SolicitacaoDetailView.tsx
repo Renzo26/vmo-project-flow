@@ -140,7 +140,7 @@ const SolicitacaoDetailView = ({ backTo }: { backTo: string }) => {
       {(s.parecer_controle || s.estimativa_aprovada) && (
         <div className="bg-card rounded-xl border border-border p-5">
           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <CircleCheck className="h-4 w-4 text-success" /> Parecer do Controle Econômico
+            <CircleCheck className="h-4 w-4 text-success" /> Parecer da Governança
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             {s.estimativa_aprovada && <Info label="Estimativa aprovada" value={s.estimativa_aprovada} />}
@@ -333,7 +333,7 @@ const PropostaEnviadaConfirmacao = ({
       <p className="text-sm font-semibold text-foreground">Proposta enviada com sucesso</p>
     </div>
     <p className="text-xs text-muted-foreground pl-7">
-      Sua proposta foi recebida e está em análise pelo solicitante e pelo Controle Econômico.
+      Sua proposta foi recebida e está em análise pelo solicitante e pela Governança.
       Você será notificado quando houver uma decisão.
     </p>
     {s.proposta?.arquivo_nome && (
@@ -618,14 +618,14 @@ const AnalisePropostaBloco = ({ analise }: { analise: AnalisePropostaOut }) => {
 const fmtMoeda = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-// ─── Valor estimado da solicitação (PF × R$/PF) + teto do Controle Econômico ──
+// ─── Valor estimado da solicitação (PF × R$/PF) + teto da Governança ──
 const ValorEstimadoBloco = ({ s }: { s: SolicitacaoDetail }) => {
   if (s.valor_estimado == null) return null;
   return (
     <div className={`rounded-xl border p-5 ${s.excede_teto_ce ? "bg-destructive/5 border-destructive/30" : "bg-card border-border"}`}>
       <div className="flex items-center gap-2 mb-3">
         <DollarSign className="h-4 w-4 text-success" />
-        <h3 className="text-sm font-semibold text-foreground">Valor estimado (Controle Econômico)</h3>
+        <h3 className="text-sm font-semibold text-foreground">Valor estimado (Governança)</h3>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
@@ -650,7 +650,7 @@ const ValorEstimadoBloco = ({ s }: { s: SolicitacaoDetail }) => {
       {s.excede_teto_ce && (
         <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 rounded-lg px-3 py-2">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          Valor estimado ultrapassa o teto do Controle Econômico — requer aprovação de alçada superior.
+          Valor estimado ultrapassa o teto da Governança — requer aprovação de alçada superior.
         </p>
       )}
     </div>
@@ -764,7 +764,7 @@ const ControleAval = ({ onDone, s }: { onDone: () => void; s: SolicitacaoDetail 
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4">
-      <h3 className="text-sm font-bold text-foreground">Parecer do Controle Econômico</h3>
+      <h3 className="text-sm font-bold text-foreground">Parecer da Governança</h3>
 
       {/* Fornecedores indicados pelo solicitante */}
       {fornecedoresIndicados.length > 0 && (
