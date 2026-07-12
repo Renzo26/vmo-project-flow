@@ -3,9 +3,7 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
-import { Plus, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -61,7 +59,6 @@ async function fetchDashboard(): Promise<SolicitacaoDetail[]> {
 }
 
 const SolicitanteDashboard = () => {
-  const navigate = useNavigate();
   const { userName, userTeam } = useAuth();
 
   const { data, isLoading } = useQuery({
@@ -205,14 +202,9 @@ const SolicitanteDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">Dashboard — Solicitante</h2>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            {userName || "Solicitante"}{userTeam ? ` · ${userTeam}` : ""}
-          </span>
-          <Button onClick={() => navigate("/solicitante/nova-analise")} className="gap-1 rounded-full">
-            <Plus className="h-4 w-4" /> Nova Análise
-          </Button>
-        </div>
+        <span className="text-sm text-muted-foreground">
+          {userName || "Solicitante"}{userTeam ? ` · ${userTeam}` : ""}
+        </span>
       </div>
 
       {/* Visão geral */}

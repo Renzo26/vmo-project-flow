@@ -1,11 +1,15 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import {
   LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply,
   Award, FileText, SlidersHorizontal, Inbox, Calculator, ClipboardList, Building2, UserPlus,
   ShieldCheck, FileCheck2, FileSignature, Table, Calculator as CalcIcon, Briefcase,
-  PanelLeftClose, PanelLeftOpen
+  Sun, Moon, ChevronDown,
 } from "lucide-react";
 
 interface AppLayoutProps {
@@ -17,8 +21,6 @@ type MenuSection = { section: string; items: MenuItem[] };
 type MenuGroup = MenuItem | MenuSection;
 
 const isSection = (m: MenuGroup): m is MenuSection => "section" in m;
-
-const SIDEBAR_STORAGE_KEY = "sidebar-collapsed";
 
 const solicitanteMenu = [
   { label: "Dashboard", path: "/solicitante/dashboard", icon: LayoutDashboard },
@@ -83,130 +85,127 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const { role, userName, userTeam, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [collapsed, setCollapsed] = useState<boolean>(
-    () => localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1",
-  );
-
-  const toggleSidebar = () => {
-    setCollapsed(prev => {
-      const next = !prev;
-      localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? "1" : "0");
-      return next;
-    });
-  };
+  const { resolvedTheme, setTheme } = useTheme();
 
   const isSolicitante = role === "solicitante";
   const isControle = role === "controle";
   const menu: MenuGroup[] = isControle ? controleMenu : isSolicitante ? solicitanteMenu : fornecedorMenu;
-  const sidebarBg = isControle ? "bg-sidebar-ctrl-bg" : isSolicitante ? "bg-sidebar-sol-bg" : "bg-sidebar-forn-bg";
-  const sidebarText = isControle ? "text-sidebar-ctrl-fg" : isSolicitante ? "text-sidebar-sol-fg" : "text-sidebar-forn-fg";
-  const expandedWidth = isControle ? "w-[240px]" : "w-[200px]";
-  const sidebarWidth = collapsed ? "w-[64px]" : expandedWidth;
 
-  const flatItems: MenuItem[] = menu.flatMap(m => isSection(m) ? m.items : [m]);
-  const currentTitle = flatItems.find(m => location.pathname === m.path)?.label
-    || flatItems.find(m => location.pathname.startsWith(m.path))?.label
-    || "Braesp";
-
-  const renderItem = (item: MenuItem) => {
-    const active = location.pathname === item.path;
-    return (
-      <button
-        key={item.label + item.path}
-        onClick={() => navigate(item.path)}
-        title={collapsed ? item.label : undefined}
-        className={`w-full flex items-center gap-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
-          collapsed ? "justify-center px-0" : "px-3"
-        } ${active ? "bg-white/15 font-medium" : "hover:bg-white/10 opacity-80"}`}
-      >
-        <item.icon className="h-4 w-4 shrink-0" />
-        {!collapsed && <span className="leading-tight">{item.label}</span>}
-      </button>
-    );
-  };
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  return (
-    <div className="min-h-screen flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarWidth} h-screen sticky top-0 flex flex-col ${sidebarBg} ${sidebarText} shrink-0 transition-[width] duration-200`}>
-        <div className="p-4 border-b border-white/10">
-          <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
-            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-[10px] font-bold leading-none shrink-0">BR</div>
-            {!collapsed && (
-              <div className="flex flex-col leading-tight">
-                <span className="font-semibold text-sm">BRAESP</span>
-                <span className="text-[10px] opacity-70">Suprimentos TI</span>
-              </div>
-            )}
-          </div>
-        </div>
+  // Pílula ativa invertida (branca no dark / escura no light) — assinatura do design
+  const pillActive = "bg-foreground text-background font-medium shadow-sm";
+  const pillIdle = "text-muted-foreground hover:text-foreground";
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-none">
-          {menu.map((m, idx) => {
-            if (isSection(m)) {
-              return (
-                <div key={m.section} className={idx === 0 ? "" : "pt-3"}>
-                  {collapsed
-                    ? idx !== 0 && <div className="mx-2 mb-1 border-t border-white/10" />
-                    : (
-                      <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider opacity-50">
-                        {m.section}
-                      </p>
-                    )}
-                  <div className="space-y-1">{m.items.map(renderItem)}</div>
-                </div>
-              );
-            }
-            return renderItem(m);
-          })}
-        </nav>
+  const navItem = (item: MenuItem) => {
+    const active = location.pathname === item.path;
+    return (
+      <button
+        key={item.label + item.path}
+        onClick={() => navigate(item.path)}
+        className={`flex items-center gap-2 h-9 px-4 rounded-full text-sm whitespace-nowrap transition-colors ${
+          active ? pillActive : pillIdle
+        }`}
+      >
+        <item.icon className="h-4 w-4 shrink-0" />
+        <span>{item.label}</span>
+      </button>
+    );
+  };
 
-        <div className="p-3 border-t border-white/10">
-          {!collapsed && (
-            <div className="px-3 py-2">
-              <p className="text-xs font-medium truncate">{userName}</p>
-              <p className="text-xs opacity-60 truncate">{userTeam}</p>
-            </div>
-          )}
+  const sectionMenu = (m: MenuSection) => {
+    const active = m.items.some(i => isActive(i.path));
+    return (
+      <DropdownMenu key={m.section}>
+        <DropdownMenuTrigger asChild>
           <button
-            onClick={handleLogout}
-            title={collapsed ? "Sair" : undefined}
-            className={`w-full flex items-center gap-2 py-2 rounded-lg text-sm hover:bg-white/10 opacity-70 hover:opacity-100 transition-all ${
-              collapsed ? "justify-center px-0" : "px-3"
+            className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm whitespace-nowrap outline-none transition-colors ${
+              active ? pillActive : pillIdle
             }`}
           >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && "Sair"}
+            {m.section}
+            <ChevronDown className="h-3.5 w-3.5 opacity-70" />
           </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleSidebar}
-              title={collapsed ? "Expandir menu" : "Recolher menu"}
-              aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-              className="text-muted-foreground hover:text-foreground transition-colors -ml-1"
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56 rounded-2xl p-1.5">
+          {m.items.map(item => (
+            <DropdownMenuItem
+              key={item.label + item.path}
+              onClick={() => navigate(item.path)}
+              className={`cursor-pointer rounded-full px-3 ${location.pathname === item.path ? "bg-accent text-accent-foreground font-medium" : ""}`}
             >
-              {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-            </button>
-            <h1 className="text-lg font-semibold text-foreground">{currentTitle}</h1>
+              <item.icon className="h-4 w-4 mr-2 shrink-0" />
+              {item.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Barra superior fundida ao fundo — navegação em pill container (estilo Quark) */}
+      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur">
+        <div className="h-16 px-4 md:px-6 flex items-center gap-3">
+          {/* Marca em chip */}
+          <div className="flex items-center gap-2.5 h-11 pl-1.5 pr-4 rounded-full bg-card border border-border shrink-0">
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden">
+              <img src="/logo-metri-symbol.png" alt="Metri" className="w-6 h-6 object-contain" />
+            </div>
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="font-semibold text-sm text-foreground">Metri</span>
+              <span className="text-[10px] text-muted-foreground">Suprimentos TI</span>
+            </div>
           </div>
-          <span className="text-sm text-muted-foreground">{userName}</span>
-        </header>
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
-        </main>
-      </div>
+
+          {/* Navegação em container pill centralizado */}
+          <div className="flex-1 flex justify-center min-w-0">
+            <nav className="flex items-center gap-0.5 h-11 px-1.5 rounded-full bg-card border border-border overflow-x-auto scrollbar-none max-w-full">
+              {menu.map(m => (isSection(m) ? sectionMenu(m) : navItem(m)))}
+            </nav>
+          </div>
+
+          {/* Ações à direita */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              title="Alternar tema"
+              aria-label="Alternar tema claro/escuro"
+              className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+
+            <div className="hidden lg:flex items-center gap-2.5 h-11 px-4 rounded-full bg-card border border-border">
+              <div className="flex flex-col items-end leading-tight">
+                <span className="text-xs font-medium text-foreground truncate max-w-[140px]">{userName}</span>
+                {userTeam && <span className="text-[10px] text-muted-foreground truncate max-w-[140px]">{userTeam}</span>}
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              title="Sair"
+              aria-label="Sair"
+              className="flex items-center gap-2 h-11 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className="hidden md:inline">Sair</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Conteúdo */}
+      <main className="flex-1 p-4 md:p-6 overflow-auto">
+        {children}
+      </main>
     </div>
   );
 };

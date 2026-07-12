@@ -35,7 +35,7 @@ const FornecedorLoginPage = () => {
         userId: res.user.id,
         fornecedorId: res.user.fornecedor_id,
       });
-      navigate("/fornecedor/projetos");
+      navigate("/fornecedor/dashboard");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Falha ao conectar. Tente novamente.");
     } finally {
@@ -46,7 +46,7 @@ const FornecedorLoginPage = () => {
   const loginDev = () => {
     const u = mockUsers.fornecedor;
     login("fornecedor", u.name, u.team);
-    navigate("/fornecedor/projetos");
+    navigate("/fornecedor/dashboard");
   };
 
   return (
@@ -54,11 +54,11 @@ const FornecedorLoginPage = () => {
       <div className="w-full max-w-md p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-success mb-4">
-            <Wrench className="h-8 w-8 text-success-foreground" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
+            <Wrench className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Portal do Fornecedor</h1>
-          <p className="text-muted-foreground mt-1">BRAESP — Suprimentos TI</p>
+          <p className="text-muted-foreground mt-1">Metri — Suprimentos TI</p>
         </div>
 
         {/* Card */}
@@ -95,7 +95,7 @@ const FornecedorLoginPage = () => {
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" className="w-full bg-success hover:bg-success/90 text-success-foreground" disabled={loading}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</> : "Entrar como Fornecedor"}
             </Button>
           </form>
@@ -109,7 +109,7 @@ const FornecedorLoginPage = () => {
 
           <Button
             variant="outline"
-            className="w-full border-dashed border-success/40 text-success hover:bg-success/5 hover:border-success"
+            className="w-full border-dashed border-primary/40 text-primary hover:bg-primary/5 hover:border-primary"
             onClick={loginDev}
           >
             <Wrench className="mr-2 h-4 w-4" />
@@ -127,7 +127,7 @@ const FornecedorLoginPage = () => {
         </button>
 
         <p className="text-xs text-center text-muted-foreground mt-3">
-          Acesso criado pela Governança da BRAESP
+          Acesso criado pela Governança da Metri
         </p>
       </div>
     </div>

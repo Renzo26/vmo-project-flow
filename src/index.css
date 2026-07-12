@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 210 76% 61%;
+    --primary: 178 72% 34%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
@@ -38,18 +38,19 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 210 76% 61%;
+    --ring: 178 72% 34%;
 
-    --radius: 0.625rem;
+    --radius: 0.875rem;
 
-    --sidebar-sol-bg: 213 52% 24%;
-    --sidebar-sol-fg: 210 40% 96%;
-    --sidebar-forn-bg: 150 48% 20%;
-    --sidebar-forn-fg: 142 40% 96%;
-    --sidebar-ctrl-bg: 270 45% 22%;
-    --sidebar-ctrl-fg: 270 30% 96%;
+    /* Identidade Metri unificada — os 3 módulos usam o mesmo teal da marca */
+    --sidebar-sol-bg: 179 58% 20%;
+    --sidebar-sol-fg: 180 30% 96%;
+    --sidebar-forn-bg: 179 58% 20%;
+    --sidebar-forn-fg: 180 30% 96%;
+    --sidebar-ctrl-bg: 179 58% 20%;
+    --sidebar-ctrl-fg: 180 30% 96%;
 
-    --ctrl: 270 55% 45%;
+    --ctrl: 178 72% 34%;
     --ctrl-foreground: 0 0% 100%;
 
     --sidebar-background: 0 0% 98%;
@@ -60,6 +61,62 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 12% 6%;
+    --foreground: 210 20% 96%;
+
+    --card: 220 10% 10%;
+    --card-foreground: 210 20% 96%;
+
+    --popover: 220 10% 10%;
+    --popover-foreground: 210 20% 96%;
+
+    --primary: 178 66% 42%;
+    --primary-foreground: 200 30% 8%;
+
+    --secondary: 210 18% 18%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 210 18% 18%;
+    --muted-foreground: 215 16% 62%;
+
+    --accent: 210 18% 20%;
+    --accent-foreground: 210 40% 96%;
+
+    --destructive: 0 63% 46%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 88% 52%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 18% 22%;
+    --input: 214 18% 22%;
+    --ring: 178 66% 42%;
+
+    /* Identidade Metri — a barra de navegação mantém o teal da marca */
+    --sidebar-sol-bg: 179 55% 16%;
+    --sidebar-sol-fg: 180 30% 96%;
+    --sidebar-forn-bg: 179 55% 16%;
+    --sidebar-forn-fg: 180 30% 96%;
+    --sidebar-ctrl-bg: 179 55% 16%;
+    --sidebar-ctrl-fg: 180 30% 96%;
+
+    --ctrl: 178 66% 44%;
+    --ctrl-foreground: 200 30% 8%;
+
+    --sidebar-background: 210 22% 12%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 178 66% 42%;
+    --sidebar-primary-foreground: 200 30% 8%;
+    --sidebar-accent: 210 18% 20%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 214 18% 22%;
+    --sidebar-ring: 178 66% 42%;
   }
 }
 

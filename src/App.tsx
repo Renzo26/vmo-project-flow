@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -47,6 +48,7 @@ const Guard = ({ roles, children }: { roles: Role[]; children: React.ReactNode }
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange storageKey="metri-theme">
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -86,6 +88,7 @@ const App = () => (
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

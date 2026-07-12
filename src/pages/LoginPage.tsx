@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Lock, Mail, Code2, Loader2, Wrench } from "lucide-react";
 
 const ROUTE_BY_ROLE: Record<string, string> = {
-  solicitante: "/solicitante/projetos",
-  fornecedor: "/fornecedor/projetos",
-  controle: "/controle/solicitacoes/recebidas",
+  solicitante: "/solicitante/dashboard",
+  fornecedor: "/fornecedor/dashboard",
+  controle: "/controle/dashboard",
 };
 
 const LoginPage = () => {
@@ -48,11 +48,8 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-            <span className="text-lg font-bold text-primary-foreground">BR</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">BRAESP</h1>
-          <p className="text-muted-foreground mt-1">Suprimentos TI</p>
+          <img src="/logo-metri.png" alt="Metri" className="h-24 w-auto mx-auto mb-3" />
+          <p className="text-muted-foreground">Suprimentos TI</p>
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-sm p-6">
@@ -90,7 +87,7 @@ const LoginPage = () => {
 
         <button
           onClick={() => navigate("/fornecedor-login")}
-          className="mt-6 mx-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-success transition-colors"
+          className="mt-6 mx-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           <Wrench className="h-3 w-3" />
           Sou fornecedor — acessar portal do fornecedor
