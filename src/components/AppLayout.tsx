@@ -160,7 +160,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             </div>
             <div className="hidden sm:flex flex-col leading-tight">
               <span className="font-semibold text-sm text-foreground">Metri</span>
-              <span className="text-[10px] text-muted-foreground">Suprimentos TI</span>
+              <span className="text-[10px] text-muted-foreground">Vendor Management System</span>
             </div>
           </div>
 

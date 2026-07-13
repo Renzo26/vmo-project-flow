@@ -49,7 +49,7 @@ const LoginPage = () => {
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <img src="/logo-metri.png" alt="Metri" className="h-24 w-auto mx-auto mb-3" />
-          <p className="text-muted-foreground">Suprimentos TI</p>
+          <p className="text-muted-foreground">Vendor Management System</p>
         </div>
 
         <div className="bg-card rounded-xl border border-border shadow-sm p-6">

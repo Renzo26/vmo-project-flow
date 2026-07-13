@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Star, Loader2 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import StatCard, { HeroChip } from "@/components/dashboard/StatCard";
+import ChartCard from "@/components/dashboard/ChartCard";
 import { api } from "@/lib/api";
 import type {
   ConfiguracaoAPFOut,
@@ -225,17 +227,6 @@ const ControleDashboard = () => {
     };
   }, [data]);
 
-  const kpis = [
-    { label: "Gasto TI estimado (ano)", value: brl.format(m.gastoAno), hint: "portfólio com contagem", accent: COLORS.ctrl, tone: "text-muted-foreground" },
-    { label: "Valor médio R$/PF", value: brl.format(m.vpf), hint: "configuração vigente", accent: COLORS.primary, tone: "text-muted-foreground" },
-    { label: "Aderência contratual geral", value: m.aderenciaGeral == null ? "—" : `${m.aderenciaGeral}%`, hint: "propostas dentro da tolerância", accent: COLORS.success, tone: "text-muted-foreground" },
-    { label: "Total de PF no portfólio", value: Math.round(m.totalPF).toLocaleString("pt-BR"), hint: "todos os projetos contados", accent: COLORS.primary, tone: "text-muted-foreground" },
-    { label: "Saving acumulado", value: brl.format(m.savingAcumulado), hint: "economia vs. estimativa", accent: COLORS.success, tone: "text-muted-foreground" },
-    { label: "Propostas acima do contrato", value: m.acimaContrato, hint: "variação além da tolerância", accent: COLORS.warning, tone: "text-muted-foreground" },
-    { label: "Contratos a vencer (90d)", value: "—", hint: "sem dado de vigência", accent: COLORS.destructive, tone: "text-muted-foreground" },
-    { label: "Metodologia padrão APF", value: String(m.metodologiaPadrao).toUpperCase(), hint: "mais usada no portfólio", accent: COLORS.ctrl, tone: "text-muted-foreground" },
-  ];
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24 text-muted-foreground">
@@ -254,24 +245,83 @@ const ControleDashboard = () => {
         </div>
       </div>
 
-      {/* Visão financeira consolidada */}
+      {/* Visão financeira consolidada — grid bento: hero 2×2 + 6 cards + 1 wide */}
       <SectionLabel>Visão financeira consolidada</SectionLabel>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {kpis.map((k) => (
-          <div key={k.label} className="bg-card rounded-xl border border-border p-4 border-t-[3px]" style={{ borderTopColor: k.accent }}>
-            <p className="text-xs text-muted-foreground mb-1">{k.label}</p>
-            <p className="text-2xl font-bold text-foreground leading-tight">{k.value}</p>
-            <p className={`text-[11px] mt-1 ${k.tone}`}>{k.hint}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard
+          variant="hero"
+          className="sm:col-span-2 xl:row-span-2"
+          label="Gasto TI estimado (ano)"
+          value={brl.format(m.gastoAno)}
+          hint="portfólio com contagem"
+          footer={
+            <div className="flex flex-wrap gap-2">
+              <HeroChip>{m.suppliers.length} {m.suppliers.length === 1 ? "fornecedor" : "fornecedores"}</HeroChip>
+              <HeroChip>{Math.round(m.totalPF).toLocaleString("pt-BR")} PF</HeroChip>
+            </div>
+          }
+        />
+        <StatCard
+          label="Valor médio R$/PF"
+          value={brl.format(m.vpf)}
+          hint="configuração vigente"
+          tone="primary"
+        />
+        <StatCard
+          label="Aderência contratual geral"
+          value={m.aderenciaGeral == null ? "—" : `${m.aderenciaGeral}%`}
+          hint="propostas dentro da tolerância"
+          tone="success"
+          badge={
+            m.aderenciaGeral == null
+              ? undefined
+              : m.aderenciaGeral >= 90
+                ? { label: "meta atingida", tone: "success", direction: "up" }
+                : { label: "abaixo da meta", tone: "warning", direction: "down" }
+          }
+        />
+        <StatCard
+          label="Total de PF no portfólio"
+          value={Math.round(m.totalPF).toLocaleString("pt-BR")}
+          hint="todos os projetos contados"
+          tone="primary"
+        />
+        <StatCard
+          label="Saving acumulado"
+          value={brl.format(m.savingAcumulado)}
+          hint="economia vs. estimativa"
+          tone="success"
+          badge={m.savingAcumulado > 0 ? { label: "economia", tone: "success", direction: "up" } : undefined}
+        />
+        <StatCard
+          label="Propostas acima do contrato"
+          value={m.acimaContrato}
+          hint="variação além da tolerância"
+          tone="warning"
+          badge={
+            m.acimaContrato > 0
+              ? { label: "atenção", tone: "destructive" }
+              : { label: "em dia", tone: "success" }
+          }
+        />
+        <StatCard label="Contratos a vencer (90d)" value="—" hint="sem dado de vigência" tone="destructive" />
+        <StatCard
+          className="sm:col-span-2"
+          label="Metodologia padrão APF"
+          value={String(m.metodologiaPadrao).toUpperCase()}
+          hint="mais usada no portfólio"
+          tone="neutral"
+        />
       </div>
 
       {/* Saving e Custo */}
       <SectionLabel>Valor estimado e custo</SectionLabel>
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="font-semibold text-foreground text-sm">Valor estimado por período</h3>
-          <p className="text-xs text-muted-foreground mb-4">Valor estimado dos projetos contados e acumulado (R$ mil)</p>
+        <ChartCard
+          title="Valor estimado por período"
+          subtitle="Valor estimado dos projetos contados e acumulado (R$ mil)"
+          chip="6 meses"
+        >
           {!m.temValorPeriodo ? (
             <EmptyState minHeight={260} description="Sem valores estimados no período." />
           ) : (
@@ -287,11 +337,13 @@ const ControleDashboard = () => {
               </ComposedChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </ChartCard>
 
-        <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="font-semibold text-foreground text-sm">Valor estimado mensal por fornecedor</h3>
-          <p className="text-xs text-muted-foreground mb-4">R$ mil — últimos 6 meses</p>
+        <ChartCard
+          title="Valor estimado mensal por fornecedor"
+          subtitle="R$ mil — últimos 6 meses"
+          chip={`${m.suppliers.length} ${m.suppliers.length === 1 ? "fornecedor" : "fornecedores"}`}
+        >
           {!m.temGastoMensal ? (
             <EmptyState minHeight={260} description="Sem valores por fornecedor para exibir." />
           ) : (
@@ -308,15 +360,17 @@ const ControleDashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </ChartCard>
       </div>
 
       {/* Scorecard de fornecedores */}
       <SectionLabel>Scorecard de fornecedores</SectionLabel>
       <div className="grid lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="font-semibold text-foreground text-sm">Aderência de preço por fornecedor</h3>
-          <p className="text-xs text-muted-foreground mb-4">% de propostas dentro da tolerância (meta: 90%)</p>
+        <ChartCard
+          title="Aderência de preço por fornecedor"
+          subtitle="% de propostas dentro da tolerância"
+          chip="meta 90%"
+        >
           {m.aderenciaData.length === 0 ? (
             <EmptyState minHeight={260} description="Sem dados de aderência para exibir." />
           ) : (
@@ -335,11 +389,13 @@ const ControleDashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </ChartCard>
 
-        <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="font-semibold text-foreground text-sm">Fornecedores por categoria de projeto</h3>
-          <p className="text-xs text-muted-foreground mb-4">Projetos estratégicos, de área, legais e outros por fornecedor</p>
+        <ChartCard
+          title="Fornecedores por categoria de projeto"
+          subtitle="Projetos estratégicos, de área, legais e outros por fornecedor"
+          chip="projetos"
+        >
           {!m.temCategoria ? (
             <EmptyState minHeight={260} description="Sem projetos por categoria para exibir." />
           ) : (
@@ -357,13 +413,15 @@ const ControleDashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </ChartCard>
       </div>
 
       {/* Scorecard tabela */}
-      <div className="bg-card rounded-xl border border-border p-5">
-        <h3 className="font-semibold text-foreground text-sm">Scorecard completo de fornecedores</h3>
-        <p className="text-xs text-muted-foreground mb-4">Avaliação consolidada por fornecedor com projeto atribuído</p>
+      <ChartCard
+        title="Scorecard completo de fornecedores"
+        subtitle="Avaliação consolidada por fornecedor com projeto atribuído"
+        chip={`${m.scorecard.length} ${m.scorecard.length === 1 ? "fornecedor" : "fornecedores"}`}
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -424,7 +482,7 @@ const ControleDashboard = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </ChartCard>
     </div>
   );
 };

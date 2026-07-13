@@ -14,6 +14,8 @@ import {
 } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import EmptyState from "@/components/EmptyState";
+import StatCard, { HeroChip } from "@/components/dashboard/StatCard";
+import ChartCard, { DonutCenter } from "@/components/dashboard/ChartCard";
 
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -147,6 +149,13 @@ const SolicitanteDashboard = () => {
         })
       : [];
 
+    // Δ% do custo contratado no mês atual vs. mês anterior (selo de tendência).
+    const mesAtual = buckets[5]?.value ?? 0;
+    const mesAnterior = buckets[4]?.value ?? 0;
+    const custoDeltaPct = mesAnterior > 0
+      ? Math.round(((mesAtual - mesAnterior) / mesAnterior) * 100)
+      : null;
+
     return {
       total: items.length,
       ativos,
@@ -157,37 +166,12 @@ const SolicitanteDashboard = () => {
       paraCorrigir,
       slaMedio,
       taxaAprovacao,
+      custoDeltaPct,
       statusChart,
       serviceCostChart,
       costEvolution,
     };
   }, [data]);
-
-  const kpis = [
-    { label: "Projetos ativos", value: metrics.ativos, hint: "em andamento", accent: "bg-primary" },
-    { label: "Aguardando minha ação", value: metrics.aguardandoAcao, hint: "propostas a decidir", accent: "bg-warning" },
-    { label: "Custo contratado", value: brl.format(metrics.custoContratado), hint: "projetos aceitos", accent: "bg-success" },
-    {
-      label: "Horas contratadas",
-      value: metrics.temHoras ? `${Math.round(metrics.horasContratadas)}h` : "—",
-      hint: "esforço estimado",
-      accent: "bg-success",
-    },
-    { label: "Propostas para corrigir", value: metrics.paraCorrigir, hint: "com divergência", accent: "bg-destructive" },
-    { label: "Contratos próx. vencimento", value: "—", hint: "sem dado de vigência", accent: "bg-warning" },
-    {
-      label: "SLA médio de resposta",
-      value: metrics.slaMedio == null ? "—" : `${metrics.slaMedio.toFixed(1)}d`,
-      hint: "criação → proposta",
-      accent: "bg-success",
-    },
-    {
-      label: "Taxa de aprovação",
-      value: metrics.taxaAprovacao == null ? "—" : `${metrics.taxaAprovacao}%`,
-      hint: "aceitas vs. decididas",
-      accent: "bg-success",
-    },
-  ];
 
   if (isLoading) {
     return (
@@ -207,28 +191,93 @@ const SolicitanteDashboard = () => {
         </span>
       </div>
 
-      {/* Visão geral */}
+      {/* Visão geral — grid bento: hero 2×2 + 6 cards + 1 wide */}
       <div>
         <p className="text-[11px] font-semibold tracking-widest text-muted-foreground mb-3">VISÃO GERAL</p>
-        <div className="grid grid-cols-4 gap-4">
-          {kpis.map((kpi) => (
-            <div key={kpi.label} className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className={`h-1 w-full ${kpi.accent}`} />
-              <div className="p-4">
-                <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
-                <p className="text-2xl font-bold text-foreground mb-1">{kpi.value}</p>
-                <p className="text-[11px] text-muted-foreground">{kpi.hint}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard
+            variant="hero"
+            className="sm:col-span-2 xl:row-span-2"
+            label="Projetos ativos"
+            value={metrics.ativos}
+            hint="solicitações em andamento"
+            footer={
+              <div className="flex flex-wrap gap-2">
+                <HeroChip>{metrics.aguardandoAcao} a decidir</HeroChip>
+                <HeroChip>{metrics.total} no total</HeroChip>
               </div>
-            </div>
-          ))}
+            }
+          />
+          <StatCard
+            label="Aguardando minha ação"
+            value={metrics.aguardandoAcao}
+            hint="propostas a decidir"
+            tone="warning"
+            badge={metrics.aguardandoAcao > 0 ? { label: "requer ação", tone: "warning" } : undefined}
+          />
+          <StatCard
+            label="Custo contratado"
+            value={brl.format(metrics.custoContratado)}
+            hint="projetos aceitos"
+            tone="success"
+            badge={
+              metrics.custoDeltaPct == null
+                ? undefined
+                : {
+                    label: `${metrics.custoDeltaPct > 0 ? "+" : ""}${metrics.custoDeltaPct}%`,
+                    tone: metrics.custoDeltaPct > 0 ? "warning" : "success",
+                    direction: metrics.custoDeltaPct > 0 ? "up" : "down",
+                  }
+            }
+          />
+          <StatCard
+            label="Horas contratadas"
+            value={metrics.temHoras ? `${Math.round(metrics.horasContratadas)}h` : "—"}
+            hint="esforço estimado"
+            tone="success"
+          />
+          <StatCard
+            label="Propostas para corrigir"
+            value={metrics.paraCorrigir}
+            hint="com divergência"
+            tone="destructive"
+            badge={
+              metrics.paraCorrigir > 0
+                ? { label: "divergência", tone: "destructive" }
+                : { label: "em dia", tone: "success" }
+            }
+          />
+          <StatCard label="Contratos próx. vencimento" value="—" hint="sem dado de vigência" tone="warning" />
+          <StatCard
+            label="SLA médio de resposta"
+            value={metrics.slaMedio == null ? "—" : `${metrics.slaMedio.toFixed(1)}d`}
+            hint="criação → proposta"
+            tone="success"
+          />
+          <StatCard
+            className="sm:col-span-2"
+            label="Taxa de aprovação"
+            value={metrics.taxaAprovacao == null ? "—" : `${metrics.taxaAprovacao}%`}
+            hint="aceitas vs. decididas"
+            tone="success"
+            badge={
+              metrics.taxaAprovacao == null
+                ? undefined
+                : metrics.taxaAprovacao >= 50
+                  ? { label: "saudável", tone: "success", direction: "up" }
+                  : { label: "abaixo de 50%", tone: "warning", direction: "down" }
+            }
+          />
         </div>
       </div>
 
       {/* Donut charts */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-card rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-foreground">Status dos projetos</h3>
-          <p className="text-xs text-muted-foreground mb-3">Distribuição por situação atual</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard
+          title="Status dos projetos"
+          subtitle="Distribuição por situação atual"
+          chip={`${metrics.total} ${metrics.total === 1 ? "projeto" : "projetos"}`}
+        >
           {metrics.statusChart.length === 0 ? (
             <EmptyState minHeight={240} description="Sem projetos para exibir." />
           ) : (
@@ -236,26 +285,31 @@ const SolicitanteDashboard = () => {
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
                 {metrics.statusChart.map((d) => (
                   <div key={d.name} className="flex items-center gap-1.5 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
                     <span className="text-muted-foreground">{d.name} {d.value}</span>
                   </div>
                 ))}
               </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie data={metrics.statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
-                    {metrics.statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={tooltipStyle} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie data={metrics.statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
+                      {metrics.statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={tooltipStyle} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <DonutCenter value={metrics.total} label="projetos" />
+              </div>
             </>
           )}
-        </div>
+        </ChartCard>
 
-        <div className="bg-card rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-foreground">Custo por tipo de serviço</h3>
-          <p className="text-xs text-muted-foreground mb-3">Distribuição do orçamento contratado</p>
+        <ChartCard
+          title="Custo por tipo de serviço"
+          subtitle="Distribuição do orçamento contratado"
+          chip="contratado"
+        >
           {metrics.serviceCostChart.length === 0 ? (
             <EmptyState minHeight={240} description="Sem custos contratados para exibir." />
           ) : (
@@ -263,28 +317,33 @@ const SolicitanteDashboard = () => {
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
                 {metrics.serviceCostChart.map((d) => (
                   <div key={d.name} className="flex items-center gap-1.5 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
                     <span className="text-muted-foreground">{d.name} {d.value}%</span>
                   </div>
                 ))}
               </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie data={metrics.serviceCostChart} dataKey="valor" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
-                    {metrics.serviceCostChart.map((e, i) => <Cell key={i} fill={e.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number, n) => [brl.format(v), n]} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie data={metrics.serviceCostChart} dataKey="valor" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
+                      {metrics.serviceCostChart.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number, n) => [brl.format(v), n]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <DonutCenter value={brl.format(metrics.custoContratado)} label="total" />
+              </div>
             </>
           )}
-        </div>
+        </ChartCard>
       </div>
 
       {/* Evolução do custo */}
-      <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="font-semibold text-foreground">Evolução do custo contratado</h3>
-        <p className="text-xs text-muted-foreground mb-4">Acumulado mensal em R$ mil — últimos 6 meses</p>
+      <ChartCard
+        title="Evolução do custo contratado"
+        subtitle="Acumulado mensal em R$ mil"
+        chip="6 meses"
+      >
         {metrics.costEvolution.length === 0 ? (
           <EmptyState minHeight={260} description="Sem histórico de custo para exibir." />
         ) : (
@@ -301,7 +360,7 @@ const SolicitanteDashboard = () => {
             </LineChart>
           </ResponsiveContainer>
         )}
-      </div>
+      </ChartCard>
     </div>
   );
 };

@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -41,6 +41,12 @@
     --ring: 178 72% 34%;
 
     --radius: 0.875rem;
+
+    /* Card hero dos dashboards — gradiente da marca (mint → teal) com texto escuro */
+    --stat-hero-from: 158 70% 82%;
+    --stat-hero-via: 172 62% 56%;
+    --stat-hero-to: 178 72% 38%;
+    --stat-hero-fg: 182 55% 11%;
 
     /* Identidade Metri unificada — os 3 módulos usam o mesmo teal da marca */
     --sidebar-sol-bg: 179 58% 20%;
@@ -98,6 +104,12 @@
     --input: 214 18% 22%;
     --ring: 178 66% 42%;
 
+    /* Card hero em dark — gradiente mais profundo, quase neon */
+    --stat-hero-from: 160 62% 68%;
+    --stat-hero-via: 174 64% 46%;
+    --stat-hero-to: 180 74% 28%;
+    --stat-hero-fg: 182 60% 8%;
+
     /* Identidade Metri — a barra de navegação mantém o teal da marca */
     --sidebar-sol-bg: 179 55% 16%;
     --sidebar-sol-fg: 180 30% 96%;
@@ -128,6 +140,16 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  /* Gradiente do card hero dos dashboards (StatCard variant="hero") */
+  .stat-hero-gradient {
+    background:
+      radial-gradient(120% 140% at 100% 0%, hsl(var(--stat-hero-from)) 0%, transparent 60%),
+      linear-gradient(135deg, hsl(var(--stat-hero-from)) 0%, hsl(var(--stat-hero-via)) 55%, hsl(var(--stat-hero-to)) 100%);
+    color: hsl(var(--stat-hero-fg));
   }
 }
 

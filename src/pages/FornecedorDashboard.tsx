@@ -15,6 +15,8 @@ import {
 } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import EmptyState from "@/components/EmptyState";
+import StatCard, { HeroChip } from "@/components/dashboard/StatCard";
+import ChartCard, { DonutCenter } from "@/components/dashboard/ChartCard";
 
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -140,32 +142,6 @@ const FornecedorDashboard = () => {
     };
   }, [data]);
 
-  const kpis = [
-    { label: "Aguardando envio", value: metrics.aguardando, hint: "propostas a enviar", accent: "bg-warning" },
-    { label: "Propostas em análise", value: metrics.enviadas, hint: "aguardando decisão", accent: "bg-primary" },
-    { label: "Projetos contratados", value: metrics.aceitas, hint: "propostas aceitas", accent: "bg-success" },
-    {
-      label: "Taxa de aprovação",
-      value: metrics.taxaAprovacao == null ? "—" : `${metrics.taxaAprovacao}%`,
-      hint: "aceitas vs. decididas",
-      accent: "bg-success",
-    },
-    { label: "Propostas divergentes", value: metrics.divergentes, hint: "acima da tolerância", accent: "bg-destructive" },
-    { label: "Propostas recusadas", value: metrics.recusadas, hint: "não contratadas", accent: "bg-destructive" },
-    {
-      label: "Variação média (PF)",
-      value: metrics.variacaoMedia == null ? "—" : `${metrics.variacaoMedia.toFixed(1)}%`,
-      hint: "proposta vs. estimativa",
-      accent: "bg-muted-foreground",
-    },
-    {
-      label: "Tempo médio p/ proposta",
-      value: metrics.tempoMedio == null ? "—" : `${metrics.tempoMedio.toFixed(1)}d`,
-      hint: "da atribuição ao envio",
-      accent: "bg-muted-foreground",
-    },
-  ];
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24 text-muted-foreground">
@@ -184,31 +160,89 @@ const FornecedorDashboard = () => {
         </span>
       </div>
 
-      {/* Visão geral */}
+      {/* Visão geral — grid bento: hero 2×2 + 6 cards + 1 wide */}
       <div>
         <p className="text-[11px] font-semibold tracking-widest text-muted-foreground mb-3">VISÃO GERAL</p>
-        <div className="grid grid-cols-4 gap-4">
-          {kpis.map((kpi) => (
-            <div key={kpi.label} className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className={`h-1 w-full ${kpi.accent}`} />
-              <div className="p-4">
-                <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
-                <p className="text-2xl font-bold text-foreground mb-1">{kpi.value}</p>
-                <p className="text-[11px] text-muted-foreground">{kpi.hint}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard
+            variant="hero"
+            className="sm:col-span-2 xl:row-span-2"
+            label="Aguardando envio"
+            value={metrics.aguardando}
+            hint="propostas a enviar"
+            footer={
+              <div className="flex flex-wrap gap-2">
+                <HeroChip>{metrics.enviadas} em análise</HeroChip>
+                <HeroChip>{metrics.aceitas} contratados</HeroChip>
               </div>
-            </div>
-          ))}
+            }
+          />
+          <StatCard
+            label="Propostas em análise"
+            value={metrics.enviadas}
+            hint="aguardando decisão"
+            tone="primary"
+          />
+          <StatCard
+            label="Projetos contratados"
+            value={metrics.aceitas}
+            hint="propostas aceitas"
+            tone="success"
+          />
+          <StatCard
+            label="Taxa de aprovação"
+            value={metrics.taxaAprovacao == null ? "—" : `${metrics.taxaAprovacao}%`}
+            hint="aceitas vs. decididas"
+            tone="success"
+            badge={
+              metrics.taxaAprovacao == null
+                ? undefined
+                : metrics.taxaAprovacao >= 50
+                  ? { label: "saudável", tone: "success", direction: "up" }
+                  : { label: "abaixo de 50%", tone: "warning", direction: "down" }
+            }
+          />
+          <StatCard
+            label="Propostas divergentes"
+            value={metrics.divergentes}
+            hint="acima da tolerância"
+            tone="destructive"
+            badge={
+              metrics.divergentes > 0
+                ? { label: "corrigir", tone: "destructive" }
+                : { label: "em dia", tone: "success" }
+            }
+          />
+          <StatCard
+            label="Propostas recusadas"
+            value={metrics.recusadas}
+            hint="não contratadas"
+            tone="destructive"
+          />
+          <StatCard
+            label="Variação média (PF)"
+            value={metrics.variacaoMedia == null ? "—" : `${metrics.variacaoMedia.toFixed(1)}%`}
+            hint="proposta vs. estimativa"
+            tone="neutral"
+          />
+          <StatCard
+            className="sm:col-span-2"
+            label="Tempo médio p/ proposta"
+            value={metrics.tempoMedio == null ? "—" : `${metrics.tempoMedio.toFixed(1)}d`}
+            hint="da atribuição ao envio"
+            tone="neutral"
+          />
         </div>
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Status donut */}
-        <div className="bg-card rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-foreground">Status dos projetos atribuídos</h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            {metrics.total} {metrics.total === 1 ? "projeto atribuído" : "projetos atribuídos"}
-          </p>
+        <ChartCard
+          title="Status dos projetos atribuídos"
+          subtitle="Distribuição por situação atual"
+          chip={`${metrics.total} ${metrics.total === 1 ? "projeto" : "projetos"}`}
+        >
           {metrics.statusChart.length === 0 ? (
             <EmptyState minHeight={240} description="Sem projetos atribuídos para exibir." />
           ) : (
@@ -216,35 +250,40 @@ const FornecedorDashboard = () => {
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
                 {metrics.statusChart.map((d) => (
                   <div key={d.name} className="flex items-center gap-1.5 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color }} />
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
                     <span className="text-muted-foreground">{d.name} {d.value}</span>
                   </div>
                 ))}
               </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie data={metrics.statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
-                    {metrics.statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={tooltipStyle} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie data={metrics.statusChart} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} strokeWidth={0}>
+                      {metrics.statusChart.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={tooltipStyle} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <DonutCenter value={metrics.total} label="projetos" />
+              </div>
             </>
           )}
-        </div>
+        </ChartCard>
 
         {/* Variação PF proposta vs estimativa */}
-        <div className="bg-card rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-foreground">Variação da proposta vs. estimativa</h3>
-          <p className="text-xs text-muted-foreground mb-3">% de desvio dos PF propostos frente à contagem inicial</p>
+        <ChartCard
+          title="Variação da proposta vs. estimativa"
+          subtitle="% de desvio dos PF propostos frente à contagem inicial"
+          chip="% PF"
+        >
           {metrics.variacaoChart.length === 0 ? (
             <EmptyState minHeight={240} description="Sem análise de proposta para exibir." />
           ) : (
             <>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-xs">
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-success" /><span className="text-muted-foreground">Dentro da tolerância</span></div>
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-warning" /><span className="text-muted-foreground">Atenção</span></div>
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-destructive" /><span className="text-muted-foreground">Divergente</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-success" /><span className="text-muted-foreground">Dentro da tolerância</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-warning" /><span className="text-muted-foreground">Atenção</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-destructive" /><span className="text-muted-foreground">Divergente</span></div>
               </div>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={metrics.variacaoChart} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
@@ -260,20 +299,22 @@ const FornecedorDashboard = () => {
               </ResponsiveContainer>
             </>
           )}
-        </div>
+        </ChartCard>
       </div>
 
       {/* Valor estimado vs proposto (R$) */}
-      <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="font-semibold text-foreground">Valor estimado vs. proposto (R$)</h3>
-        <p className="text-xs text-muted-foreground mb-4">Comparação por projeto — base R$/PF da Configuração APF vigente</p>
+      <ChartCard
+        title="Valor estimado vs. proposto (R$)"
+        subtitle="Comparação por projeto — base R$/PF da Configuração APF vigente"
+        chip="R$"
+      >
         {metrics.valorChart.length === 0 ? (
           <EmptyState minHeight={260} description="Sem valores de proposta para exibir." />
         ) : (
           <>
             <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-xs">
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground" /><span className="text-muted-foreground">Estimado</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-primary" /><span className="text-muted-foreground">Proposto</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-muted-foreground" /><span className="text-muted-foreground">Estimado</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary" /><span className="text-muted-foreground">Proposto</span></div>
             </div>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={metrics.valorChart} margin={{ top: 10, right: 20, bottom: 0, left: 10 }}>
@@ -287,7 +328,7 @@ const FornecedorDashboard = () => {
             </ResponsiveContainer>
           </>
         )}
-      </div>
+      </ChartCard>
     </div>
   );
 };
