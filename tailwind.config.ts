@@ -86,6 +86,10 @@ export default {
           foreground: "hsl(var(--ctrl-foreground))",
         },
       },
+      transitionTimingFunction: {
+        // Easing expo — hovers e micro-interações da página de boas-vindas
+        expo: "cubic-bezier(0.16, 1, 0.3, 1)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

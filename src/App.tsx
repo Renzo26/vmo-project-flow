@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
@@ -38,6 +39,9 @@ import RequireAuth from "./components/RequireAuth";
 import type { Role } from "@/lib/auth";
 import NotFound from "./pages/NotFound";
 
+// Página de apresentação — carregada sob demanda (fora do bundle de login)
+const BemVindo = lazy(() => import("./pages/BemVindo"));
+
 const queryClient = new QueryClient();
 
 const Guard = ({ roles, children }: { roles: Role[]; children: React.ReactNode }) => (
@@ -56,6 +60,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LoginPage />} />
+            <Route path="/bem-vindo" element={<Suspense fallback={null}><BemVindo /></Suspense>} />
             <Route path="/fornecedor-login" element={<FornecedorLoginPage />} />
             <Route path="/dev" element={<DevSelector />} />
             <Route path="/solicitante/projetos" element={<Guard roles={["solicitante"]}><SolicitanteProjects /></Guard>} />
