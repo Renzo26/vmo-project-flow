@@ -6,7 +6,7 @@ import type { LoginResponse } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, Code2, Loader2, Wrench } from "lucide-react";
+import { Lock, Mail, Loader2, Wrench } from "lucide-react";
 
 const ROUTE_BY_ROLE: Record<string, string> = {
   solicitante: "/solicitante/dashboard",
@@ -73,16 +73,6 @@ const LoginPage = () => {
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</> : "Entrar"}
             </Button>
           </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
-          </div>
-
-          <Button variant="outline" className="w-full border-dashed border-muted-foreground/40 text-muted-foreground hover:text-foreground" onClick={() => navigate("/dev")}>
-            <Code2 className="mr-2 h-4 w-4" />
-            Entrar como DEV (sem login)
-          </Button>
         </div>
 
         <button
@@ -92,10 +82,6 @@ const LoginPage = () => {
           <Wrench className="h-3 w-3" />
           Sou fornecedor — acessar portal do fornecedor
         </button>
-
-        <p className="text-xs text-center text-muted-foreground mt-3">
-          Demo: solicitante@vmo.com / controle@vmo.com — senha: 123456
-        </p>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockUsers } from "@/data/mockData";
 import { api, ApiError } from "@/lib/api";
 import type { LoginResponse } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ const FornecedorLoginPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setSessionData, login } = useAuth();
+  const { setSessionData } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,12 +40,6 @@ const FornecedorLoginPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const loginDev = () => {
-    const u = mockUsers.fornecedor;
-    login("fornecedor", u.name, u.team);
-    navigate("/fornecedor/dashboard");
   };
 
   return (
@@ -99,22 +92,6 @@ const FornecedorLoginPage = () => {
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</> : "Entrar como Fornecedor"}
             </Button>
           </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-card px-2 text-muted-foreground">ou</span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full border-dashed border-primary/40 text-primary hover:bg-primary/5 hover:border-primary"
-            onClick={loginDev}
-          >
-            <Wrench className="mr-2 h-4 w-4" />
-            Entrar como Fornecedor (DEV)
-          </Button>
         </div>
 
         {/* Voltar */}

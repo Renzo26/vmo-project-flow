@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Building2 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api } from "@/lib/api";
 import type { FornecedorOut, SolicitacaoListItem } from "@/lib/types";
+import { fornecedoresComPendenciaDoc, pendenciasPorFornecedor, TIPO_CONFIG } from "@/data/documentosFornecedores";
 import {
   ResponsiveContainer,
   PieChart,
@@ -40,6 +42,7 @@ async function fetchData(): Promise<{ fornecedores: FornecedorOut[]; solicitacoe
 
 const FornecedoresDashboard = () => {
   const navigate = useNavigate();
+  const [openDocs, setOpenDocs] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["fornecedores-dashboard"],
@@ -92,11 +95,15 @@ const FornecedoresDashboard = () => {
     );
   }
 
-  const cards = [
+  const comPendenciaDoc = fornecedoresComPendenciaDoc().length;
+
+  type Card = { label: string; value: number; hint: string; accent: string; onClick?: () => void };
+  const cards: Card[] = [
     { label: "Total de fornecedores", value: m.total, hint: "cadastrados", accent: "bg-primary" },
     { label: "Com projetos atribuídos", value: m.comProjetos, hint: "do total", accent: "bg-success" },
     { label: "Sem projetos", value: m.semProjetos, hint: "ainda não atribuídos", accent: "bg-warning" },
     { label: "Categorias TI cobertas", value: m.categoriasCobertas, hint: "áreas de atuação", accent: "bg-ctrl" },
+    { label: "Pend. de documentação", value: comPendenciaDoc, hint: "clique para ver quem são", accent: "bg-destructive", onClick: () => setOpenDocs(true) },
   ];
 
   return (
@@ -112,18 +119,75 @@ const FornecedoresDashboard = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c) => (
-          <div key={c.label} className="bg-card rounded-xl border border-border overflow-hidden">
-            <div className={`h-1 ${c.accent}`} />
-            <div className="p-4">
-              <p className="text-xs text-muted-foreground">{c.label}</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{c.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{c.hint}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        {cards.map((c) => {
+          const inner = (
+            <>
+              <div className={`h-1 ${c.accent}`} />
+              <div className="p-4">
+                <p className="text-xs text-muted-foreground">{c.label}</p>
+                <p className="text-3xl font-bold text-foreground mt-1">{c.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{c.hint}</p>
+              </div>
+            </>
+          );
+          return c.onClick ? (
+            <button
+              key={c.label}
+              onClick={c.onClick}
+              className="text-left bg-card rounded-xl border border-border overflow-hidden transition-all hover:shadow-md hover:border-primary/40"
+            >
+              {inner}
+            </button>
+          ) : (
+            <div key={c.label} className="bg-card rounded-xl border border-border overflow-hidden">
+              {inner}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Modal: fornecedores com pendência de documentação */}
+      <Dialog open={openDocs} onOpenChange={setOpenDocs}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fornecedores com pendência de documentação</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 max-h-[60vh] overflow-y-auto space-y-3">
+            {[...pendenciasPorFornecedor().entries()].length === 0 ? (
+              <EmptyState
+                title="Nenhuma pendência"
+                description="Nenhum fornecedor com certidões vencidas ou vencendo."
+              />
+            ) : (
+              [...pendenciasPorFornecedor().entries()].map(([fornecedor, docs]) => (
+                <div key={fornecedor} className="rounded-lg border border-border p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="font-semibold text-foreground">{fornecedor}</span>
+                    <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full font-medium">
+                      {docs.length}
+                    </span>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {docs.map((d) => (
+                      <li key={d.id} className="flex items-center justify-between gap-2 text-sm">
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${TIPO_CONFIG[d.tipo]}`}>{d.tipo}</span>
+                          <span className="text-foreground truncate">{d.documento}</span>
+                        </span>
+                        <span className={`text-xs shrink-0 ${d.status === "Vencido" ? "text-destructive font-semibold" : "text-orange-600 font-medium"}`}>
+                          {d.status === "Vencido" ? "Vencido" : `Vence em ${d.diasRestantes}d`} · {d.vencimento}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -1,30 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/EmptyState";
-
-type TipoDoc = "Fiscal" | "Trabalhista" | "Certificação" | "Jurídico" | "Técnico";
-type StatusDoc = "Vencido" | "Vencendo" | "Válido";
-
-interface Documento {
-  id: string;
-  fornecedor: string;
-  documento: string;
-  tipo: TipoDoc;
-  vencimento: string;
-  vencimentoTs: number;
-  status: StatusDoc;
-  diasRestantes: number | null;
-}
-
-const TIPO_CONFIG: Record<TipoDoc, string> = {
-  Fiscal:       "bg-yellow-100 text-yellow-700",
-  Trabalhista:  "bg-orange-100 text-orange-700",
-  Certificação: "bg-purple-100 text-purple-700",
-  Jurídico:     "bg-blue-100 text-blue-700",
-  Técnico:      "bg-cyan-100 text-cyan-700",
-};
-
-const DOCUMENTOS: Documento[] = [];
+import { DOCUMENTOS, TIPO_CONFIG, type Documento, type StatusDoc } from "@/data/documentosFornecedores";
 
 const statusLabel = (doc: Documento): string => {
   if (doc.status === "Vencido") return "Vencido";

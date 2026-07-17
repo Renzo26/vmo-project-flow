@@ -7,7 +7,7 @@ const ControleScorecard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-foreground">Scorecard de Fornecedores</h2>
+        <h2 className="text-xl font-bold text-foreground">NPS Fornecedor</h2>
         <p className="text-sm text-muted-foreground mt-1">Avaliação consolidada de desempenho</p>
       </div>
 

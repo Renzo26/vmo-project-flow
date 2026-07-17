@@ -8,7 +8,7 @@ import {
 import {
   LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply,
   Award, FileText, SlidersHorizontal, Inbox, Calculator, ClipboardList, Building2, UserPlus,
-  ShieldCheck, FileCheck2, FileSignature, Table, Calculator as CalcIcon, Briefcase,
+  FileCheck2, FileSignature, Table, Calculator as CalcIcon, Briefcase,
   Sun, Moon, ChevronDown,
 } from "lucide-react";
 
@@ -53,9 +53,7 @@ const controleMenu: MenuGroup[] = [
     items: [
       { label: "Base de fornecedores", path: "/controle/fornecedores/base", icon: Building2 },
       { label: "Cadastro de fornecedor", path: "/controle/fornecedores/novo", icon: UserPlus },
-      { label: "Homologação", path: "/controle/fornecedores/homologacao", icon: ShieldCheck },
-      { label: "Documentos e certidões", path: "/controle/fornecedores/documentos", icon: FileCheck2 },
-      { label: "Scorecard", path: "/controle/scorecard", icon: Award },
+      { label: "NPS Fornecedor", path: "/controle/scorecard", icon: Award },
     ],
   },
   {

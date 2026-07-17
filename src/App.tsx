@@ -30,8 +30,6 @@ import APFContagemDetalhe from "./pages/controle/APFContagemDetalhe";
 import FornecedoresBase from "./pages/controle/FornecedoresBase";
 import FornecedoresDashboard from "./pages/controle/FornecedoresDashboard";
 import FornecedoresNovo from "./pages/controle/FornecedoresNovo";
-import FornecedoresHomologacao from "./pages/controle/FornecedoresHomologacao";
-import FornecedoresDocumentos from "./pages/controle/FornecedoresDocumentos";
 import ContratosAtivos from "./pages/controle/ContratosAtivos";
 import ContratosTabelaPF from "./pages/controle/ContratosTabelaPF";
 import AppLayout from "./components/AppLayout";
@@ -80,8 +78,6 @@ const App = () => (
             <Route path="/controle/fornecedores/dashboard" element={<Guard roles={["controle"]}><FornecedoresDashboard /></Guard>} />
             <Route path="/controle/fornecedores/base" element={<Guard roles={["controle"]}><FornecedoresBase /></Guard>} />
             <Route path="/controle/fornecedores/novo" element={<Guard roles={["controle"]}><FornecedoresNovo /></Guard>} />
-            <Route path="/controle/fornecedores/homologacao" element={<Guard roles={["controle"]}><FornecedoresHomologacao /></Guard>} />
-            <Route path="/controle/fornecedores/documentos" element={<Guard roles={["controle"]}><FornecedoresDocumentos /></Guard>} />
             <Route path="/controle/scorecard" element={<Guard roles={["controle"]}><ControleScorecard /></Guard>} />
             <Route path="/controle/contratos/ativos" element={<Guard roles={["controle"]}><ContratosAtivos /></Guard>} />
             <Route path="/controle/contratos/tabela-pf" element={<Guard roles={["controle"]}><ContratosTabelaPF /></Guard>} />
