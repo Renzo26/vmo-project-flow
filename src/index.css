@@ -162,3 +162,38 @@
     display: none;
   }
 }
+
+/* ── Landing /bem-vindo — faixa infinita do fluxo e flutuação do card de KPI ── */
+@keyframes metri-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes metri-flutuar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-marquee {
+  animation: metri-marquee 32s linear infinite;
+}
+
+.animate-flutuar {
+  animation: metri-flutuar 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-flutuar {
+    animation: none;
+  }
+}

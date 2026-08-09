@@ -18,6 +18,12 @@ export default {
         display: ['Sora', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        // Tokens da landing /bem-vindo — fundo quase preto com temperatura teal
+        // e o teal da marca fora da paleta de tons do shadcn (design-system-metri.md).
+        fundo: "#04080a",
+        "fundo-card": "#0b1416",
+        marca: "hsl(178 72% 34%)",
+        "marca-claro": "hsl(178 66% 42%)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
