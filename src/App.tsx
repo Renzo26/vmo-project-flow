@@ -31,6 +31,7 @@ import FornecedoresBase from "./pages/controle/FornecedoresBase";
 import FornecedoresDashboard from "./pages/controle/FornecedoresDashboard";
 import FornecedoresNovo from "./pages/controle/FornecedoresNovo";
 import ContratosAtivos from "./pages/controle/ContratosAtivos";
+import ContratoNotaFiscalNova from "./pages/controle/ContratoNotaFiscalNova";
 import ContratosTabelaPF from "./pages/controle/ContratosTabelaPF";
 import AppLayout from "./components/AppLayout";
 import RequireAuth from "./components/RequireAuth";
@@ -39,6 +40,8 @@ import NotFound from "./pages/NotFound";
 
 // Página de apresentação — carregada sob demanda (fora do bundle de login)
 const BemVindo = lazy(() => import("./pages/BemVindo"));
+// Novo site institucional (em construção) — por ora, apenas a hero
+const Site = lazy(() => import("./pages/Site"));
 
 const queryClient = new QueryClient();
 
@@ -59,6 +62,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/bem-vindo" element={<Suspense fallback={null}><BemVindo /></Suspense>} />
+            <Route path="/site" element={<Suspense fallback={null}><Site /></Suspense>} />
             <Route path="/fornecedor-login" element={<FornecedorLoginPage />} />
             <Route path="/dev" element={<DevSelector />} />
             <Route path="/solicitante/projetos" element={<Guard roles={["solicitante"]}><SolicitanteProjects /></Guard>} />
@@ -80,6 +84,8 @@ const App = () => (
             <Route path="/controle/fornecedores/novo" element={<Guard roles={["controle"]}><FornecedoresNovo /></Guard>} />
             <Route path="/controle/scorecard" element={<Guard roles={["controle"]}><ControleScorecard /></Guard>} />
             <Route path="/controle/contratos/ativos" element={<Guard roles={["controle"]}><ContratosAtivos /></Guard>} />
+            <Route path="/controle/contratos/ativos/nova-nota" element={<Guard roles={["controle"]}><ContratoNotaFiscalNova /></Guard>} />
+            <Route path="/controle/contratos/ativos/:contratoId/nova-nota" element={<Guard roles={["controle"]}><ContratoNotaFiscalNova /></Guard>} />
             <Route path="/controle/contratos/tabela-pf" element={<Guard roles={["controle"]}><ContratosTabelaPF /></Guard>} />
             <Route path="/controle/contratos" element={<Guard roles={["controle"]}><ControleContratos /></Guard>} />
             <Route path="/controle/apf" element={<Guard roles={["controle"]}><ControleAPF /></Guard>} />
