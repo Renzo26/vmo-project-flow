@@ -35,7 +35,7 @@ from app.governanca.schemas.ingestao import (
     IngestaoEntrada,
     IngestaoSaida,
 )
-from app.services.faturas import DESFECHO_PARA_STATUS
+from app.governanca.services.faturas import DESFECHO_PARA_STATUS
 
 
 class ErroDeIngestao(Exception):
