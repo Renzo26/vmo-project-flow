@@ -16,6 +16,8 @@ from app.services.document_parser import UnsupportedDocumentError, extract_text
 from app.services.template_reader import get_expected_fields
 from app.services.storage_service import StorageError, ensure_bucket
 from app.api import auth, fornecedores, solicitacoes, pf, apf_config
+from app.governanca.router import router as governanca_router
+import app.governanca.models  # noqa: F401 — registra modelos no Base.metadata
 
 logger = logging.getLogger("entrada_pf")
 
@@ -48,6 +50,7 @@ app.include_router(fornecedores.router, prefix="/api")
 app.include_router(solicitacoes.router, prefix="/api")
 app.include_router(pf.router, prefix="/api")
 app.include_router(apf_config.router, prefix="/api")
+app.include_router(governanca_router, prefix="/api/governanca")
 
 
 @app.exception_handler(StorageError)

@@ -33,6 +33,12 @@ import FornecedoresNovo from "./pages/controle/FornecedoresNovo";
 import ContratosAtivos from "./pages/controle/ContratosAtivos";
 import ContratoNotaFiscalNova from "./pages/controle/ContratoNotaFiscalNova";
 import ContratosTabelaPF from "./pages/controle/ContratosTabelaPF";
+import GovDashboard from "./pages/controle/governanca/GovDashboard";
+import GovFaturas from "./pages/controle/governanca/GovFaturas";
+import GovFaturaDetalhe from "./pages/controle/governanca/GovFaturaDetalhe";
+import GovPendencias from "./pages/controle/governanca/GovPendencias";
+import GovContratos from "./pages/controle/governanca/GovContratos";
+import GovCadastros from "./pages/controle/governanca/GovCadastros";
 import AppLayout from "./components/AppLayout";
 import RequireAuth from "./components/RequireAuth";
 import type { Role } from "@/lib/auth";
@@ -90,6 +96,12 @@ const App = () => (
             <Route path="/controle/contratos" element={<Guard roles={["controle"]}><ControleContratos /></Guard>} />
             <Route path="/controle/apf" element={<Guard roles={["controle"]}><ControleAPF /></Guard>} />
             <Route path="/controle/configuracoes" element={<Guard roles={["controle"]}><Configuracoes /></Guard>} />
+            <Route path="/controle/governanca" element={<Guard roles={["controle"]}><GovDashboard /></Guard>} />
+            <Route path="/controle/governanca/faturas" element={<Guard roles={["controle"]}><GovFaturas /></Guard>} />
+            <Route path="/controle/governanca/faturas/:faturaId" element={<Guard roles={["controle"]}><GovFaturaDetalhe /></Guard>} />
+            <Route path="/controle/governanca/pendencias" element={<Guard roles={["controle"]}><GovPendencias /></Guard>} />
+            <Route path="/controle/governanca/contratos" element={<Guard roles={["controle"]}><GovContratos /></Guard>} />
+            <Route path="/controle/governanca/cadastros" element={<Guard roles={["controle"]}><GovCadastros /></Guard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

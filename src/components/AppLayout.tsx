@@ -9,7 +9,7 @@ import {
   LogOut, FolderKanban, PlusCircle, LayoutDashboard, Settings, History, MessageSquareReply,
   Award, FileText, SlidersHorizontal, Inbox, Calculator, ClipboardList, Building2, UserPlus,
   FileCheck2, FileSignature, Table, Calculator as CalcIcon, Briefcase,
-  Sun, Moon, ChevronDown,
+  Sun, Moon, ChevronDown, ShieldCheck, Receipt, AlertTriangle, Users, BookOpen,
 } from "lucide-react";
 
 interface AppLayoutProps {
@@ -69,6 +69,16 @@ const controleMenu: MenuGroup[] = [
     items: [
       { label: "Contratos ativos", path: "/controle/contratos/ativos", icon: FileSignature },
       { label: "Tabela R$/PF", path: "/controle/contratos/tabela-pf", icon: Table },
+    ],
+  },
+  {
+    section: "Governança",
+    items: [
+      { label: "Visão geral", path: "/controle/governanca", icon: ShieldCheck },
+      { label: "Faturas", path: "/controle/governanca/faturas", icon: Receipt },
+      { label: "Pendências", path: "/controle/governanca/pendencias", icon: AlertTriangle },
+      { label: "Contratos", path: "/controle/governanca/contratos", icon: FileSignature },
+      { label: "Cadastros", path: "/controle/governanca/cadastros", icon: BookOpen },
     ],
   },
   {
